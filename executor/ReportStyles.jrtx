@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE jasperTemplate PUBLIC "-//JasperReports//DTD Template//EN" "http://jasperreports.sourceforge.net/dtds/jaspertemplate.dtd">
+
+<jasperTemplate>
+	<style name="data_text_left" hAlign="Left" vAlign="Middle" isBlankWhenNull="true" fontName="Aleo" fontSize="8"/>
+	<style name="data_text_right" style="data_text_left" hAlign="Right"/>
+	<style name="data_text_center" style="data_text_left" hAlign="Center"/>
+	<style name="data_date_left" style="data_text_left" pattern="dd.MM.yyyy"/>
+	<style name="data_date_right" style="data_text_right" pattern="dd.MM.yyyy"/>
+	<style name="data_date_center" style="data_text_center" pattern="dd.MM.yyyy"/>
+	<style name="data_number_left" style="data_text_left" pattern="#,###.###;(#,###.###-)"/>
+	<style name="data_number_right" style="data_text_right" pattern="#,###.###;(#,###.###-)"/>
+	<style name="data_number_center" style="data_text_center" pattern="#,###.###;(#,###.###-)"/>
+	<style name="heading_1_report" hAlign="Left" vAlign="Middle" isBlankWhenNull="true" fontName="Immenhausen" fontSize="14" isBold="true"/>
+	<style name="heading_2_report" style="heading_1_report" fontSize="10"/>
+	<style name="heading_data_text_left" hAlign="Left" vAlign="Middle" isBlankWhenNull="true" fontName="Immenhausen" fontSize="8"/>
+	<style name="heading_data_text_right" style="heading_data_text_left" hAlign="Right"/>
+	<style name="heading_data_text_center" style="heading_data_text_left" hAlign="Center"/>
+	<style name="heading_data_2_text_left" hAlign="Left" vAlign="Middle" isBlankWhenNull="true" fontName="Immenhausen" fontSize="10"/>
+	<style name="heading_data_2_text_right" style="heading_data_text_left" hAlign="Right"/>
+	<style name="heading_data_2_text_center" style="heading_data_text_left" hAlign="Center"/>
+	<style name="id_data_text" hAlign="Left" vAlign="Middle" isBlankWhenNull="true" fontSize="9"/>
+	<style name="id_data_text_address" style="id_data_text" fontSize="8"/>
+	<style name="id_data_text_top" style="id_data_text" vAlign="Top"/>
+	<style name="invoice_data_text_left" hAlign="Left" vAlign="Middle" isBlankWhenNull="true" fontName="Aleo" fontSize="10"/>
+	<style name="invoice_data_text_center" hAlign="Center"/>
+	<style name="invoice_data_text_right" hAlign="Right"/>
+	<style name="invoice_data_date_left" style="invoice_data_text_left" pattern="dd.MM.yyyy"/>
+	<style name="invoice_data_date_center" style="invoice_data_date_left" hAlign="Center"/>
+	<style name="invoice_data_date_right" style="invoice_data_date_left" hAlign="Right"/>
+	<style name="invoice_data_top_left" style="invoice_data_text_left" vAlign="Top"/>
+	<style name="invoice_pos_heading_left" hAlign="Left" vAlign="Top" isBlankWhenNull="true" fontName="Aleo" fontSize="10"/>
+	<style name="invoice_pos_heading_center" style="invoice_pos_heading_left" hAlign="Center"/>
+	<style name="invoice_pos_heading_right" style="invoice_pos_heading_left" hAlign="Right"/>
+	<style name="invoice_pos_data_left" hAlign="Left" vAlign="Top" isBlankWhenNull="true" fontName="Aleo" fontSize="10"/>
+	<style name="invoice_pos_data_center" style="invoice_pos_data_left" hAlign="Center"/>
+	<style name="invoice_pos_data_right" style="invoice_pos_data_left" hAlign="Right"/>
+	<style name="invoice_sender" hAlign="Left" vAlign="Middle" fontName="Immenhausen" fontSize="14"/>
+	<style name="invoice_sender_small" style="invoice_sender" fontSize="7"/>
+	<style name="invoice_subject" style="invoice_data_text_left" fontSize="14"/>
+	<style name="page_number_from" style="data_text_right"/>
+	<style name="page_number_to" style="data_text_left"/>
+	<style name="report_name" hAlign="Center"  vAlign="Middle" isBlankWhenNull="true" fontSize="6"/>
+	<style name="status" style="data_text_left"/>
+	<style name="xls_header" mode="Opaque" forecolor="#000000" backcolor="#D9D9D9"/>
+	<style name="xls_data" mode="Transparent" isBlankWhenNull="true"/>
+</jasperTemplate>
