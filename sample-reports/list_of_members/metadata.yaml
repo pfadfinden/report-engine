@@ -1,0 +1,19 @@
+id: list_of_members
+title: List of Members (Tabular)
+description: This report lists all active members with address and contact details.
+outputFormats: [pdf, xls, xlsx, csv]
+
+parameter:
+    - name: groupId
+      label: Group
+      description: ID of the group to create the report for
+      comment: Is not displayed in the mask when the report is executed, but is automatically filled with the data of the current context.
+      type: int
+
+versionHistory: 
+    - version: 1.0
+    - version: 1.1
+      createdOn: 2021-10-15
+      description: Sample Version
+        
+      

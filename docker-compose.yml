@@ -1,0 +1,14 @@
+services:
+    sample-db:
+        image: mysql:8.0
+        environment:
+            - MYSQL_ROOT_PASSWORD=development
+        volumes:
+            - ./sample-db-dump:/docker-entrypoint-initdb.d:ro
+        ports:
+            - "3306:3306"
+
+    whodb:
+        image: clidey/whodb
+        ports:
+            - "8080:8080"
