@@ -10,6 +10,8 @@
     <packaging>pom</packaging>
 
     <modules>
+        <module>executor</module>
+        <module>azure-report-executor</module>
         <module>preprocessor</module>
     </modules>
 </project>

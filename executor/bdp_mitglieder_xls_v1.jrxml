@@ -1,0 +1,364 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Created with Jaspersoft Studio version 6.5.1.final using JasperReports Library version 6.5.1  -->
+<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="bdp_mitglieder_xls_v1.9" pageWidth="2400" pageHeight="540" orientation="Landscape" columnWidth="2400" leftMargin="0" rightMargin="0" topMargin="0" bottomMargin="0" isIgnorePagination="true" uuid="897814a8-a756-4a44-acda-8c62f8a39fcc">
+	<property name="net.sf.jasperreports.export.xls.detect.cell.type" value="true"/>
+	<property name="net.sf.jasperreports.export.xls.exclude.origin.keep.first.band.1" value="columnHeader"/>
+	<property name="net.sf.jasperreports.export.xls.freeze.row" value="2"/>
+	<property name="net.sf.jasperreports.export.xls.remove.empty.space.between.rows" value="true"/>
+	<property name="net.sf.jasperreports.export.xls.white.page.background" value="false"/>
+	<property name="net.sf.jasperreports.page.break.no.pagination" value="apply"/>
+	<property name="net.sf.jasperreports.print.keep.full.text" value="true"/>
+	<template><![CDATA["ReportStyles.jrtx"]]></template>
+	<parameter name="h_grpId" class="java.lang.Long"/>
+	<queryString>
+		<![CDATA[SELECT 
+    Gruppierung1.nummer,
+    CASE
+        WHEN Ebene1.tiefe = 1 THEN CONCAT(Ebene1.name, ' ', Gruppierung1.name)
+        WHEN Ebene2.tiefe = 1 THEN CONCAT(Ebene2.name, ' ', Gruppierung2.name)
+        WHEN Ebene3.tiefe = 1 THEN CONCAT(Ebene3.name, ' ', Gruppierung3.name)
+        WHEN Ebene4.tiefe = 1 THEN CONCAT(Ebene4.name, ' ', Gruppierung4.name)
+    END AS landesverband,
+    CASE
+        WHEN Ebene1.tiefe = 2 THEN CONCAT(Ebene1.name, ' ', Gruppierung1.name)
+        WHEN Ebene2.tiefe = 2 THEN CONCAT(Ebene2.name, ' ', Gruppierung2.name)
+        WHEN Ebene3.tiefe = 2 THEN CONCAT(Ebene3.name, ' ', Gruppierung3.name)
+        WHEN Ebene4.tiefe = 2 THEN CONCAT(Ebene4.name, ' ', Gruppierung4.name)
+    END AS bezirk,
+    CASE
+        WHEN Ebene1.tiefe = 3 THEN CONCAT(Ebene1.name, ' ', Gruppierung1.name)
+        WHEN Ebene2.tiefe = 3 THEN CONCAT(Ebene2.name, ' ', Gruppierung2.name)
+        WHEN Ebene3.tiefe = 3 THEN CONCAT(Ebene3.name, ' ', Gruppierung3.name)
+        WHEN Ebene4.tiefe = 3 THEN CONCAT(Ebene4.name, ' ', Gruppierung4.name)
+    END AS stamm,
+    Gruppierung1.sitzOrt,
+    Geschlecht.nameEnc AS Geschlecht,
+    Identitaet.nachnameEnc,
+    Identitaet.vornameEnc,
+    Identitaet.spitzname,
+    Identitaet.geburtsDatumEnc,
+    Identitaet.strasseEnc,
+    Identitaet.nameZusatz,
+    CASE
+        WHEN Land.defaultCountry = 0 THEN Land.countryCode2
+        ELSE ''
+    END AS land,
+    Identitaet.plzEnc,
+    Identitaet.ortEnc,
+    Identitaet.telefon1Enc,
+    Identitaet.telefon2Enc,
+    Identitaet.telefon3Enc,
+    Identitaet.eintrittsdatum,
+    Identitaet.mitgliedsNummer,
+    Identitaet.emailEnc,
+    Identitaet.emailVertretungsberechtigter,
+    EorDynAbstractValue.textVal AS eMail2,
+    Taetigkeit.id AS mitgliedschaft_id,
+    Taetigkeit.name AS mitgliedschaft,
+    GROUP_CONCAT(DISTINCT MID(Taetigkeit2.name, 2)
+        ORDER BY Taetigkeit2.ordering
+        SEPARATOR ', ') AS gruppe
+FROM
+    Identitaet
+        LEFT JOIN
+    TaetigkeitAssignment ON Identitaet.id = TaetigkeitAssignment.Mitglied_id
+        LEFT JOIN
+    Taetigkeit ON TaetigkeitAssignment.taetigkeit_id = Taetigkeit.id
+        LEFT JOIN
+    Gruppierung AS Gruppierung1 ON TaetigkeitAssignment.gruppierung_id = Gruppierung1.id
+        LEFT JOIN
+    Gruppierung AS Gruppierung2 ON Gruppierung1.parent_gruppierung_id = Gruppierung2.id
+        LEFT JOIN
+    Gruppierung AS Gruppierung3 ON Gruppierung2.parent_gruppierung_id = Gruppierung3.id
+        LEFT JOIN
+    Gruppierung AS Gruppierung4 ON Gruppierung3.parent_gruppierung_id = Gruppierung4.id
+        LEFT JOIN
+    (SELECT
+        id,
+            REPLACE(name, 'Landesunmittelbar', 'Landesverband') AS name,
+            tiefe
+    FROM
+        Ebene) AS Ebene1 ON Gruppierung1.ebene_id = Ebene1.id
+        LEFT JOIN
+    (SELECT
+        id,
+            REPLACE(name, 'Landesunmittelbar', 'Landesverband') AS name,
+            tiefe
+    FROM
+        Ebene) AS Ebene2 ON Gruppierung2.ebene_id = Ebene2.id
+        LEFT JOIN
+    (SELECT
+        id,
+            REPLACE(name, 'Landesunmittelbar', 'Landesverband') AS name,
+            tiefe
+    FROM
+        Ebene) AS Ebene3 ON Gruppierung3.ebene_id = Ebene3.id
+        LEFT JOIN
+    (SELECT
+        id,
+            REPLACE(name, 'Landesunmittelbar', 'Landesverband') AS name,
+            tiefe
+    FROM
+        Ebene) AS Ebene4 ON Gruppierung4.ebene_id = Ebene4.id
+        LEFT JOIN
+    Land ON Identitaet.land_id = Land.id
+        LEFT JOIN
+    Geschlecht ON Identitaet.geschlecht_id = Geschlecht.id
+        LEFT JOIN
+    Identitaet_EorDynAbstractValue ON Identitaet.id = Identitaet_EorDynAbstractValue.Identitaet_id
+        LEFT JOIN
+    EorDynAbstractValue ON Identitaet_EorDynAbstractValue.dynFieldValues_id = EorDynAbstractValue.id AND 
+		EorDynAbstractValue.eorDynFieldDef_id = (SELECT id FROM EorDynFieldDef WHERE EorDynFieldDef.fieldName = "eMail2")
+        LEFT JOIN
+    TaetigkeitAssignment AS TaetigkeitAssignment2 ON Identitaet.id = TaetigkeitAssignment2.mitglied_id
+        LEFT JOIN
+    Taetigkeit AS Taetigkeit2 ON TaetigkeitAssignment2.taetigkeit_id = Taetigkeit2.id
+        AND Taetigkeit2.name LIKE '.%'
+WHERE
+    Identitaet.status = 'AKTIV'
+        AND (Gruppierung1.id = $P{h_grpId}
+        OR Gruppierung2.id = $P{h_grpId}
+        OR Gruppierung3.id = $P{h_grpId}
+        OR Gruppierung4.id = $P{h_grpId})
+        AND Taetigkeit.DTYPE = 'Mitgliedschaft'
+        AND Taetigkeit.disabled = 0
+        AND (TaetigkeitAssignment.aktivVon IS NULL
+        OR TaetigkeitAssignment.aktivVon <= CURDATE())
+        AND (TaetigkeitAssignment.aktivBis IS NULL
+        OR TaetigkeitAssignment.aktivBis >= CURDATE())
+        AND (TaetigkeitAssignment2.aktivVon IS NULL
+        OR TaetigkeitAssignment2.aktivVon <= CURDATE())
+        AND (TaetigkeitAssignment2.aktivBis IS NULL
+        OR TaetigkeitAssignment2.aktivBis >= CURDATE())         
+GROUP BY Identitaet.id]]>
+	</queryString>
+	<field name="nummer" class="java.lang.String"/>
+	<field name="landesverband" class="java.lang.String"/>
+	<field name="bezirk" class="java.lang.String"/>
+	<field name="stamm" class="java.lang.String"/>
+	<field name="sitzOrt" class="java.lang.String"/>
+	<field name="Geschlecht" class="java.lang.String"/>
+	<field name="nachnameEnc" class="java.lang.String"/>
+	<field name="vornameEnc" class="java.lang.String"/>
+	<field name="spitzname" class="java.lang.String"/>
+	<field name="geburtsDatumEnc" class="java.lang.String"/>
+	<field name="strasseEnc" class="java.lang.String"/>
+	<field name="nameZusatz" class="java.lang.String"/>
+	<field name="land" class="java.lang.String"/>
+	<field name="plzEnc" class="java.lang.String"/>
+	<field name="ortEnc" class="java.lang.String"/>
+	<field name="telefon1Enc" class="java.lang.String"/>
+	<field name="telefon2Enc" class="java.lang.String"/>
+	<field name="telefon3Enc" class="java.lang.String"/>
+	<field name="eintrittsdatum" class="java.sql.Timestamp"/>
+	<field name="mitgliedsNummer" class="java.lang.Long"/>
+	<field name="emailEnc" class="java.lang.String"/>
+	<field name="emailVertretungsberechtigter" class="java.lang.String"/>
+	<field name="eMail2" class="java.lang.String"/>
+	<field name="mitgliedschaft_id" class="java.lang.Long"/>
+	<field name="mitgliedschaft" class="java.lang.String"/>
+	<field name="gruppe" class="java.lang.String"/>
+	<sortField name="nummer"/>
+	<sortField name="nachnameEnc"/>
+	<sortField name="vornameEnc"/>
+	<columnHeader>
+		<band height="15" splitType="Stretch">
+			<staticText>
+				<reportElement style="xls_header" x="0" y="0" width="100" height="15" uuid="f329bf62-2112-4306-b976-54e28e80f39e"/>
+				<text><![CDATA[Landesverband]]></text>
+			</staticText>
+			<staticText>
+				<reportElement style="xls_header" x="100" y="0" width="100" height="15" uuid="b75640b5-91c3-457f-a739-705cdf69a271"/>
+				<text><![CDATA[Bezirk]]></text>
+			</staticText>
+			<staticText>
+				<reportElement style="xls_header" x="200" y="0" width="100" height="15" uuid="624c55a7-d8e9-491b-bc57-6ca3db19c726"/>
+				<text><![CDATA[Stamm]]></text>
+			</staticText>
+			<staticText>
+				<reportElement style="xls_header" x="300" y="0" width="100" height="15" uuid="8bed0768-b844-42c6-b3f2-ddc8a6f43c69"/>
+				<text><![CDATA[Sitz (Ort)]]></text>
+			</staticText>
+			<staticText>
+				<reportElement style="xls_header" x="400" y="0" width="100" height="15" uuid="9153dcd6-b9cc-404f-9f69-ae244e29b6a8"/>
+				<text><![CDATA[Geschlecht]]></text>
+			</staticText>
+			<staticText>
+				<reportElement style="xls_header" x="500" y="0" width="100" height="15" uuid="6df202bf-108b-4b01-b006-1f686ff9ca67"/>
+				<text><![CDATA[Nachname]]></text>
+			</staticText>
+			<staticText>
+				<reportElement style="xls_header" x="600" y="0" width="100" height="15" uuid="a7002b9c-0f27-4405-88d5-86a89ae4195e"/>
+				<text><![CDATA[Vorname]]></text>
+			</staticText>
+			<staticText>
+				<reportElement style="xls_header" x="700" y="0" width="100" height="15" uuid="bd8a1da1-2e85-40d0-b1f6-0dffe1de58c0"/>
+				<text><![CDATA[Spitzname]]></text>
+			</staticText>
+			<staticText>
+				<reportElement style="xls_header" x="800" y="0" width="100" height="15" uuid="b888d668-fd53-4a62-916b-1840f781fae3"/>
+				<text><![CDATA[Name (Zusatz)]]></text>
+			</staticText>
+			<staticText>
+				<reportElement style="xls_header" x="900" y="0" width="100" height="15" uuid="7ee0e094-e380-4e3f-85b6-fc5ea17aeb98"/>
+				<text><![CDATA[Straße]]></text>
+			</staticText>
+			<staticText>
+				<reportElement style="xls_header" x="1000" y="0" width="100" height="15" uuid="3d9c8676-e89f-4663-96e9-ce4141f22fab"/>
+				<text><![CDATA[Land]]></text>
+			</staticText>
+			<staticText>
+				<reportElement style="xls_header" x="1100" y="0" width="100" height="15" uuid="72f21c2b-5024-4ce1-8d9c-6683233a76dd"/>
+				<text><![CDATA[PLZ]]></text>
+			</staticText>
+			<staticText>
+				<reportElement style="xls_header" x="1200" y="0" width="100" height="15" uuid="be935f42-b71f-491b-9fe7-746923baa97b"/>
+				<text><![CDATA[Ort]]></text>
+			</staticText>
+			<staticText>
+				<reportElement style="xls_header" x="1300" y="0" width="100" height="15" uuid="eb00d649-00d4-4264-a85c-94d8986c4665"/>
+				<text><![CDATA[Telefon 1]]></text>
+			</staticText>
+			<staticText>
+				<reportElement style="xls_header" x="1400" y="0" width="100" height="15" uuid="cf603741-a2f1-4316-9759-141562b9c0b9"/>
+				<text><![CDATA[Telefon 2]]></text>
+			</staticText>
+			<staticText>
+				<reportElement style="xls_header" x="1500" y="0" width="100" height="15" uuid="bce43ee6-b95a-4434-8218-f43ed7b9b90c"/>
+				<text><![CDATA[Mobiltelefon]]></text>
+			</staticText>
+			<staticText>
+				<reportElement style="xls_header" x="1600" y="0" width="100" height="15" uuid="e67649b1-f6b2-42ba-b040-2e15b5013256"/>
+				<text><![CDATA[E-Mail]]></text>
+			</staticText>
+			<staticText>
+				<reportElement style="xls_header" x="1700" y="0" width="100" height="15" uuid="db2d9714-d093-4663-a703-cdd743795fe9"/>
+				<text><![CDATA[E-Mail (Vertretungsberechtigte)]]></text>
+			</staticText>
+			<staticText>
+				<reportElement style="xls_header" x="1800" y="0" width="100" height="15" uuid="900e6e2f-660f-4b68-ae10-b7a4ff359db2"/>
+				<text><![CDATA[E-Mail 2]]></text>
+			</staticText>
+			<staticText>
+				<reportElement style="xls_header" x="1900" y="0" width="100" height="15" uuid="a852a290-be9f-4aaa-a1b8-36d31f8757db"/>
+				<text><![CDATA[Geburtsdatum]]></text>
+			</staticText>
+			<staticText>
+				<reportElement style="xls_header" x="2000" y="0" width="100" height="15" uuid="0e4236f8-fcb3-45be-b793-ce233e43946a"/>
+				<text><![CDATA[Eintrittsdatum]]></text>
+			</staticText>
+			<staticText>
+				<reportElement style="xls_header" x="2100" y="0" width="100" height="15" uuid="bd586bc1-7c25-4777-a5a2-aea91a849c0c"/>
+				<text><![CDATA[Mitgliedsnummer]]></text>
+			</staticText>
+			<staticText>
+				<reportElement style="xls_header" x="2200" y="0" width="100" height="15" uuid="3419490b-fd81-4f4a-ab3e-be347d6dabba"/>
+				<text><![CDATA[Mitgliedsart]]></text>
+			</staticText>
+			<staticText>
+				<reportElement style="xls_header" x="2300" y="0" width="100" height="15" uuid="6b63e6ab-f949-472a-b2e4-eaaac07834ee"/>
+				<text><![CDATA[Gruppe(n)]]></text>
+			</staticText>
+		</band>
+	</columnHeader>
+	<detail>
+		<band height="15" splitType="Stretch">
+			<textField>
+				<reportElement style="xls_data" x="0" y="0" width="100" height="15" uuid="78e8c213-4d68-4766-b497-75732f8723eb"/>
+				<textFieldExpression><![CDATA[$F{landesverband}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement style="xls_data" x="100" y="0" width="100" height="15" uuid="591ef0a8-4c6f-4fb5-8f24-93f763638295"/>
+				<textFieldExpression><![CDATA[$F{bezirk}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement style="xls_data" x="200" y="0" width="100" height="15" uuid="050073ee-7476-4a6f-a5d3-8636dfe92f93"/>
+				<textFieldExpression><![CDATA[$F{stamm}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement style="xls_data" x="300" y="0" width="100" height="15" uuid="af63fff0-af16-4770-8f04-03fd2243542a"/>
+				<textFieldExpression><![CDATA[$F{sitzOrt}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement style="xls_data" x="400" y="0" width="100" height="15" uuid="46ac7005-7f48-462f-9b57-cbe082083f8c"/>
+				<textFieldExpression><![CDATA[$F{Geschlecht}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement style="xls_data" x="500" y="0" width="100" height="15" uuid="3197f1b9-2b8b-4a56-a630-3257b0898fb0"/>
+				<textFieldExpression><![CDATA[$F{nachnameEnc}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement style="xls_data" x="600" y="0" width="100" height="15" uuid="0c41eeae-540b-4261-ad71-861bc3784a33"/>
+				<textFieldExpression><![CDATA[$F{vornameEnc}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement style="xls_data" x="700" y="0" width="100" height="15" uuid="15c2bbbe-68f6-461d-b874-a9dd0f869204"/>
+				<textFieldExpression><![CDATA[$F{spitzname}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement style="xls_data" x="800" y="0" width="100" height="15" uuid="b7c1d0fd-951d-47a8-92a9-eaf69cf9d92d"/>
+				<textFieldExpression><![CDATA[$F{nameZusatz}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement style="xls_data" x="900" y="0" width="100" height="15" uuid="2ff2c810-3038-4f71-830d-bd2d3c97c4de"/>
+				<textFieldExpression><![CDATA[$F{strasseEnc}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement style="xls_data" x="1000" y="0" width="100" height="15" uuid="dd33079e-1421-4c94-b5a2-b58dc33520bd"/>
+				<textFieldExpression><![CDATA[$F{land}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement style="xls_data" x="1100" y="0" width="100" height="15" uuid="00bec698-6aa8-4fb2-a3cb-ad4b912546b0"/>
+				<textFieldExpression><![CDATA[$F{plzEnc}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement style="xls_data" x="1200" y="0" width="100" height="15" uuid="5a49e550-d7b9-414a-89a7-aee19c92d4fb"/>
+				<textFieldExpression><![CDATA[$F{ortEnc}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement style="xls_data" x="1300" y="0" width="100" height="15" uuid="c7e67f16-25f2-4011-ba51-ceb1b55cb87a"/>
+				<textFieldExpression><![CDATA[$F{telefon1Enc}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement style="xls_data" x="1400" y="0" width="100" height="15" uuid="37438d2e-2522-420f-bc6d-dd2c99c84ea7"/>
+				<textFieldExpression><![CDATA[$F{telefon2Enc}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement style="xls_data" x="1500" y="0" width="100" height="15" uuid="728452bd-3ae6-46aa-9800-71aef6d58cc6"/>
+				<textFieldExpression><![CDATA[$F{telefon3Enc}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement style="xls_data" x="1600" y="0" width="100" height="15" uuid="db75fb77-17c4-4f0c-b9a0-8a6177c7ddaa"/>
+				<textFieldExpression><![CDATA[$F{emailEnc}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement style="xls_data" x="1700" y="0" width="100" height="15" uuid="5502f87c-9644-4cb7-80f4-0fe53001196d"/>
+				<textFieldExpression><![CDATA[$F{emailVertretungsberechtigter}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement style="xls_data" x="1800" y="0" width="100" height="15" uuid="d618f690-ece3-4ed8-8f6f-c45dd0280aa9"/>
+				<textFieldExpression><![CDATA[$F{eMail2}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement style="xls_data" x="1900" y="0" width="100" height="15" uuid="6b52f2c7-578f-4c1f-a5a7-92fe64405429"/>
+				<textFieldExpression><![CDATA[$F{geburtsDatumEnc}.substring( 8, 10 )+"."+$F{geburtsDatumEnc}.substring( 5, 7 )+"."+$F{geburtsDatumEnc}.substring( 0, 4 )]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement style="xls_data" x="2000" y="0" width="100" height="15" uuid="0e0713f9-a9ff-40bb-a198-11c2ca1ad424"/>
+				<textFieldExpression><![CDATA[new SimpleDateFormat("dd.MM.yyyy").format($F{eintrittsdatum})]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement style="xls_data" x="2100" y="0" width="100" height="15" uuid="1934d8bb-2d5c-44df-86ec-d5f65631fc06"/>
+				<textFieldExpression><![CDATA[$F{mitgliedsNummer}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement style="xls_data" x="2200" y="0" width="100" height="15" uuid="66eccb82-a903-4468-8819-b1e3be655d1d"/>
+				<textFieldExpression><![CDATA[$F{mitgliedschaft}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement style="xls_data" x="2300" y="0" width="100" height="15" uuid="76bee3f4-ee4e-4806-9d91-80ce61d51212"/>
+				<textFieldExpression><![CDATA[$F{gruppe}]]></textFieldExpression>
+			</textField>
+		</band>
+	</detail>
+</jasperReport>
