@@ -10,5 +10,6 @@
     <packaging>pom</packaging>
 
     <modules>
+        <module>preprocessor</module>
     </modules>
 </project>
