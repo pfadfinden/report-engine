@@ -5,8 +5,8 @@ runs:
   steps:
     - name: Download CLI JAR 
       run: | 
-        curl -L -o cli.jar \ 
-        https://github.com/<org>/<repo>/releases/latest/download/preprocessor.jar 
+        curl -L -o preprocessor.jar \
+        https://github.com/pfadfinden/report-engine/releases/latest/download/preprocessor.jar 
       shell: bash
 
     - name: Run CLI
