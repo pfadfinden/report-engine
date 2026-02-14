@@ -1,5 +1,4 @@
 de.pfadfinden.reports_engine.preprocessor.Tasks.CompileJasperReportsTask
-de.pfadfinden.reports_engine.preprocessor.Tasks.ValidateJasperReportsTask
 de.pfadfinden.reports_engine.preprocessor.Tasks.CopySourceTask
 de.pfadfinden.reports_engine.preprocessor.Tasks.GenerateMarkdownDetailsPublicTask
 de.pfadfinden.reports_engine.preprocessor.Tasks.GenerateMarkdownOverviewTask

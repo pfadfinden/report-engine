@@ -1,6 +1,7 @@
 package de.pfadfinden.reports_engine.preprocessor.Metadata;
 
 import java.io.Serializable;
+import java.util.Objects;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -23,7 +24,7 @@ public class ParameterMetadata {
     @JsonBackReference
     @ManyToOne
     @MapsId("reportId")
-	@JoinColumn(name="report_id")
+    @JoinColumn(name = "report_id")
     public ReportMetadata report;
 
     public String label = "";
@@ -32,14 +33,36 @@ public class ParameterMetadata {
     public String type;
 
     @Embeddable
-    public class ParameterId implements Serializable {
+    public static class ParameterId implements Serializable {
         @Column(name = "report_id")
         private String reportId;
-    
+
         @Column(name = "name")
         private String name;
-    }
 
+        public ParameterId() {
+        }
+
+        public ParameterId(String reportId, String name) {
+            this.reportId = reportId;
+            this.name = name;
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o)
+                return true;
+            if (!(o instanceof ParameterId))
+                return false;
+            ParameterId that = (ParameterId) o;
+            return Objects.equals(reportId, that.reportId) && Objects.equals(name, that.name);
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(reportId, name);
+        }
+    }
 
     public ParameterMetadata() {
         this.id = new ParameterId();

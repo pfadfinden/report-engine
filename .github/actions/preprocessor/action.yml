@@ -1,0 +1,17 @@
+name: "Reports Engine Preprocessor"
+description: "Runs the preprocessor package on a reports directory"
+runs:
+  using: "composite"
+  steps:
+    - name: Download CLI JAR 
+      run: | 
+        curl -L -o cli.jar \ 
+        https://github.com/<org>/<repo>/releases/latest/download/preprocessor.jar 
+      shell: bash
+
+    - name: Run CLI
+      run: java -jar preprocessor.jar ${{ inputs.args }}
+inputs:
+  args:
+    required: false
+    default: ""
