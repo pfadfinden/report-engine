@@ -10,6 +10,7 @@ runs:
       shell: bash
 
     - name: Run CLI
+      shell: bash
       run: java -jar preprocessor.jar ${{ inputs.args }}
 inputs:
   args:
