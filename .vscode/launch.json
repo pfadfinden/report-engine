@@ -1,0 +1,34 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "type": "java",
+            "name": "Preprocess",
+            "request": "launch",
+            "mainClass": "de.pfadfinden.reports_engine.preprocessor.Preprocess",
+            "projectName": "preprocessor"
+        },
+        {
+            "type": "java",
+            "name": "Main",
+            "request": "launch",
+            "mainClass": "de.pfadfinden.reports_engine.preprocessor.Main",
+            "projectName": ""
+        },
+        {
+            "type": "java",
+            "name": "Main",
+            "request": "launch",
+            "mainClass": "de.pfadfinden.reports_engine.preprocessor.Main",
+            "projectName": "preprocessor"
+        },
+        {
+            "name": "Attach to Java Functions",
+            "type": "java",
+            "request": "attach",
+            "hostName": "127.0.0.1",
+            "port": 5005,
+            "preLaunchTask": "func: host start"
+        }
+    ]
+}

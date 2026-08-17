@@ -1,0 +1,9 @@
+{
+    "java.configuration.updateBuildConfiguration": "interactive",
+    "debug.internalConsoleOptions": "neverOpen",
+    "azureFunctions.javaBuildTool": "maven",
+    "azureFunctions.deploySubpath": "azure-report-executor/target/azure-functions/azure-report-executor-1748544512735",
+    "azureFunctions.projectLanguage": "Java",
+    "azureFunctions.projectRuntime": "~4",
+    "azureFunctions.preDeployTask": "package (functions)",
+}

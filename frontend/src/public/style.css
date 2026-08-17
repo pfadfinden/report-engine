@@ -1,0 +1,306 @@
+/* 1. Use a more-intuitive box-sizing model */
+*,
+*::before,
+*::after {
+    box-sizing: border-box;
+}
+
+/* 2. Remove default margin */
+* {
+    margin: 0;
+}
+
+/* 3. Enable keyword animations */
+@media (prefers-reduced-motion: no-preference) {
+    html {
+        interpolate-size: allow-keywords;
+    }
+}
+
+body {
+    /* 4. Add accessible line-height */
+    line-height: 1.5;
+    /* 5. Improve text rendering */
+    -webkit-font-smoothing: antialiased;
+}
+
+/* 6. Improve media defaults */
+img,
+picture,
+video,
+canvas,
+svg {
+    display: block;
+    max-width: 100%;
+}
+
+/* 7. Inherit fonts for form controls */
+input,
+button,
+textarea,
+select {
+    font: inherit;
+}
+
+/* 8. Avoid text overflows */
+p,
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+    overflow-wrap: break-word;
+}
+
+/* 9. Improve line wrapping */
+p {
+    text-wrap: pretty;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+    text-wrap: balance;
+}
+
+/*
+    10. Create a root stacking context
+  */
+#root,
+#__next {
+    isolation: isolate;
+}
+
+
+/* ##################################### */
+
+:root {
+    --interaction: rgb(29, 72, 153);
+    --interaction-fg: #fff;
+    --bdp-mitternachtsblau: var(--interaction);
+    --bdp-sonnengelb: #ffcb04;
+    --header-bg: var(--bdp-sonnengelb);
+    --w-text: 70ch;
+}
+
+html {
+    line-height: 1.5;
+    -webkit-text-size-adjust: 100%;
+    font-family: Inter, Roboto, system-ui, -apple-system, Segoe UI, Helvetica Neue, Arial, Noto Sans, sans-serif, Apple Color Emoji, Segoe UI Emoji, Segoe UI Symbol, Noto Color Emoji;
+    font-feature-settings: normal;
+    font-variation-settings: normal;
+    -moz-tab-size: 4;
+    -o-tab-size: 4;
+    tab-size: 4;
+    -webkit-tap-highlight-color: transparent
+}
+
+body>header {
+    background-color: var(--header-bg);
+    color: white;
+    padding: 0.25rem 1rem;
+    font-weight: bold;
+    font-size: 120%;
+}
+
+main {
+    max-width: 920px;
+    margin-inline: auto;
+    margin-bottom: 5rem;
+    padding: 1rem;
+}
+
+main header {
+    margin-bottom: 2rem;
+}
+
+fieldset {
+    margin-bottom: 2rem;
+    border: 1px solid #e5e7eb;
+    padding: 1.5rem;
+    border-radius: 4px;
+}
+
+fieldset legend {
+    background: #fafafa;
+    border-radius: 3px;
+    ;
+    border-width: 1px;
+    border-style: solid;
+    border-color: #eee;
+    padding: 1rem 0.875rem;
+    font-weight: 700;
+}
+
+.form-error {
+    color: #d30014;
+}
+
+
+label {
+    padding-bottom: 0.5rem;
+}
+
+input,
+select {
+    width: 100%;
+    --form-border: #e0e0e0;
+    border-width: 1px;
+    border-style: solid;
+    border-color: var(--form-border);
+    border-radius: 4px;
+    background-color: white;
+    padding-block: 0.5rem;
+    padding-inline: 0.5rem;
+    outline: transparent;
+    line-height: 1.25;
+    transition:
+        background 0.2s,
+        color 0.2s,
+        border-color 0.2s,
+        outline-color 0.2s,
+        box-shadow 0.2s;
+}
+
+input:focus,
+select:focus {
+    --form-border: var(--interaction);
+    box-shadow: 0 0 0 0.2rem #a9c2ef;
+}
+
+button {
+    background-color: var(--interaction);
+    color: var(--interaction-fg);
+    border: none;
+    padding: 0.5rem 1rem;
+    border-radius: 4px;
+}
+
+.question {
+    max-width: var(--w-text);
+}
+
+.question>* {
+    display: block;
+}
+
+.question~.question,
+.question~button {
+    margin-top: 1rem;
+}
+
+
+.alert {
+    --alert-bg: #ccc;
+    --alert-fg: #111;
+    padding: 1rem;
+    background-color: var(--alert-bg);
+    color: var(--alert-fg);
+    border-radius: 4px;
+}
+
+.alert_title {
+    font-weight: 700;
+}
+
+.alert--info {
+    --alert-bg: #a9c2ef;
+    --alert-fg: #102956;
+}
+
+aside {
+    margin-top: 2rem;
+    border-top: 1px solid #ccc;
+}
+
+aside>div {
+    margin-top: 2rem;
+}
+
+aside>div>* {
+    margin-top: 0.5rem;
+}
+
+.debug-info {
+    background-color: #eee;
+    border-radius: 3px;
+    padding: 1rem;
+}
+
+.debug-info .collapsible_content {
+    box-sizing: border-box;
+    font-family: monospace;
+}
+
+.debug-info label:hover {
+    color: var(--interaction);
+    text-decoration: underline;
+}
+
+.collapsible>input[type='checkbox'] {
+    display: none;
+}
+
+.collapsible label {
+    display: block;
+    font-weight: bold;
+    cursor: pointer;
+    border-radius: 7px;
+    transition: all 0.25s ease-out;
+    padding: 0;
+}
+
+
+
+.collapsible label::before {
+    content: ' ';
+    display: inline-block;
+    border-top: 5px solid transparent;
+    border-bottom: 5px solid transparent;
+    border-left: 5px solid currentColor;
+    vertical-align: middle;
+    margin-right: .7rem;
+    transform: translateY(-2px);
+    transition: transform .2s ease-out;
+}
+
+.toggle:checked+.lbl-toggle::before {
+    transform: rotate(90deg) translateX(-3px);
+}
+
+.collapsible_content {
+    max-height: 0px;
+    overflow: hidden;
+    transition: max-height .25s ease-in-out;
+}
+
+.collapsible>input:checked+label+.collapsible_content {
+    padding-top: 0.5rem;
+    max-height: 350px;
+}
+
+.toggle:checked+.lbl-toggle {
+    border-bottom-right-radius: 0;
+    border-bottom-left-radius: 0;
+}
+
+.btn--secondary {
+    background-color: #a9c2ef;
+    color: #111;
+}
+
+button:has(+ button) {
+    margin-inline-end: 1rem;
+}
+
+button:disabled {
+    background-color: #bbb;
+}
+
+.w-text {
+    max-width: var(--w-text);
+}

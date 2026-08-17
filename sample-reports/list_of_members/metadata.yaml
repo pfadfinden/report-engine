@@ -8,7 +8,11 @@ parameter:
       label: Group
       description: ID of the group to create the report for
       comment: Is not displayed in the mask when the report is executed, but is automatically filled with the data of the current context.
-      type: int
+      type: number
+    - name: ageMin
+      label: Mindestalter
+      description: Zeige nur Personen deren Alter mindestens x ist.
+      type: number
 
 versionHistory: 
     - version: 1.0
