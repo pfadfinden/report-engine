@@ -1,0 +1,22 @@
+{
+  "ts-node": {
+    // ts-node normally only compiles files reachable via require()/import from the entry
+    // point; without this, src/auth/*.d.ts (pure ambient `declare global` augmentations,
+    // never imported by name) are silently skipped and `req.principal`/`req.session.*`
+    // fail to type-check at runtime even though `tsc`/typecheck (which use "include") pass.
+    "files": true
+  },
+  "compilerOptions": {
+    "target": "es6",
+    "module": "commonjs",
+    "rootDir": "./src",
+    "outDir": "./dist",
+    "strict": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "types": ["node", "jest", "@types/jest"]
+  },
+  "include": ["src/**/*.ts"],
+  "exclude": ["node_modules", "src/**/*.test.ts"]
+}

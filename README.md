@@ -56,4 +56,10 @@ See the documentation [here](preprocessor/README.md) for further information.
 
 ### Frontend
 
-To Be Developed
+TypeScript/Express web app for selecting reports and downloading generated output, with OIDC login.
+See [frontend/README.md](frontend/README.md) for details.
+
+## Contributing
+
+See [CONTRIBUTING.md](CONTRIBUTING.md) for how to set up a local dev environment and run the checks
+used in CI.

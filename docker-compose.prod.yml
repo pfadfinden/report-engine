@@ -1,0 +1,55 @@
+# Production stack: builds the hardened "production" image (see frontend/Dockerfile) and
+# runs only the frontend - no sample DB, no bundled Keycloak. Point OIDC_ISSUER_URL at a
+# real identity provider and REPORTS_DB_SOURCE at "remote" (the production image does not
+# contain a local reports.db - see .env.example).
+#
+# Usage:
+#   cp frontend/.env.example frontend/.env   # fill in real secrets, never commit this file
+#   docker compose -f docker-compose.prod.yml up -d --build
+services:
+    frontend:
+        build:
+            context: ./frontend
+            target: production
+        image: mv-reports-frontend:latest
+        restart: unless-stopped
+        init: true # runs the container's PID 1 under tini so signals (e.g. SIGTERM) are handled correctly
+        read_only: true
+        tmpfs:
+            - /tmp
+        cap_drop:
+            - ALL
+        security_opt:
+            - no-new-privileges:true
+        ports:
+            - "3000:3000"
+        env_file:
+            - ./frontend/.env
+        environment:
+            NODE_ENV: production
+            REPORTS_DB_SOURCE: remote
+            REPORTS_DB_CACHE_DIR: /usr/src/app/.cache/reports-db
+        volumes:
+            # the only writable path the app needs: the downloaded/cached remote reports.db
+            - reports-db-cache:/usr/src/app/.cache
+        healthcheck:
+            test: ["CMD", "node", "-e", "require('http').get({host:'localhost',port:process.env.PORT||3000,path:'/healthz'},r=>process.exit(r.statusCode===200?0:1)).on('error',()=>process.exit(1))"]
+            interval: 30s
+            timeout: 3s
+            start_period: 10s
+            retries: 3
+        deploy:
+            resources:
+                limits:
+                    cpus: "1.0"
+                    memory: 512M
+                reservations:
+                    memory: 128M
+        logging:
+            driver: json-file
+            options:
+                max-size: "10m"
+                max-file: "3"
+
+volumes:
+    reports-db-cache:

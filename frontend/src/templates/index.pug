@@ -1,0 +1,114 @@
+extends layout
+
+
+block content
+  main
+    header
+      h1 Bericht erstellen
+      p.w-text Auf dieser Seite kannst du erweiterte Berichte über Gruppen im BdP erstellen. Die Reportdaten werden täglich gegen 2 Uhr mit der Mitgliederverwaltung synchronisiert.<br/>Einfache Auswertungen und Exporte der aktuellen Daten lassen sich auch in der Mitgliederverwaltung selbst machen.
+
+    if availableGroups.length
+
+      form(method="GET", id="requestReport")
+        fieldset
+          legend Gruppe
+          
+          div.question
+            label Für welche Gruppe soll der Bericht erstellt werden?
+            select(name="groupId")
+              each item in groupOptions
+                option(value=item.group.id, selected=(selectedGroup && selectedGroup.id === item.group.id), autocomplete='off')= item.label 
+            if !selectedGroup && requestParams.groupId
+              small.form-error Die vorausgewählte Gruppe exisitert nicht oder du hast keine ausreichenden Rechte für diese Gruppe. Bitte wähle eine andere Gruppe.
+            small Die verfügbaren Reports sind abhängig von der Gruppe und deiner Tätigkeit in dieser Gruppe.
+          
+          button Gruppe auswählen
+       
+        fieldset
+          legend Bericht
+          
+          if availableReports && availableReports.length
+            div.question
+              label Welcher Bericht soll erstellt werden?
+              select(name="reportId")
+                each report in availableReports
+                  option(value=report.id)= report.title
+              if !selectedReport && requestParams.reportId
+                small.form-error Der vorausgewählte Report exisitert nicht oder du hast keine ausreichenden Rechte für diese Gruppe. Bitte wähle eine andere Gruppe oder einen anderen Report.
+             
+            button Report auswählen
+          else if requestParams.reportId
+            //- Since no reports can be selected, keep previous reportId around until the user selected a suitable group
+            input(type="hidden", name="reportId", value=requestParams.reportId)
+           
+          if availableReports && availableReports.length === 0
+            //-- group was selected, but no reports are available / permission missing
+            .alert.alert--error
+              .alert_title You do not have permission to create any reports for the selected group.
+          else if availableReports === undefined
+            .alert.alert--info
+              .alert_title Please select a group first.
+            
+          
+        
+        fieldset
+          legend Berichtseinstellungen
+          if selectedReport
+
+            each parameter in parameterToFill
+
+              div.question
+                label= parameter.label
+                input(type=parameter.type,name="p_" + parameter.name)
+                if parameter.description
+                  small= parameter.description
+            
+            div.question
+              label In welchem Format soll der Bericht ausgegeben werden?
+              select(name="outputFormat")
+                each outputFormat in selectedReport.outputFormats
+                  option(value=outputFormat, selected=(outputFormat === requestParams.outputFormat))
+                    case outputFormat
+                      when 'pdf': | Portable-Document-Format (*.pdf)
+                      when 'xlsx': | Microsoft Excel (*.xlsx)
+                      when 'xls': | Microsoft Excel (*.xls)
+                      when 'csv': | Comma-Separated-Values (*.csv)
+                      when 'ods': | OpenDocument Spreadsheet (*.ods)
+                      when 'JSON': | JSON - JavaScript Object Notation (*.json)
+                      default: | #{outputFormat}
+                        
+          else
+            .alert.alert--info
+               .alert_title Please select a report first.
+
+        
+        button(type="submit", formaction="./generate" formmethod="POST", disabled=(!selectedReport)) Report generieren
+
+    else
+      div.alert.alert--error
+        div Fehlermeldung
+        p Keine Gruppen
+
+    aside
+    
+      div.w-text
+        h3 Tipp: Du brauchst diesen Bericht häufiger oder möchtest diese Einstellungen mit anderen teilen?
+        p Lesezeichen hinzufügen oder URL mit anderen teilen:
+        .debug-info= request.url
+        button.btn--secondary(form="requestReport", formmethod="get", formnovalidate=true) Link aktualisieren
+    
+      div.w-text
+        h3 Probleme beim Erstellen von Berichten?
+        p Bei Problemen kannst du dich per E-Mail bei mitglied@pfadfinden.de melden.
+        .debug-info.collapsible
+          input(id="debugInfoCollapsible",type="checkbox")
+          label(for="debugInfoCollapsible") Show Debug Information
+          .collapsible_content
+            pre
+              | # Requested: #{request.method} #{request.url}
+              | # Requested Date: #{request.timestamp}
+              | # Selected Group: #{selectedGroup ? selectedGroup.id : "~None~"} 
+              | # Selected Report: #{selectedReport ? selectedReport.id: "~None~"} 
+              | # Selected Report Version: #{selectedReport ? selectedReport.version: "~None~"} 
+        button.btn--secondary Support Ticket öffnen
+        button.btn--secondary Debug Informationen Kopieren

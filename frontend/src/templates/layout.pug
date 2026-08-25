@@ -1,0 +1,14 @@
+doctype html
+html
+  head
+    title= title
+    link(rel='stylesheet', href='/style.css')
+  body
+    header
+      span Mitgliederservice
+      if principal
+        span.user-info
+          | Angemeldet als #{principal.name}
+          |  &middot;
+          a(href='/auth/logout') Abmelden
+    block content
