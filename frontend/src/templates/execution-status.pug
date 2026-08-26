@@ -1,0 +1,23 @@
+extends layout
+
+block content
+  main
+    header
+      h1 Bericht wird erstellt
+
+    if downloadUrl
+      .alert.alert--info
+        .alert_title Dein Bericht ist fertig.
+      a.btn(href=downloadUrl) Bericht herunterladen
+    else if statusLabel === "FAILED"
+      .alert.alert--error
+        .alert_title Die Berichtserstellung ist fehlgeschlagen.
+        p Bitte versuche es erneut oder wende dich an mitglied@pfadfinden.de.
+    else
+      meta(http-equiv="refresh", content="3")
+      .alert.alert--info
+        .alert_title Status: #{statusLabel}
+        p Diese Seite aktualisiert sich automatisch alle paar Sekunden.
+
+    p
+      a(href="/") Zurück zur Berichtsauswahl

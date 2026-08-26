@@ -2,6 +2,7 @@ import { Request, Response, NextFunction } from "express";
 import { AppServices } from "./composition-root";
 import { AppConfig } from "./config";
 import { createIndexRouter } from "./routes/index";
+import { createReportExecutionRouter } from "./routes/report-execution";
 import { createAuthRouter } from "./auth/auth-router";
 import { requireAuth } from "./auth/require-auth";
 
@@ -50,6 +51,7 @@ export function createApp(services: AppServices, config: AppConfig) {
     ),
   );
 
+  app.use("/", requireAuth, createReportExecutionRouter(services, config));
   app.use("/", requireAuth, createIndexRouter(services));
 
   // catch 404 and forward to error handler

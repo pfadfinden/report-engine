@@ -4,9 +4,12 @@ import {
 } from "../model/report-execution-task.model";
 
 export interface ReportExecutionService {
-  executeReport(reportExecutionTask: ReportExecutionTask): void;
+  executeReport(reportExecutionTask: ReportExecutionTask): Promise<void>;
 
-  status(reportExecutionId: string): ReportExecutionStatus;
+  status(reportExecutionId: string): Promise<ReportExecutionStatus>;
 
-  downloadUrl(reportExecutionId: string): string;
+  // Resolves a short-lived, signed download URL for the finished report -
+  // requires a network round-trip (never just a local string-builder),
+  // since the executor itself signs the URL.
+  downloadUrl(reportExecutionId: string): Promise<string>;
 }

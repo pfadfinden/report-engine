@@ -27,7 +27,7 @@ export class SqliteMetadataService implements MetadataService {
                 FROM ParameterMetadata p
                 WHERE p.report_id = $reportId;
             `,
-      { $reportId: reportId },
+      { reportId },
     );
   }
 

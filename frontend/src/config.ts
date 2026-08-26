@@ -1,4 +1,5 @@
 export type MetadataSource = "local" | "remote";
+export type ReportDownloadMode = "proxy" | "direct";
 
 export interface AppConfig {
   readonly nodeEnv: string;
@@ -14,6 +15,21 @@ export interface AppConfig {
   readonly groups: {
     readonly hitobitoApiUrl: string;
     readonly hitobitoApiToken: string;
+    readonly cacheTtlMs: number;
+  };
+  readonly execution: {
+    readonly apiUrl: string;
+    readonly apiToken: string | undefined;
+    // "proxy" (default): the frontend fetches the finished report itself and
+    // streams it to the browser - the executor is never exposed to the
+    // browser/network, and this is the only place a real per-user
+    // authorization check happens (a signed URL only proves a request to
+    // /download happened, not who it was for). "direct": the browser is
+    // handed the executor's signed URL and fetches it itself - less backend
+    // bandwidth, but requires the executor to be reachable from the browser,
+    // which then also needs to trust the browser with a URL to raw report
+    // data. Only relax to "direct" if you understand and accept that.
+    readonly downloadMode: ReportDownloadMode;
   };
   readonly auth: {
     readonly issuerUrl: string;
@@ -71,6 +87,13 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): AppConfig {
     requiredEnv("REPORTS_DB_REMOTE_URL");
   }
 
+  const downloadMode = (env.REPORT_DOWNLOAD_MODE ?? "proxy") as ReportDownloadMode;
+  if (downloadMode !== "proxy" && downloadMode !== "direct") {
+    throw new Error(
+      `REPORT_DOWNLOAD_MODE must be "proxy" or "direct", got "${downloadMode}"`,
+    );
+  }
+
   return {
     nodeEnv: env.NODE_ENV ?? "development",
     port: intEnv("PORT", 3000),
@@ -85,6 +108,12 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): AppConfig {
     groups: {
       hitobitoApiUrl: requiredEnv("HITOBITO_API_URL"),
       hitobitoApiToken: requiredEnv("HITOBITO_API_TOKEN"),
+      cacheTtlMs: intEnv("HITOBITO_GROUPS_CACHE_TTL_MS", 5 * 60 * 1000),
+    },
+    execution: {
+      apiUrl: requiredEnv("REPORT_EXECUTION_API_URL"),
+      apiToken: optionalEnv("REPORT_EXECUTION_API_TOKEN"),
+      downloadMode,
     },
     auth: {
       issuerUrl: requiredEnv("OIDC_ISSUER_URL"),
