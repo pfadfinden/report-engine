@@ -1,43 +1,93 @@
 # Local development stack: `docker compose up` builds the frontend from its "dev" build
-# stage (source bind-mounted in, nodemon hot-reloads on change), plus the sample DB / whodb
-# used when working on report metadata. For a production image, see docker-compose.prod.yml
-# instead.
+# stage (source bind-mounted in, nodemon hot-reloads on change), plus the sample DB,
+# local-report-executor, and whodb used when working on reports end-to-end. For a
+# production image, see docker-compose.prod.yml instead.
 #
 # OIDC login needs an identity provider - this stack does not bundle one. Copy
 # frontend/.env.example to frontend/.env and point OIDC_ISSUER_URL/OIDC_CLIENT_ID/AUTH_* at
 # your Keycloak (or other OIDC provider) instance before running `docker compose up`.
+#
+# Security note: local-report-executor trusts whatever caller reaches it completely - it
+# has no notion of which reports/parameters a given end-user is allowed to request, only
+# the frontend enforces that. It is intentionally NOT reachable by the browser here: the
+# frontend proxies triggers/status/downloads itself (see routes/report-execution.ts), and
+# the two services share EXECUTOR_API_KEY so local-report-executor rejects any other
+# caller. Its host port below is published to 127.0.0.1 only, for direct curl-based
+# backend testing on your own machine (see README) - even that still requires the API
+# key. Do not publish it more broadly than that, and never on a shared/production network.
 services:
     frontend:
         build:
             context: ./frontend
             target: dev
+        depends_on:
+            - local-report-executor
         env_file:
             - ./frontend/.env.local
         environment:
             NODE_ENV: development
-            PORT: 3000
+            PORT: 3036
             REPORTS_DB_SOURCE: local
             REPORTS_DB_LOCAL_PATH: ../dist/preprocessed/reports.db
+            REPORT_EXECUTION_API_URL: http://local-report-executor:8080
+            REPORT_EXECUTION_API_TOKEN: local-dev-executor-api-key
+            REPORT_DOWNLOAD_MODE: proxy
         ports:
-            - "3000:3000"
+            - "3036:3036"
+        extra_hosts:
+            - "host.docker.internal:host-gateway"
         volumes:
             - ./frontend/src:/usr/src/app/src
             - ./frontend/eslint.config.js:/usr/src/app/eslint.config.js
             - ./frontend/tsconfig.json:/usr/src/app/tsconfig.json
             - ./frontend/nodemon.json:/usr/src/app/nodemon.json
-            - ./dist/preprocessed:/usr/src/dist/preprocessed:ro
+            - ./dist-reports/preprocessed:/usr/src/dist/preprocessed:ro
         restart: unless-stopped
 
     sample-db:
         image: mysql:8.0
         environment:
             - MYSQL_ROOT_PASSWORD=development
+            - MYSQL_DATABASE=sampledb
         volumes:
             - ./sample-db-dump:/docker-entrypoint-initdb.d:ro
         ports:
-            - "3306:3306"
+            - "127.0.0.1:3306:3306"
+
+    # Same API contract as azure-report-executor (see README), running as a plain Docker
+    # container instead of an Azure Function - for local dev and self-hosted deployments.
+    local-report-executor:
+        build:
+            context: ./local-report-executor
+        environment:
+            # Points at the hitobito dev stack's Postgres, running on the host (outside this
+            # compose network) - host.docker.internal is this container's route to the host,
+            # same as frontend uses for OIDC (see auth/backend-host.ts). "localhost" here would
+            # resolve to the container itself, not the host.
+            REPORT_SOURCEDATA_DATABASE_URL: jdbc:postgresql://host.docker.internal:5432/hitobito_development?user=hitobito&password=hitobito
+            REPORTS_DIR: /reports
+            SHARED_ASSETS_DIR: /shared
+            OUTPUT_DIR: /output
+            DOWNLOAD_URL_SIGNING_SECRET: local-dev-signing-secret
+            EXECUTOR_API_KEY: local-dev-executor-api-key
+            # Used to build the /files/... URL returned from /download - only ever
+            # fetched by the frontend container (over the compose network), never by
+            # the browser, so this is the internal service address, not a host-facing one.
+            PUBLIC_BASE_URL: http://local-report-executor:8080
+        extra_hosts:
+            - "host.docker.internal:host-gateway"
+        volumes:
+            - ./dist-reports/preprocessed/reports:/reports:ro
+            - ./dist-reports/preprocessed/_shared:/shared:ro
+            - ./local-report-executor-output:/output
+        ports:
+            # Loopback-only, for direct backend curl-testing from the host - see the
+            # security note above. Requests still need "Authorization: Bearer
+            # local-dev-executor-api-key" except for GET /files/... (signed instead).
+            - "127.0.0.1:8081:8080"
+        restart: unless-stopped
 
     whodb:
         image: clidey/whodb
         ports:
-            - "8080:8080"
+            - "127.0.0.1:8080:8080"
