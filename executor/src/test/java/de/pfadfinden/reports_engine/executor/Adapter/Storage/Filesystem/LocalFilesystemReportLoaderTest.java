@@ -15,6 +15,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
 import de.pfadfinden.reports_engine.executor.FillReportService;
+import de.pfadfinden.reports_engine.executor.Port.OutputFormat;
 import de.pfadfinden.reports_engine.executor.Port.ReportDefinition;
 import net.sf.jasperreports.engine.JasperCompileManager;
 import net.sf.jasperreports.engine.JasperReport;
@@ -61,7 +62,7 @@ class LocalFilesystemReportLoaderTest {
 
         Connection conn = mock(Connection.class);
         ByteArrayOutputStream output = new ByteArrayOutputStream();
-        new FillReportService().fill(reportDefinition, new HashMap<>(), conn, output);
+        new FillReportService().fill(reportDefinition, new HashMap<>(), conn, output, OutputFormat.XLSX);
 
         assertTrue(output.size() > 0, "expected a non-empty filled/exported report");
     }
