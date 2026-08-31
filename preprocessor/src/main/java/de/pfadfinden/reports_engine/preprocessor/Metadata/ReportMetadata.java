@@ -31,8 +31,9 @@ public class ReportMetadata {
     @Convert(converter = JpaConverterJson.class)
     public List<String> onlyWithRole;
     /**
-     * Report is only allowed to be executed if the selected units type is one of
-     * these.
+     * Report is only allowed to be executed if the selected unit's group type is
+     * one of these (e.g. "Group::Bundesebene"). Empty or absent means the report
+     * is available for all group types.
      */
     @Convert(converter = JpaConverterJson.class)
     public List<String> onlyForType;

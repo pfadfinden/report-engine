@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
 import java.util.List;
 
 import de.pfadfinden.reports_engine.preprocessor.AbstractFollowUpTaskCommand;
@@ -33,9 +34,9 @@ public class CopySourceTask extends AbstractFollowUpTaskCommand {
         files.forEach(source -> {
             File outputFile = new File(this.options.outputDir().getPath() + File.separator
                     + this.parent.inputDir().toPath().relativize(source));
-            outputFile.mkdirs();
+            outputFile.getParentFile().mkdirs();
             try {
-                Files.copy(source, outputFile.toPath());
+                Files.copy(source, outputFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
             } catch (IOException e) {
                 e.printStackTrace();
                 System.out.println("Failed to copy one file");

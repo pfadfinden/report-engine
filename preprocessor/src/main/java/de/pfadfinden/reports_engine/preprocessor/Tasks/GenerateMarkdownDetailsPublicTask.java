@@ -5,6 +5,7 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.Writer;
+import java.util.stream.Collectors;
 
 import de.pfadfinden.reports_engine.preprocessor.AbstractFollowUpTaskCommand;
 import de.pfadfinden.reports_engine.preprocessor.Metadata.ReportMetadata;
@@ -16,6 +17,16 @@ import picocli.CommandLine.Command;
 public class GenerateMarkdownDetailsPublicTask extends AbstractFollowUpTaskCommand {
     protected final static String MAKRDOWN_FILE_SUFFIX = ".md";
 
+    private static String toTableCell(String value) {
+        return value == null ? null : value.replace("\r\n", "\n").replace("\n", "<br>");
+    }
+
+    protected final static String GROUP_TYPE_PREFIX = "Group::";
+
+    private static String stripGroupTypePrefix(String groupType) {
+        return groupType.startsWith(GROUP_TYPE_PREFIX) ? groupType.substring(GROUP_TYPE_PREFIX.length()) : groupType;
+    }
+
     public void export(ReportMetadata report) {
         File outputDir = new File(this.options.outputDir() + "/details-public/");
         // create folder, if not exists:
@@ -26,18 +37,23 @@ public class GenerateMarkdownDetailsPublicTask extends AbstractFollowUpTaskComma
                 .addRow("", "")
                 .addRow("Beschreibung", report.description)
                 .addRow("Ausgabeformate", String.join(", ", report.outputFormats))
-                .addRow("Gruppentypen", report.onlyForType != null ? String.join(", ", report.onlyForType) : "-")
+                .addRow("Gruppentypen", report.onlyForType != null
+                        ? report.onlyForType.stream().map(GenerateMarkdownDetailsPublicTask::stripGroupTypePrefix)
+                                .collect(Collectors.joining(", "))
+                        : "-")
                 .build();
 
         Table.Builder parameterTable = new Table.Builder()
                 .addRow("Name", "Beschreibung", "Bemerkung");
 
-        report.parameter.forEach(param -> parameterTable.addRow(param.label, param.description, param.comment));
+        report.parameter.forEach(param -> parameterTable.addRow(param.label, toTableCell(param.description),
+                toTableCell(param.comment)));
 
         Table.Builder versionTable = new Table.Builder()
                 .addRow("Version", "Änderung", "Datum");
         report.versionHistory
-                .forEach(version -> versionTable.addRow(version.version(), version.description, version.createdOn));
+                .forEach(version -> versionTable.addRow(version.version(), toTableCell(version.description),
+                        version.createdOn));
 
         // write Markdown file:
         try (Writer writer = new BufferedWriter(

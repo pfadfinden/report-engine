@@ -46,6 +46,13 @@ public class MetadataIngestService {
         assert reportDir.isDirectory();
 
         File metadataFile = getFileIn(reportDir, "metadata.yaml");
+        if (metadataFile == null) {
+            // Not every directory under the source dir is a report - e.g. "_shared"
+            // holds assets (style template, fonts, logos) common to all reports.
+            System.out.println("Skipping " + reportDir.getName() + ": no metadata.yaml, not a report directory.");
+            return;
+        }
+
         ReportMetadata metadata = this.metadataReader.read(metadataFile);
         this.metadataRepository.add(metadata);
 

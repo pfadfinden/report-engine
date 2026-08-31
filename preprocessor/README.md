@@ -81,7 +81,7 @@ complex: false # optional, default: false, Add warning to users that report requ
 
 # restrict report usage: (leave away for unrestricted access)
 onlyWithRole: ["Administrator"]
-onlyForType: ["Region","Local"]
+onlyForType: ["Group::Region","Group::Local"]
 
 # optional:
 sql: |-

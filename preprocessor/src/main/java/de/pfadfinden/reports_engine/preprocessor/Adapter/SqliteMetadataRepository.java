@@ -58,8 +58,13 @@ public class SqliteMetadataRepository implements MetadataRepository {
 
     @Override
     public Stream<ReportMetadata> all() {
+        // distinct is required here: without it, the join against ReportMetadata's
+        // eagerly-fetched collections (parameters/versionHistory) returns one row per
+        // collection element, so each report gets processed once per element instead
+        // of once overall.
         CriteriaQuery<ReportMetadata> cq = this.em.getCriteriaBuilder().createQuery(ReportMetadata.class);
-        Query query = this.em.createQuery(cq.select(cq.from(ReportMetadata.class)));
+        cq.select(cq.from(ReportMetadata.class)).distinct(true);
+        Query query = this.em.createQuery(cq);
         return query.getResultStream();
     }
 
