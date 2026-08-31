@@ -79,7 +79,7 @@ export function createIndexRouter(services: AppServices): Router {
               selectedReport.id,
             );
             const parameterToFill = parameter.filter(
-              (p) => p.name !== "h_grpId" && p.name !== "groupId",
+              (p) => p.name !== "p_gruppe_id" && p.name !== "groupId",
             );
 
             // cleanup unused request parameter from url

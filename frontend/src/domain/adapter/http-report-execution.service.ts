@@ -28,6 +28,7 @@ export class HttpReportExecutionService implements ReportExecutionService {
         body: JSON.stringify({
           executionId: task.executionId,
           parameter: task.parameter,
+          outputFormat: task.outputFormat,
         }),
       },
     );

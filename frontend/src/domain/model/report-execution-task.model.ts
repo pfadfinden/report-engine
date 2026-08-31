@@ -10,4 +10,5 @@ export interface ReportExecutionTask {
   readonly executionId: string;
   readonly reportId: ReportId;
   readonly parameter: object;
+  readonly outputFormat: string;
 }

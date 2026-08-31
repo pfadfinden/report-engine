@@ -24,8 +24,9 @@ export function createReportExecutionRouter(
       try {
         const reportId = req.body.reportId as string;
         const groupId = req.body.groupId as string;
+        const outputFormat = req.body.outputFormat as string;
 
-        const parameter: Record<string, unknown> = { h_grpId: groupId };
+        const parameter: Record<string, unknown> = { p_gruppe_id: groupId };
         for (const [key, value] of Object.entries(req.body)) {
           if (key.startsWith(PARAMETER_FIELD_PREFIX)) {
             parameter[key.substring(PARAMETER_FIELD_PREFIX.length)] = value;
@@ -37,6 +38,7 @@ export function createReportExecutionRouter(
           executionId,
           reportId,
           parameter,
+          outputFormat,
         });
 
         res.redirect(`/executions/${executionId}`);
