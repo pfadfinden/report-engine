@@ -4,13 +4,68 @@ updates:
     directory: "/"
     schedule:
       interval: "weekly"
+    groups:
+      jasperreports:
+        patterns:
+          - "net.sf.jasperreports:*"
+      jackson:
+        patterns:
+          - "com.fasterxml.jackson*:*"
+      azure-sdk:
+        patterns:
+          - "com.azure:*"
+          - "com.microsoft.azure*:*"
+      netty:
+        patterns:
+          - "io.netty:*"
+      hibernate:
+        patterns:
+          - "org.hibernate*:*"
+      test-dependencies:
+        patterns:
+          - "org.junit*:*"
+          - "org.mockito:*"
+          - "io.javalin:javalin-testtools"
+      quality-tooling:
+        patterns:
+          - "org.jacoco:*"
+          - "com.diffplug.spotless:*"
+          - "com.github.spotbugs:*"
+          - "com.h3xstream.findsecbugs:*"
+      maven-plugins:
+        patterns:
+          - "org.apache.maven.plugins:*"
 
   - package-ecosystem: "npm"
     directory: "/frontend"
     schedule:
       interval: "weekly"
+    groups:
+      eslint:
+        patterns:
+          - "eslint*"
+          - "@eslint/*"
+          - "typescript-eslint"
+      testing:
+        patterns:
+          - "jest"
+          - "ts-jest"
+          - "@types/jest"
+      types:
+        patterns:
+          - "@types/*"
 
   - package-ecosystem: "github-actions"
     directory: "/"
     schedule:
       interval: "weekly"
+    groups:
+      actions:
+        patterns:
+          - "actions/*"
+      docker:
+        patterns:
+          - "docker/*"
+      codeql:
+        patterns:
+          - "github/codeql-action/*"
