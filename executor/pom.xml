@@ -30,19 +30,19 @@
         <dependency>
             <groupId>net.sf.jasperreports</groupId>
             <artifactId>jasperreports-groovy</artifactId>
-            <version>7.0.3</version>
+            <version>7.0.8</version>
         </dependency>
         <dependency>
             <groupId>net.sf.jasperreports</groupId>
             <artifactId>jasperreports-charts</artifactId>
-            <version>7.0.3</version>
+            <version>7.0.8</version>
         </dependency>
 
         <!-- PDF export was split out of core jasperreports as of 7.0 too. -->
         <dependency>
             <groupId>net.sf.jasperreports</groupId>
             <artifactId>jasperreports-pdf</artifactId>
-            <version>7.0.3</version>
+            <version>7.0.8</version>
         </dependency>
 
         <dependency>
