@@ -18,8 +18,8 @@
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <java.version>25</java.version>
-        <azure.functions.maven.plugin.version>1.38.0</azure.functions.maven.plugin.version>
-        <azure.functions.java.library.version>3.1.0</azure.functions.java.library.version>
+        <azure.functions.maven.plugin.version>1.42.0</azure.functions.maven.plugin.version>
+        <azure.functions.java.library.version>3.3.0</azure.functions.java.library.version>
         <functionAppName>azure-report-executor-1748544512735</functionAppName>
     </properties>
 
@@ -70,13 +70,13 @@
         <dependency>
             <groupId>com.azure</groupId>
             <artifactId>azure-data-tables</artifactId>
-            <version>12.5.3</version>
+            <version>12.5.12</version>
         </dependency>
 
         <dependency>
             <groupId>com.azure</groupId>
             <artifactId>azure-storage-blob</artifactId>
-            <version>12.30.0</version>
+            <version>12.35.1</version>
         </dependency>
         <!-- Test -->
         <dependency>
