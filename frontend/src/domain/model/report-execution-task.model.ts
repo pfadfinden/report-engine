@@ -1,4 +1,4 @@
-import { ReportId } from "./report";
+import { ReportId } from './report';
 
 export enum ReportExecutionStatus {
   PENDING,

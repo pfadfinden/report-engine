@@ -1,6 +1,6 @@
-import { Parameter, Report, ReportId } from "../model/report";
-import { MetadataService } from "../port/metadata.service";
-import Database, { type Database as DatabaseType } from "better-sqlite3";
+import { Parameter, Report, ReportId } from '../model/report';
+import { MetadataService } from '../port/metadata.service';
+import Database, { type Database as DatabaseType } from 'better-sqlite3';
 
 interface ReportDto {
   id: string;
@@ -54,20 +54,13 @@ export class SqliteMetadataService implements MetadataService {
     )
       .then((rows) => rows.map(this._mapReport))
       .then((reports) =>
-        groupType === "*"
+        groupType === '*'
           ? reports
-          : reports.filter(
-              (report) =>
-                report.onlyForType.length === 0 ||
-                report.onlyForType.includes(groupType),
-            ),
+          : reports.filter((report) => report.onlyForType.length === 0 || report.onlyForType.includes(groupType)),
       );
   }
 
-  private _all<T, P extends object = object>(
-    sql: string,
-    params?: P,
-  ): Promise<ReadonlyArray<T>> {
+  private _all<T, P extends object = object>(sql: string, params?: P): Promise<ReadonlyArray<T>> {
     return Promise.resolve(this.db.prepare<P, T>(sql).all(params ?? {}));
   }
 

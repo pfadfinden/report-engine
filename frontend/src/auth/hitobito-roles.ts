@@ -1,6 +1,6 @@
-import { PrincipalRole } from "../domain/model/principal";
-import { toPrincipalRoles } from "./claims-to-principal";
-import { withBackendHost } from "./backend-host";
+import { PrincipalRole } from '../domain/model/principal';
+import { toPrincipalRoles } from './claims-to-principal';
+import { withBackendHost } from './backend-host';
 
 interface BrokerTokenResponse {
   access_token?: string;
@@ -33,14 +33,11 @@ export async function fetchHitobitoRoles(
   keycloakAccessToken: string,
   backendHost: string | undefined,
 ): Promise<ReadonlyArray<PrincipalRole>> {
-  const brokerTokenUrl = withBackendHost(
-    new URL(`${issuer}/broker/${brokerIdpAlias}/token`),
-    backendHost,
-  );
+  const brokerTokenUrl = withBackendHost(new URL(`${issuer}/broker/${brokerIdpAlias}/token`), backendHost);
 
   const brokerRes = await fetch(brokerTokenUrl, {
-    method: "POST",
-    headers: { "Content-Type": "application/x-www-form-urlencoded" },
+    method: 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
     body: new URLSearchParams({
       client_id: clientId,
       client_secret: clientSecret,
@@ -52,11 +49,11 @@ export async function fetchHitobitoRoles(
   if (!brokerRes.ok || brokerBody.error || !brokerBody.access_token) {
     throw new Error(
       `Keycloak broker token request to ${brokerTokenUrl} failed: ${brokerRes.status} ` +
-        `${brokerBody.error ?? ""} ${brokerBody.error_description ?? ""}`.trim(),
+        `${brokerBody.error ?? ''} ${brokerBody.error_description ?? ''}`.trim(),
     );
   }
 
-  const userinfoUrl = new URL("/oauth/userinfo", hitobitoApiUrl);
+  const userinfoUrl = new URL('/oauth/userinfo', hitobitoApiUrl);
   const userinfoRes = await fetch(userinfoUrl, {
     headers: { Authorization: `Bearer ${brokerBody.access_token}` },
   });

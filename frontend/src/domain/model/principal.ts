@@ -1,4 +1,4 @@
-import { GroupId } from "./group";
+import { GroupId } from './group';
 
 export type PrincipalId = string;
 

@@ -1,10 +1,10 @@
-import fs from "node:fs/promises";
-import path from "node:path";
-import os from "node:os";
-import crypto from "crypto";
-import { MetadataLoaderService } from "../port/metadata-loader.service";
-import { MetadataService } from "../port/metadata.service";
-import { SqliteMetadataService } from "./sqlite-metadata.service";
+import fs from 'node:fs/promises';
+import path from 'node:path';
+import os from 'node:os';
+import crypto from 'crypto';
+import { MetadataLoaderService } from '../port/metadata-loader.service';
+import { MetadataService } from '../port/metadata.service';
+import { SqliteMetadataService } from './sqlite-metadata.service';
 
 export class RemoteMetadataLoaderService implements MetadataLoaderService {
   constructor(
@@ -14,9 +14,8 @@ export class RemoteMetadataLoaderService implements MetadataLoaderService {
   ) {}
 
   private async openRemoteDatabase(url: string): Promise<string> {
-    const filehash = crypto.createHash("md5").update(url).digest("hex");
-    const cacheDir =
-      this.cacheDir ?? path.join(os.tmpdir(), "remote-sqlite-cache");
+    const filehash = crypto.createHash('md5').update(url).digest('hex');
+    const cacheDir = this.cacheDir ?? path.join(os.tmpdir(), 'remote-sqlite-cache');
     const cachePath = path.join(cacheDir, filehash);
 
     await fs.mkdir(cacheDir, { recursive: true });
@@ -24,14 +23,12 @@ export class RemoteMetadataLoaderService implements MetadataLoaderService {
     const shouldDownload = await this.hasNoUpToDateLocalCopy(cachePath);
     if (shouldDownload) {
       console.log(`Downloading SQLite DB from ${url}...`);
-      console.log("has token", this.authToken != null);
+      console.log('has token', this.authToken != null);
       const res = await fetch(url, {
         headers: { Authorization: `Bearer ${this.authToken}` },
       });
       if (!res.ok) {
-        throw new Error(
-          `Failed to download DB: ${res.status} ${res.statusText}`,
-        );
+        throw new Error(`Failed to download DB: ${res.status} ${res.statusText}`);
       }
 
       const buffer = Buffer.from(await res.arrayBuffer());

@@ -97,18 +97,8 @@ h6 {
   --w-text: 70ch;
 
   --font-sans:
-    Jost,
-    system-ui,
-    -apple-system,
-    Segoe UI,
-    Helvetica Neue,
-    Arial,
-    Noto Sans,
-    sans-serif,
-    Apple Color Emoji,
-    Segoe UI Emoji,
-    Segoe UI Symbol,
-    Noto Color Emoji;
+    Jost, system-ui, -apple-system, Segoe UI, Helvetica Neue, Arial, Noto Sans, sans-serif, Apple Color Emoji,
+    Segoe UI Emoji, Segoe UI Symbol, Noto Color Emoji;
 }
 
 html {
@@ -397,7 +387,7 @@ aside > div > * {
   text-decoration: underline;
 }
 
-.collapsible > input[type="checkbox"] {
+.collapsible > input[type='checkbox'] {
   display: none;
 }
 
@@ -411,7 +401,7 @@ aside > div > * {
 }
 
 .collapsible label::before {
-  content: " ";
+  content: ' ';
   display: inline-block;
   border-top: 5px solid transparent;
   border-bottom: 5px solid transparent;
@@ -580,8 +570,8 @@ button:disabled {
 .site-footer_bottom {
   background-color: var(--bdp-pfadiblau);
   color: var(--bdp-woelflingsgelb);
-  -webkit-mask-image: url("/footer-wave-mask.svg");
-  mask-image: url("/footer-wave-mask.svg");
+  -webkit-mask-image: url('/footer-wave-mask.svg');
+  mask-image: url('/footer-wave-mask.svg');
   -webkit-mask-size: 100% auto;
   mask-size: 100% auto;
   -webkit-mask-position: top left;

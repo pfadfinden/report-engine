@@ -6,20 +6,18 @@ import {
   discovery,
   type DiscoveryRequestOptions,
   None,
-} from "openid-client";
-import { AppConfig } from "../config";
-import { withBackendHost } from "./backend-host";
+} from 'openid-client';
+import { AppConfig } from '../config';
+import { withBackendHost } from './backend-host';
 
-export async function createOidcClient(
-  config: AppConfig["auth"],
-): Promise<Configuration> {
+export async function createOidcClient(config: AppConfig['auth']): Promise<Configuration> {
   const issuerUrl = new URL(config.issuerUrl);
 
   const options: DiscoveryRequestOptions = {};
 
   // Plain-HTTP issuers only occur in local dev (see .env.local), where no
   // trusted TLS cert is available for the docker-internal Keycloak host.
-  if (issuerUrl.protocol === "http:") {
+  if (issuerUrl.protocol === 'http:') {
     options.execute = [allowInsecureRequests];
   }
 

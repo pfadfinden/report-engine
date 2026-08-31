@@ -1,13 +1,13 @@
-import { Group, GroupId } from "../model/group";
-import { Principal, PrincipalId } from "../model/principal";
-import { GroupsService } from "../port/groups.service";
+import { Group, GroupId } from '../model/group';
+import { Principal, PrincipalId } from '../model/principal';
+import { GroupsService } from '../port/groups.service';
 
 // Permissions that grant access to a group's entire *layer* and everything
 // below it, not just the specific group the role is attached to. See
 // "permissions" in each of the principal's resolved roles.
-const SUBTREE_PERMISSIONS = ["layer_and_below_read", "layer_and_below_full"];
+const SUBTREE_PERMISSIONS = ['layer_and_below_read', 'layer_and_below_full'];
 
-const GROUP_FIELDS = "name,type,parent_id,layer_group_id";
+const GROUP_FIELDS = 'name,type,parent_id,layer_group_id';
 
 interface HitobitoGroupResource {
   id: string;
@@ -81,20 +81,16 @@ export class HitobitoGroupsService implements GroupsService {
     return groups;
   }
 
-  private async resolveFor(
-    principal: Principal,
-  ): Promise<ReadonlyArray<Group>> {
+  private async resolveFor(principal: Principal): Promise<ReadonlyArray<Group>> {
     const groupIds = [...new Set(principal.roles.map((role) => role.groupId))];
     if (groupIds.length === 0) {
       return [];
     }
 
     const directGroups = await this.fetchGroups({
-      "filter[id][eq]": groupIds,
+      'filter[id][eq]': groupIds,
     });
-    const layerGroupIdByGroupId = new Map(
-      directGroups.map((group) => [group.id, group.layerGroupId]),
-    );
+    const layerGroupIdByGroupId = new Map(directGroups.map((group) => [group.id, group.layerGroupId]));
 
     const groups = new Map<GroupId, Group>();
     for (const group of directGroups) {
@@ -107,11 +103,7 @@ export class HitobitoGroupsService implements GroupsService {
     const layerRootIds = [
       ...new Set(
         principal.roles
-          .filter((role) =>
-            role.permissions.some((permission) =>
-              SUBTREE_PERMISSIONS.includes(permission),
-            ),
-          )
+          .filter((role) => role.permissions.some((permission) => SUBTREE_PERMISSIONS.includes(permission)))
           .map((role) => layerGroupIdByGroupId.get(role.groupId))
           .filter((id): id is GroupId => id != null),
       ),
@@ -120,12 +112,10 @@ export class HitobitoGroupsService implements GroupsService {
     if (layerRootIds.length > 0) {
       // A role can be attached directly to a layer group, in which case
       // it's already in `groups` above — no need to re-fetch it.
-      const unfetchedLayerRootIds = layerRootIds.filter(
-        (id) => !groups.has(id),
-      );
+      const unfetchedLayerRootIds = layerRootIds.filter((id) => !groups.has(id));
       if (unfetchedLayerRootIds.length > 0) {
         for (const group of await this.fetchGroups({
-          "filter[id][eq]": unfetchedLayerRootIds,
+          'filter[id][eq]': unfetchedLayerRootIds,
         })) {
           groups.set(group.id, toGroup(group));
         }
@@ -139,15 +129,13 @@ export class HitobitoGroupsService implements GroupsService {
     return [...groups.values()];
   }
 
-  private async fetchSubtrees(
-    rootGroupIds: ReadonlyArray<GroupId>,
-  ): Promise<GroupWithLayer[]> {
+  private async fetchSubtrees(rootGroupIds: ReadonlyArray<GroupId>): Promise<GroupWithLayer[]> {
     const subtree: GroupWithLayer[] = [];
     let frontier = [...new Set(rootGroupIds)];
 
     while (frontier.length > 0) {
       const children = await this.fetchGroups({
-        "filter[parent_id][eq]": frontier,
+        'filter[parent_id][eq]': frontier,
       });
       subtree.push(...children);
       frontier = children.map((group) => group.id);
@@ -156,9 +144,7 @@ export class HitobitoGroupsService implements GroupsService {
     return subtree;
   }
 
-  private async fetchGroups(
-    filters: Record<string, ReadonlyArray<string>>,
-  ): Promise<GroupWithLayer[]> {
+  private async fetchGroups(filters: Record<string, ReadonlyArray<string>>): Promise<GroupWithLayer[]> {
     const groups: GroupWithLayer[] = [];
 
     let nextUrl: URL | undefined = this.buildGroupsUrl(filters);
@@ -170,14 +156,8 @@ export class HitobitoGroupsService implements GroupsService {
           id: resource.id,
           name: resource.attributes.name,
           type: resource.attributes.type,
-          parentId:
-            resource.attributes.parent_id == null
-              ? null
-              : String(resource.attributes.parent_id),
-          layerGroupId:
-            resource.attributes.layer_group_id == null
-              ? null
-              : String(resource.attributes.layer_group_id),
+          parentId: resource.attributes.parent_id == null ? null : String(resource.attributes.parent_id),
+          layerGroupId: resource.attributes.layer_group_id == null ? null : String(resource.attributes.layer_group_id),
         });
       }
 
@@ -188,10 +168,10 @@ export class HitobitoGroupsService implements GroupsService {
   }
 
   private buildGroupsUrl(filters: Record<string, ReadonlyArray<string>>): URL {
-    const url = new URL("/api/groups", this.apiUrl);
-    url.searchParams.set("fields[groups]", GROUP_FIELDS);
+    const url = new URL('/api/groups', this.apiUrl);
+    url.searchParams.set('fields[groups]', GROUP_FIELDS);
     for (const [param, values] of Object.entries(filters)) {
-      url.searchParams.set(param, values.join(","));
+      url.searchParams.set(param, values.join(','));
     }
     return url;
   }
@@ -199,29 +179,24 @@ export class HitobitoGroupsService implements GroupsService {
   private async fetchGroupsDocument(url: URL): Promise<HitobitoGroupsDocument> {
     const res = await fetch(url, {
       headers: {
-        Accept: "application/vnd.api+json",
-        "X-TOKEN": this.apiToken,
+        Accept: 'application/vnd.api+json',
+        'X-TOKEN': this.apiToken,
       },
     });
 
     if (!res.ok) {
-      throw new Error(
-        `Hitobito API request to ${url} failed: ${res.status} ${res.statusText}`,
-      );
+      throw new Error(`Hitobito API request to ${url} failed: ${res.status} ${res.statusText}`);
     }
 
     return (await res.json()) as HitobitoGroupsDocument;
   }
 
-  private nextPageUrl(
-    document: HitobitoGroupsDocument,
-    currentUrl: URL,
-  ): URL | undefined {
+  private nextPageUrl(document: HitobitoGroupsDocument, currentUrl: URL): URL | undefined {
     const next = document.links?.next;
     if (!next) {
       return undefined;
     }
-    const href = typeof next === "string" ? next : next.href;
+    const href = typeof next === 'string' ? next : next.href;
     return new URL(href, currentUrl);
   }
 }

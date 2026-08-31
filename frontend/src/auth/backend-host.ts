@@ -9,10 +9,7 @@
  * No-op when backendHost is undefined (production, where issuer and network
  * address are the same public host).
  */
-export function withBackendHost(
-  url: URL,
-  backendHost: string | undefined,
-): URL {
+export function withBackendHost(url: URL, backendHost: string | undefined): URL {
   if (!backendHost) {
     return url;
   }

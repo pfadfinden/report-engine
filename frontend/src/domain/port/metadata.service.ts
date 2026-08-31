@@ -1,4 +1,4 @@
-import { Parameter, Report, ReportId } from "../model/report";
+import { Parameter, Report, ReportId } from '../model/report';
 
 export interface MetadataService {
   findFor(groupType: string): Promise<ReadonlyArray<Report>>;

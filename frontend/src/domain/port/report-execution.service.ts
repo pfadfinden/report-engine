@@ -1,7 +1,4 @@
-import {
-  ReportExecutionStatus,
-  ReportExecutionTask,
-} from "../model/report-execution-task.model";
+import { ReportExecutionStatus, ReportExecutionTask } from '../model/report-execution-task.model';
 
 export interface ReportExecutionService {
   executeReport(reportExecutionTask: ReportExecutionTask): Promise<void>;

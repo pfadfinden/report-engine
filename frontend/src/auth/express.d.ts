@@ -1,4 +1,4 @@
-import { Principal } from "../domain/model/principal";
+import { Principal } from '../domain/model/principal';
 
 declare global {
   namespace Express {

@@ -1,5 +1,5 @@
-export type MetadataSource = "local" | "remote";
-export type ReportDownloadMode = "proxy" | "direct";
+export type MetadataSource = 'local' | 'remote';
+export type ReportDownloadMode = 'proxy' | 'direct';
 
 export interface AppConfig {
   readonly nodeEnv: string;
@@ -49,7 +49,7 @@ export interface AppConfig {
 
 function optionalEnv(name: string): string | undefined {
   const value = process.env[name];
-  return value === undefined || value === "" ? undefined : value;
+  return value === undefined || value === '' ? undefined : value;
 }
 
 function requiredEnv(name: string): string {
@@ -67,64 +67,57 @@ function intEnv(name: string, fallback: number): number {
   }
   const parsed = Number.parseInt(raw, 10);
   if (Number.isNaN(parsed)) {
-    throw new Error(
-      `Environment variable ${name} must be an integer, got "${raw}"`,
-    );
+    throw new Error(`Environment variable ${name} must be an integer, got "${raw}"`);
   }
   return parsed;
 }
 
 export function loadConfig(env: NodeJS.ProcessEnv = process.env): AppConfig {
-  const source = (env.REPORTS_DB_SOURCE ?? "local") as MetadataSource;
-  if (source !== "local" && source !== "remote") {
-    throw new Error(
-      `REPORTS_DB_SOURCE must be "local" or "remote", got "${source}"`,
-    );
+  const source = (env.REPORTS_DB_SOURCE ?? 'local') as MetadataSource;
+  if (source !== 'local' && source !== 'remote') {
+    throw new Error(`REPORTS_DB_SOURCE must be "local" or "remote", got "${source}"`);
   }
 
-  if (source === "remote") {
+  if (source === 'remote') {
     // fail fast at startup rather than on the first incoming request
-    requiredEnv("REPORTS_DB_REMOTE_URL");
+    requiredEnv('REPORTS_DB_REMOTE_URL');
   }
 
-  const downloadMode = (env.REPORT_DOWNLOAD_MODE ?? "proxy") as ReportDownloadMode;
-  if (downloadMode !== "proxy" && downloadMode !== "direct") {
-    throw new Error(
-      `REPORT_DOWNLOAD_MODE must be "proxy" or "direct", got "${downloadMode}"`,
-    );
+  const downloadMode = (env.REPORT_DOWNLOAD_MODE ?? 'proxy') as ReportDownloadMode;
+  if (downloadMode !== 'proxy' && downloadMode !== 'direct') {
+    throw new Error(`REPORT_DOWNLOAD_MODE must be "proxy" or "direct", got "${downloadMode}"`);
   }
 
   return {
-    nodeEnv: env.NODE_ENV ?? "development",
-    port: intEnv("PORT", 3000),
+    nodeEnv: env.NODE_ENV ?? 'development',
+    port: intEnv('PORT', 3000),
     metadata: {
       source,
-      localPath: env.REPORTS_DB_LOCAL_PATH ?? "../dist/preprocessed/reports.db",
-      remoteUrl: optionalEnv("REPORTS_DB_REMOTE_URL"),
-      authToken: optionalEnv("REPORTS_DB_AUTH_TOKEN"),
-      cacheDir: optionalEnv("REPORTS_DB_CACHE_DIR"),
-      cacheTtlMs: intEnv("REPORTS_DB_CACHE_TTL_MS", 30 * 60 * 1000),
+      localPath: env.REPORTS_DB_LOCAL_PATH ?? '../dist/preprocessed/reports.db',
+      remoteUrl: optionalEnv('REPORTS_DB_REMOTE_URL'),
+      authToken: optionalEnv('REPORTS_DB_AUTH_TOKEN'),
+      cacheDir: optionalEnv('REPORTS_DB_CACHE_DIR'),
+      cacheTtlMs: intEnv('REPORTS_DB_CACHE_TTL_MS', 30 * 60 * 1000),
     },
     groups: {
-      hitobitoApiUrl: requiredEnv("HITOBITO_API_URL"),
-      hitobitoApiToken: requiredEnv("HITOBITO_API_TOKEN"),
-      cacheTtlMs: intEnv("HITOBITO_GROUPS_CACHE_TTL_MS", 5 * 60 * 1000),
+      hitobitoApiUrl: requiredEnv('HITOBITO_API_URL'),
+      hitobitoApiToken: requiredEnv('HITOBITO_API_TOKEN'),
+      cacheTtlMs: intEnv('HITOBITO_GROUPS_CACHE_TTL_MS', 5 * 60 * 1000),
     },
     execution: {
-      apiUrl: requiredEnv("REPORT_EXECUTION_API_URL"),
-      apiToken: optionalEnv("REPORT_EXECUTION_API_TOKEN"),
+      apiUrl: requiredEnv('REPORT_EXECUTION_API_URL'),
+      apiToken: optionalEnv('REPORT_EXECUTION_API_TOKEN'),
       downloadMode,
     },
     auth: {
-      issuerUrl: requiredEnv("OIDC_ISSUER_URL"),
-      backendHost: optionalEnv("OIDC_BACKEND_HOST"),
-      clientId: requiredEnv("OIDC_CLIENT_ID"),
-      clientSecret: optionalEnv("OIDC_CLIENT_SECRET"),
-      redirectUri: requiredEnv("AUTH_REDIRECT_URI"),
-      postLogoutRedirectUri:
-        optionalEnv("AUTH_POST_LOGOUT_REDIRECT_URI") ?? "/",
-      sessionSecret: requiredEnv("AUTH_SESSION_SECRET"),
-      brokerIdpAlias: requiredEnv("OIDC_BROKER_IDP_ALIAS"),
+      issuerUrl: requiredEnv('OIDC_ISSUER_URL'),
+      backendHost: optionalEnv('OIDC_BACKEND_HOST'),
+      clientId: requiredEnv('OIDC_CLIENT_ID'),
+      clientSecret: optionalEnv('OIDC_CLIENT_SECRET'),
+      redirectUri: requiredEnv('AUTH_REDIRECT_URI'),
+      postLogoutRedirectUri: optionalEnv('AUTH_POST_LOGOUT_REDIRECT_URI') ?? '/',
+      sessionSecret: requiredEnv('AUTH_SESSION_SECRET'),
+      brokerIdpAlias: requiredEnv('OIDC_BROKER_IDP_ALIAS'),
     },
   };
 }

@@ -1,7 +1,7 @@
-import "express-session";
-import { Principal } from "../domain/model/principal";
+import 'express-session';
+import { Principal } from '../domain/model/principal';
 
-declare module "express-session" {
+declare module 'express-session' {
   interface SessionData {
     principal?: Principal;
     idToken?: string;

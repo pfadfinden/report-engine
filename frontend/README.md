@@ -13,5 +13,3 @@ OIDC-compliant identity provider works — point `OIDC_ISSUER_URL` at one that s
 This repo doesn't bundle an identity provider — point it at your own Keycloak (or other OIDC-compliant
 provider) instance. Copy `.env.example` to `.env` and fill in `OIDC_ISSUER_URL`, `OIDC_CLIENT_ID`
 (and `OIDC_CLIENT_SECRET` for a confidential client) and `AUTH_SESSION_SECRET`.
-
-
