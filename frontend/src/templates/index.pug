@@ -2,10 +2,13 @@ extends layout
 
 
 block content
-  main
-    header
+  .page-hero
+    .page-hero_inner
       h1 Bericht erstellen
+      svg.page-hero_squiggle(viewBox='0 0 200 16' preserveAspectRatio='none' aria-hidden='true')
+        path(d='M2 12 C 20 2, 36 2, 52 9 S 86 16, 102 9 S 136 2, 152 9 S 186 16, 198 8' fill='none' stroke='#971b2f' stroke-width='4' stroke-linecap='round')
       p.w-text Auf dieser Seite kannst du erweiterte Berichte über Gruppen im BdP erstellen. Die Reportdaten werden täglich gegen 2 Uhr mit der Mitgliederverwaltung synchronisiert.<br/>Einfache Auswertungen und Exporte der aktuellen Daten lassen sich auch in der Mitgliederverwaltung selbst machen.
+  main
 
     if availableGroups.length
 
@@ -44,10 +47,10 @@ block content
           if availableReports && availableReports.length === 0
             //-- group was selected, but no reports are available / permission missing
             .alert.alert--error
-              .alert_title You do not have permission to create any reports for the selected group.
+              .alert_title Du hast keine Berechtigung, für die ausgewählte Gruppe Berichte zu erstellen.
           else if availableReports === undefined
             .alert.alert--info
-              .alert_title Please select a group first.
+              .alert_title Bitte wähle zuerst eine Gruppe aus.
             
           
         
@@ -72,14 +75,14 @@ block content
                       when 'pdf': | Portable-Document-Format (*.pdf)
                       when 'xlsx': | Microsoft Excel (*.xlsx)
                       when 'xls': | Microsoft Excel (*.xls)
-                      when 'csv': | Comma-Separated-Values (*.csv)
-                      when 'ods': | OpenDocument Spreadsheet (*.ods)
+                      when 'csv': | Kommagetrennte Werte (*.csv)
+                      when 'ods': | OpenDocument-Tabellendokument (*.ods)
                       when 'JSON': | JSON - JavaScript Object Notation (*.json)
                       default: | #{outputFormat}
                         
           else
             .alert.alert--info
-               .alert_title Please select a report first.
+               .alert_title Bitte wähle zuerst einen Bericht aus.
 
         
         button(type="submit", formaction="./generate" formmethod="POST", disabled=(!selectedReport)) Report generieren
@@ -102,13 +105,13 @@ block content
         p Bei Problemen kannst du dich per E-Mail bei mitglied@pfadfinden.de melden.
         .debug-info.collapsible
           input(id="debugInfoCollapsible",type="checkbox")
-          label(for="debugInfoCollapsible") Show Debug Information
+          label(for="debugInfoCollapsible") Debug-Informationen anzeigen
           .collapsible_content
             pre
-              | # Requested: #{request.method} #{request.url}
-              | # Requested Date: #{request.timestamp}
-              | # Selected Group: #{selectedGroup ? selectedGroup.id : "~None~"} 
-              | # Selected Report: #{selectedReport ? selectedReport.id: "~None~"} 
-              | # Selected Report Version: #{selectedReport ? selectedReport.version: "~None~"} 
+              | # Angefragt: #{request.method} #{request.url}
+              | # Anfragedatum: #{request.timestamp}
+              | # Ausgewählte Gruppe: #{selectedGroup ? selectedGroup.id : "~Keine~"}
+              | # Ausgewählter Bericht: #{selectedReport ? selectedReport.id: "~Keiner~"}
+              | # Ausgewählte Berichtsversion: #{selectedReport ? selectedReport.version: "~Keine~"}
         button.btn--secondary Support Ticket öffnen
         button.btn--secondary Debug Informationen Kopieren

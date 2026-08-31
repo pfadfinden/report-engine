@@ -24,6 +24,11 @@ export function createApp(services: AppServices, config: AppConfig) {
   app.use(express.urlencoded({ extended: false }));
   app.use(express.static(path.join(__dirname, "public")));
 
+  app.use(function (req: Request, res: Response, next: NextFunction) {
+    res.locals.memberManagementUrl = config.groups.hitobitoApiUrl;
+    next();
+  });
+
   app.get("/healthz", function (req: Request, res: Response) {
     res.status(200).json({ status: "ok" });
   });
@@ -56,7 +61,7 @@ export function createApp(services: AppServices, config: AppConfig) {
 
   // catch 404 and forward to error handler
   app.use(function (req: Request, res: Response, next: NextFunction) {
-    next(createError(404));
+    next(createError(404, "Nicht gefunden"));
   });
 
   // error handler
