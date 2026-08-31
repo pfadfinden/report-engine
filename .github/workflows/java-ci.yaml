@@ -1,4 +1,4 @@
-name: Preprocessor CI
+name: Java CI
 
 env:
   # Use docker.io for Docker Hub if empty
@@ -11,14 +11,20 @@ on:
     branches: [ main ]
     paths:
       - 'pom.xml'
+      - 'executor/**'
+      - 'azure-report-executor/**'
       - 'preprocessor/**'
-      - '.github/workflows/preprocessor-ci.yaml'
+      - 'local-report-executor/**'
+      - '.github/workflows/java-ci.yaml'
   pull_request:
     branches: [ main ]
     paths:
       - 'pom.xml'
+      - 'executor/**'
+      - 'azure-report-executor/**'
       - 'preprocessor/**'
-      - '.github/workflows/preprocessor-ci.yaml'
+      - 'local-report-executor/**'
+      - '.github/workflows/java-ci.yaml'
 
 jobs:
   build:

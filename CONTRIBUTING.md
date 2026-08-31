@@ -1,11 +1,15 @@
 # Developing in this repository
 
-This repo has two independently built modules:
+This repo has five independently built modules:
 
 - **`frontend/`** - TypeScript/Express web app (report selection UI, OIDC login).
 - **`preprocessor/`** - Java/Maven CLI that compiles report definitions into the SQLite metadata DB the frontend reads.
+- **`executor/`** - Java library wrapping JasperReports (fill/export), shared by the two executor deployments below.
+- **`azure-report-executor/`** - Azure Functions deployment of the report-execution API (cloud, queue-backed).
+- **`local-report-executor/`** - Docker/self-hosted deployment of the same report-execution API.
 
-Each has its own CI workflow (see [CI](#ci) below) that only runs when files under its module change.
+`frontend/` has its own CI workflow that only runs when files under it change; the four Java modules
+share one workflow (see [CI](#ci) below) that runs whenever any of them, or the root `pom.xml`, change.
 
 ## Prerequisites
 
@@ -82,7 +86,8 @@ compile report definitions.
 
 - [.github/workflows/frontend-ci.yaml](.github/workflows/frontend-ci.yaml) - triggered by changes under
   `frontend/**`: typecheck, lint, test, build, and a production Docker image build.
-- [.github/workflows/preprocessor-ci.yaml](.github/workflows/preprocessor-ci.yaml) - triggered by
-  changes under `preprocessor/**` or the root `pom.xml`: Maven build.
+- [.github/workflows/java-ci.yaml](.github/workflows/java-ci.yaml) - triggered by changes under
+  `executor/**`, `azure-report-executor/**`, `preprocessor/**`, `local-report-executor/**`, or the
+  root `pom.xml`: Maven build (builds and tests all four Java modules).
 - [.github/workflows/release.yaml](.github/workflows/release.yaml) - publishes the preprocessor JAR and
   its Docker image on pushes to `main` and version tags.
