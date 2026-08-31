@@ -53,7 +53,20 @@
         <dependency>
             <groupId>net.sf.jasperreports</groupId>
             <artifactId>jasperreports</artifactId>
-            <version>6.21.4</version>
+            <version>${jasperreports.version}</version>
+        </dependency>
+
+        <!-- Language/component support that isn't in core jasperreports as of 7.0: some
+             mv_reports report designs declare language="groovy" or use chart elements. -->
+        <dependency>
+            <groupId>net.sf.jasperreports</groupId>
+            <artifactId>jasperreports-groovy</artifactId>
+            <version>7.0.3</version>
+        </dependency>
+        <dependency>
+            <groupId>net.sf.jasperreports</groupId>
+            <artifactId>jasperreports-charts</artifactId>
+            <version>7.0.3</version>
         </dependency>
 
         <dependency>
@@ -132,30 +145,37 @@
                     </compilerArgs>
                 </configuration>
             </plugin>
+            <!-- maven-assembly-plugin's jar-with-dependencies naively keeps only one copy of
+                 any resource path duplicated across dependency jars - jasperreports-groovy and
+                 jasperreports-charts each ship their own jasperreports_extension.properties,
+                 which silently clobbered the core jasperreports jar's copy (dropping most of its
+                 extension registrations, e.g. the Jackson-based JRXML loader) when assembled this
+                 way. maven-shade-plugin with these transformers merges such files instead. -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-assembly-plugin</artifactId>
-                <version>3.1.1</version>
-                <configuration>
-                    <finalName>${project.artifactId}</finalName>
-                    <archive>
-                        <manifest>
-                            <addDefaultImplementationEntries>true</addDefaultImplementationEntries>
-                            <mainClass>de.pfadfinden.reports_engine.preprocessor.Main</mainClass>
-                        </manifest>
-                    </archive>
-                    <descriptorRefs>
-                        <descriptorRef>jar-with-dependencies</descriptorRef>
-                    </descriptorRefs>
-                    <appendAssemblyId>false</appendAssemblyId>
-                </configuration>
+                <artifactId>maven-shade-plugin</artifactId>
+                <version>3.6.2</version>
                 <executions>
                     <execution>
-                        <id>make-assembly</id>
                         <phase>package</phase>
                         <goals>
-                            <goal>single</goal>
+                            <goal>shade</goal>
                         </goals>
+                        <configuration>
+                            <outputFile>${project.build.directory}/preprocessor.jar</outputFile>
+                            <transformers>
+                                <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
+                                    <mainClass>de.pfadfinden.reports_engine.preprocessor.Main</mainClass>
+                                </transformer>
+                                <transformer implementation="org.apache.maven.plugins.shade.resource.ServicesResourceTransformer"/>
+                                <transformer implementation="org.apache.maven.plugins.shade.resource.AppendingTransformer">
+                                    <resource>jasperreports_extension.properties</resource>
+                                </transformer>
+                                <transformer implementation="org.apache.maven.plugins.shade.resource.AppendingTransformer">
+                                    <resource>default.jasperreports.properties</resource>
+                                </transformer>
+                            </transformers>
+                        </configuration>
                     </execution>
                 </executions>
             </plugin>

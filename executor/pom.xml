@@ -22,7 +22,27 @@
         <dependency>
             <groupId>net.sf.jasperreports</groupId>
             <artifactId>jasperreports</artifactId>
-            <version>6.21.4</version>
+            <version>${jasperreports.version}</version>
+        </dependency>
+
+        <!-- Language/component support that isn't in core jasperreports as of 7.0: some
+             mv_reports report designs declare language="groovy" or use chart elements. -->
+        <dependency>
+            <groupId>net.sf.jasperreports</groupId>
+            <artifactId>jasperreports-groovy</artifactId>
+            <version>7.0.3</version>
+        </dependency>
+        <dependency>
+            <groupId>net.sf.jasperreports</groupId>
+            <artifactId>jasperreports-charts</artifactId>
+            <version>7.0.3</version>
+        </dependency>
+
+        <!-- PDF export was split out of core jasperreports as of 7.0 too. -->
+        <dependency>
+            <groupId>net.sf.jasperreports</groupId>
+            <artifactId>jasperreports-pdf</artifactId>
+            <version>7.0.3</version>
         </dependency>
 
         <dependency>

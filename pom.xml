@@ -9,6 +9,11 @@
     <version>1.0-SNAPSHOT</version>
     <packaging>pom</packaging>
 
+    <properties>
+        <!-- 7.x can no longer load *.jrxml/*.jrtx authored under 6.x - do not release/deploy until mv_reports' content is re-saved via Jaspersoft Studio 7+. -->
+        <jasperreports.version>7.0.8</jasperreports.version>
+    </properties>
+
     <modules>
         <module>executor</module>
         <module>azure-report-executor</module>
