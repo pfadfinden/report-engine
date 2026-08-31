@@ -30,6 +30,13 @@ public class Main {
         ReportExecutionRunner runner = new ReportExecutionRunner(config, executionStore, backgroundExecutor);
         DownloadUrlSigner signer = new DownloadUrlSigner(config.downloadUrlSigningSecret());
 
+        Javalin app = createApp(config, executionStore, runner, signer);
+        app.start(config.port());
+    }
+
+    /** Package-private so tests can build and exercise the app without binding a real port. */
+    static Javalin createApp(Config config, ExecutionStore executionStore, ReportExecutionRunner runner,
+            DownloadUrlSigner signer) {
         Javalin app = Javalin.create();
 
         // This service trusts its caller completely: it has no notion of which
@@ -54,7 +61,7 @@ public class Main {
         app.get("/executions/{executionId}/download", ctx -> getDownloadUrl(ctx, executionStore, signer, config));
         app.get("/files/{executionId}", ctx -> serveFile(ctx, executionStore, signer));
 
-        app.start(config.port());
+        return app;
     }
 
     private static void requireApiKey(Context ctx, String apiKey) {
