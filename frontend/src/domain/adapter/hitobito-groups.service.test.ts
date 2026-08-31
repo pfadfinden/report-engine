@@ -211,6 +211,39 @@ test("follows pagination links and deduplicates groups shared by multiple roles"
   ]);
 });
 
+test("caches resolved groups per principal instead of refetching on every call", async () => {
+  fetchMock.mockResolvedValueOnce(
+    jsonResponse({
+      data: [groupResource("1", "Bundesamt", "Group::Bundesamt")],
+    }),
+  );
+
+  const sut = new HitobitoGroupsService(API_URL, API_TOKEN);
+  const p = principal([role({ groupId: "1", permissions: ["contact_data"] })]);
+
+  const first = await sut.findFor(p);
+  const second = await sut.findFor(p);
+
+  expect(fetchMock).toHaveBeenCalledTimes(1);
+  expect(second).toEqual(first);
+});
+
+test("refetches once the cache TTL has elapsed", async () => {
+  fetchMock.mockResolvedValue(
+    jsonResponse({
+      data: [groupResource("1", "Bundesamt", "Group::Bundesamt")],
+    }),
+  );
+
+  const sut = new HitobitoGroupsService(API_URL, API_TOKEN, -1);
+  const p = principal([role({ groupId: "1", permissions: ["contact_data"] })]);
+
+  await sut.findFor(p);
+  await sut.findFor(p);
+
+  expect(fetchMock).toHaveBeenCalledTimes(2);
+});
+
 test("throws when the Hitobito API responds with an error status", async () => {
   fetchMock.mockResolvedValueOnce(jsonResponse({}, false));
 

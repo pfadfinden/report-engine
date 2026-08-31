@@ -1,5 +1,5 @@
 import { Group, GroupId } from "../model/group";
-import { Principal } from "../model/principal";
+import { Principal, PrincipalId } from "../model/principal";
 import { GroupsService } from "../port/groups.service";
 
 // Permissions that grant access to a group's entire *layer* and everything
@@ -40,6 +40,13 @@ interface HitobitoGroupsDocument {
   };
 }
 
+interface CacheEntry {
+  readonly groups: ReadonlyArray<Group>;
+  readonly expiresAt: number;
+}
+
+const DEFAULT_CACHE_TTL_MS = 5 * 60 * 1000;
+
 /**
  * Resolves a principal's groups against the Hitobito API (see <apiUrl>/api/openapi.yaml).
  *
@@ -47,14 +54,36 @@ interface HitobitoGroupsDocument {
  * with its Hitobito group type. Roles carrying "layer_and_below_read"/"layer_and_below_full"
  * additionally pull in that group's full subtree, since those permissions grant access to
  * the group and everything below it.
+ *
+ * Results are cached per principal for `cacheTtlMs`, so repeated calls (e.g. one per page
+ * load) don't re-hit the Hitobito API each time.
  */
 export class HitobitoGroupsService implements GroupsService {
+  private readonly cache = new Map<PrincipalId, CacheEntry>();
+
   constructor(
     private readonly apiUrl: string,
     private readonly apiToken: string,
+    private readonly cacheTtlMs: number = DEFAULT_CACHE_TTL_MS,
   ) {}
 
   public async findFor(principal: Principal): Promise<ReadonlyArray<Group>> {
+    const cached = this.cache.get(principal.id);
+    if (cached && cached.expiresAt > Date.now()) {
+      return cached.groups;
+    }
+
+    const groups = await this.resolveFor(principal);
+    this.cache.set(principal.id, {
+      groups,
+      expiresAt: Date.now() + this.cacheTtlMs,
+    });
+    return groups;
+  }
+
+  private async resolveFor(
+    principal: Principal,
+  ): Promise<ReadonlyArray<Group>> {
     const groupIds = [...new Set(principal.roles.map((role) => role.groupId))];
     if (groupIds.length === 0) {
       return [];
