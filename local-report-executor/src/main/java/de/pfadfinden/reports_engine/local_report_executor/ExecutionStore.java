@@ -4,18 +4,18 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
- * Process-local table of execution state, keyed by the client-supplied
- * executionId. See ExecutionState for the durability caveat.
+ * Process-local table of execution state, keyed by the client-supplied executionId. See
+ * ExecutionState for the durability caveat.
  */
 public class ExecutionStore {
 
-    private final Map<String, ExecutionState> executions = new ConcurrentHashMap<>();
+  private final Map<String, ExecutionState> executions = new ConcurrentHashMap<>();
 
-    public void createPending(String executionId) {
-        executions.put(executionId, new ExecutionState());
-    }
+  public void createPending(String executionId) {
+    executions.put(executionId, new ExecutionState());
+  }
 
-    public ExecutionState get(String executionId) {
-        return executions.get(executionId);
-    }
+  public ExecutionState get(String executionId) {
+    return executions.get(executionId);
+  }
 }

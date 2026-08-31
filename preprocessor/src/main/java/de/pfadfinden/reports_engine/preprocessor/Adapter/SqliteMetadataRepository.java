@@ -1,8 +1,5 @@
 package de.pfadfinden.reports_engine.preprocessor.Adapter;
 
-import java.io.File;
-import java.util.stream.Stream;
-
 import de.pfadfinden.reports_engine.preprocessor.Metadata.ParameterMetadata;
 import de.pfadfinden.reports_engine.preprocessor.Metadata.ReportMetadata;
 import de.pfadfinden.reports_engine.preprocessor.Metadata.VersionMetadata;
@@ -12,60 +9,64 @@ import jakarta.persistence.EntityManagerFactory;
 import jakarta.persistence.PersistenceConfiguration;
 import jakarta.persistence.Query;
 import jakarta.persistence.criteria.CriteriaQuery;
+import java.io.File;
+import java.util.stream.Stream;
 
 public class SqliteMetadataRepository implements MetadataRepository {
 
-    private EntityManager em;
+  private EntityManager em;
 
-    public static SqliteMetadataRepository initNew(String outputBasePath) {
-        return new SqliteMetadataRepository(outputBasePath, "reports.db", true);
+  public static SqliteMetadataRepository initNew(String outputBasePath) {
+    return new SqliteMetadataRepository(outputBasePath, "reports.db", true);
+  }
+
+  private SqliteMetadataRepository(
+      String outputBasePath, String databaseFileName, Boolean initNew) {
+    String jdbcUrl = "jdbc:sqlite:" + outputBasePath + File.separator + databaseFileName;
+
+    EntityManagerFactory emf =
+        new PersistenceConfiguration("ReportDatabase")
+            .managedClass(ReportMetadata.class)
+            .managedClass(VersionMetadata.class)
+            .managedClass(ParameterMetadata.class)
+            .property(PersistenceConfiguration.LOCK_TIMEOUT, 5000)
+            .property(PersistenceConfiguration.JDBC_URL, jdbcUrl)
+            .createEntityManagerFactory();
+
+    assert emf != null;
+
+    if (initNew) {
+      emf.getSchemaManager().create(true);
     }
 
-    private SqliteMetadataRepository(String outputBasePath, String databaseFileName, Boolean initNew) {
-        String jdbcUrl = "jdbc:sqlite:" + outputBasePath + File.separator + databaseFileName;
+    this.em = emf.createEntityManager();
+  }
 
-        EntityManagerFactory emf = new PersistenceConfiguration("ReportDatabase")
-                .managedClass(ReportMetadata.class)
-                .managedClass(VersionMetadata.class)
-                .managedClass(ParameterMetadata.class)
-                .property(PersistenceConfiguration.LOCK_TIMEOUT, 5000)
-                .property(PersistenceConfiguration.JDBC_URL, jdbcUrl)
-                .createEntityManagerFactory();
+  public SqliteMetadataRepository(String outputBasePath) {
+    this(outputBasePath, "reports.db", false);
+  }
 
-        assert emf != null;
+  public SqliteMetadataRepository(String outputBasePath, String databaseFileName) {
+    this(outputBasePath, databaseFileName, false);
+  }
 
-        if (initNew) {
-            emf.getSchemaManager().create(true);
-        }
+  @Override
+  public void add(ReportMetadata report) {
+    this.em.getTransaction().begin();
+    this.em.persist(report);
+    this.em.getTransaction().commit();
+  }
 
-        this.em = emf.createEntityManager();
-    }
-
-    public SqliteMetadataRepository(String outputBasePath) {
-        this(outputBasePath, "reports.db", false);
-    }
-
-    public SqliteMetadataRepository(String outputBasePath, String databaseFileName) {
-        this(outputBasePath, databaseFileName, false);
-    }
-
-    @Override
-    public void add(ReportMetadata report) {
-        this.em.getTransaction().begin();
-        this.em.persist(report);
-        this.em.getTransaction().commit();
-    }
-
-    @Override
-    public Stream<ReportMetadata> all() {
-        // distinct is required here: without it, the join against ReportMetadata's
-        // eagerly-fetched collections (parameters/versionHistory) returns one row per
-        // collection element, so each report gets processed once per element instead
-        // of once overall.
-        CriteriaQuery<ReportMetadata> cq = this.em.getCriteriaBuilder().createQuery(ReportMetadata.class);
-        cq.select(cq.from(ReportMetadata.class)).distinct(true);
-        Query query = this.em.createQuery(cq);
-        return query.getResultStream();
-    }
-
+  @Override
+  public Stream<ReportMetadata> all() {
+    // distinct is required here: without it, the join against ReportMetadata's
+    // eagerly-fetched collections (parameters/versionHistory) returns one row per
+    // collection element, so each report gets processed once per element instead
+    // of once overall.
+    CriteriaQuery<ReportMetadata> cq =
+        this.em.getCriteriaBuilder().createQuery(ReportMetadata.class);
+    cq.select(cq.from(ReportMetadata.class)).distinct(true);
+    Query query = this.em.createQuery(cq);
+    return query.getResultStream();
+  }
 }

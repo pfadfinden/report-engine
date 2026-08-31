@@ -11,19 +11,21 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class FindMatchingFilesFileVisitor extends SimpleFileVisitor<Path> {
-    public List<Path> matchesList = new ArrayList<Path>();
-    private PathMatcher matcher;
+  public List<Path> matchesList = new ArrayList<Path>();
+  private PathMatcher matcher;
 
-    public FindMatchingFilesFileVisitor(String globOrRegex) {
-        this.matcher = FileSystems.getDefault().getPathMatcher(globOrRegex);
-    };
+  public FindMatchingFilesFileVisitor(String globOrRegex) {
+    this.matcher = FileSystems.getDefault().getPathMatcher(globOrRegex);
+  }
+  ;
 
-    @Override
-    public FileVisitResult visitFile(Path file, BasicFileAttributes attribs) throws IOException {
-        Path name = file.getFileName();
-        if (matcher.matches(name)) {
-            matchesList.add(file);
-        }
-        return FileVisitResult.CONTINUE;
+  @Override
+  public FileVisitResult visitFile(Path file, BasicFileAttributes attribs) throws IOException {
+    Path name = file.getFileName();
+    if (matcher.matches(name)) {
+      matchesList.add(file);
     }
-};
+    return FileVisitResult.CONTINUE;
+  }
+}
+;

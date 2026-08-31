@@ -1,11 +1,10 @@
 package de.pfadfinden.reports_engine.preprocessor.Port;
 
+import de.pfadfinden.reports_engine.preprocessor.Metadata.ReportMetadata;
 import java.util.stream.Stream;
 
-import de.pfadfinden.reports_engine.preprocessor.Metadata.ReportMetadata;
-
 public interface MetadataRepository {
-    public void add(ReportMetadata report);
+  public void add(ReportMetadata report);
 
-    public Stream<ReportMetadata> all();
+  public Stream<ReportMetadata> all();
 }

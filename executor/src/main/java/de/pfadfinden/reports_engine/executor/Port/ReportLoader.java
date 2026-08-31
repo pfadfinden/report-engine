@@ -4,5 +4,5 @@ import de.pfadfinden.reports_engine.executor.Exceptions.FailedToLoadReport;
 
 public interface ReportLoader {
 
-    public ReportDefinition load(String reportName) throws FailedToLoadReport;
+  public ReportDefinition load(String reportName) throws FailedToLoadReport;
 }
