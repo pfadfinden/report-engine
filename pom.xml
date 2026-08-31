@@ -18,6 +18,7 @@
         <module>executor</module>
         <module>azure-report-executor</module>
         <module>preprocessor</module>
+        <module>local-report-executor</module>
     </modules>
 
     <build>
