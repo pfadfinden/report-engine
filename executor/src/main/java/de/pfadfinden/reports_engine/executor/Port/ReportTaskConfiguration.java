@@ -25,13 +25,20 @@ public class ReportTaskConfiguration {
      */
     public final String outputName;
 
+    /**
+     * Format to export the filled report to
+     */
+    public final OutputFormat outputFormat;
+
     public ReportTaskConfiguration(
         String reportId,
         Map<String, Object> parameters,
-        String outputName
+        String outputName,
+        OutputFormat outputFormat
     ) {
         this.reportId = reportId;
         this.parameters = parameters;
         this.outputName = outputName;
+        this.outputFormat = outputFormat;
     }
 }
