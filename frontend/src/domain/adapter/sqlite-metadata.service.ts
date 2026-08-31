@@ -9,6 +9,7 @@ interface ReportDto {
   version: string;
   complex: number;
   outputFormats: string;
+  onlyForType: string | null;
 }
 
 export class SqliteMetadataService implements MetadataService {
@@ -34,22 +35,33 @@ export class SqliteMetadataService implements MetadataService {
   findFor(groupType: string): Promise<ReadonlyArray<Report>> {
     return this._all<ReportDto>(
       `
-                SELECT 
+                SELECT
                     r.id,
                     r.title,
                     r.description,
                     r.complex,
-                    r.outputFormats, 
-                    ( 
-                      SELECT v.version 
-                      FROM VersionMetadata v 
+                    r.outputFormats,
+                    r.onlyForType,
+                    (
+                      SELECT v.version
+                      FROM VersionMetadata v
                       WHERE v.report_id = r.id
                       ORDER BY v.createdOn DESC
                       LIMIT 1
                     ) as version
                 FROM Reports r
             `,
-    ).then((rows) => rows.map(this._mapReport));
+    )
+      .then((rows) => rows.map(this._mapReport))
+      .then((reports) =>
+        groupType === "*"
+          ? reports
+          : reports.filter(
+              (report) =>
+                report.onlyForType.length === 0 ||
+                report.onlyForType.includes(groupType),
+            ),
+      );
   }
 
   private _all<T, P extends object = object>(
@@ -64,6 +76,7 @@ export class SqliteMetadataService implements MetadataService {
       ...dbReport,
       complex: dbReport.complex === 1,
       outputFormats: JSON.parse(dbReport.outputFormats),
+      onlyForType: (dbReport.onlyForType && JSON.parse(dbReport.onlyForType)) || [],
     };
   }
 

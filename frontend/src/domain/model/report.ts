@@ -7,6 +7,12 @@ export interface Report {
   version: string;
   complex: boolean;
   outputFormats: string[];
+  /**
+   * Hitobito group types this report is allowed to run for (e.g.
+   * "Group::Bundesebene"). Empty means the report is available for all
+   * group types.
+   */
+  onlyForType: string[];
 }
 
 export interface Parameter {

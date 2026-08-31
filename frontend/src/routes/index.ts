@@ -53,7 +53,7 @@ export function createIndexRouter(services: AppServices): Router {
             return;
           }
 
-          availableReports = await metadataService.findFor("*");
+          availableReports = await metadataService.findFor(selectedGroup.type);
 
           if (requestParams.reportId) {
             selectedReport = availableReports.find(
