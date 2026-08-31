@@ -103,15 +103,24 @@
                     <region>westus</region>
                     <!-- function app service plan name -->
                     <appServicePlanName>java-functions-app-service-plan</appServicePlanName>
-                    <!-- function pricingTier, default to be consumption if not specified -->
-                    <!-- refers https://github.com/microsoft/azure-maven-plugins/wiki/Azure-Functions:-Configuration-Details#supported-pricing-tiers for all valid values -->
-                    <!-- <pricingTier></pricingTier> -->
+                    <!-- Flex Consumption: the only Azure Functions plan that supports virtual network
+                         integration, needed so this function can reach REPORT_SOURCEDATA_DATABASE_URL
+                         over a private network instead of the public internet. Neither Windows nor
+                         Linux Consumption support VNet integration at all, regardless of pricing tier.
+                         Stays well within Flex's free grant (250k executions / 100k GB-s per month) at
+                         the expected ~400 executions/month - see alwaysReadyInstances note below.
+                         VNet integration itself isn't configurable here; it's set up against the
+                         subnet (delegated to Microsoft.App/environments, >= /27) via
+                         `az functionapp vnet-integration add` or the portal, after the app exists. -->
+                    <pricingTier>Flex Consumption</pricingTier>
                     <!-- Whether to disable application insights, default is false -->
                     <!-- refers https://github.com/microsoft/azure-maven-plugins/wiki/Azure-Functions:-Configuration-Details for all valid configurations for application insights-->
                     <!-- <disableAppInsights></disableAppInsights> -->
+                    <!-- Deliberately not setting alwaysReadyInstances: any always-ready instance has
+                         zero free grant and bills from the first second, unlike on-demand instances. -->
                     <runtime>
-                        <!-- runtime os, could be windows, linux or docker-->
-                        <os>windows</os>
+                        <!-- Flex Consumption is Linux-only -->
+                        <os>linux</os>
                         <javaVersion>25</javaVersion>
                     </runtime>
                     <appSettings>
