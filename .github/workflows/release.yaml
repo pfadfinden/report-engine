@@ -36,7 +36,10 @@ jobs:
       - name: Package with Maven
         run: mvn package -pl preprocessor
 
+      # GitHub Releases are tied to a tag, so this only runs for tag pushes (e.g. v1.2.3) -
+      # a plain push to main has no tag to attach a release to.
       - name: Upload JAR File as Release Artefact
+        if: startsWith(github.ref, 'refs/tags/')
         uses: softprops/action-gh-release@v2
         with:
           files: preprocessor/target/preprocessor.jar
@@ -96,7 +99,10 @@ jobs:
       - name: Package with Maven
         run: mvn package -pl local-report-executor -am
 
+      # GitHub Releases are tied to a tag, so this only runs for tag pushes (e.g. v1.2.3) -
+      # a plain push to main has no tag to attach a release to.
       - name: Upload JAR File as Release Artefact
+        if: startsWith(github.ref, 'refs/tags/')
         uses: softprops/action-gh-release@v2
         with:
           files: local-report-executor/target/local-report-executor.jar
