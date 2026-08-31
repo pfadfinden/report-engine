@@ -1,7 +1,7 @@
 # Local development stack: `docker compose up` builds the frontend from its "dev" build
-# stage (source bind-mounted in, nodemon hot-reloads on change), plus the sample DB,
-# local-report-executor, and whodb used when working on reports end-to-end. For a
-# production image, see docker-compose.prod.yml instead.
+# stage (source bind-mounted in, nodemon hot-reloads on change), plus local-report-executor,
+# used when working on reports end-to-end. For a production image, see
+# docker-compose.prod.yml instead.
 #
 # OIDC login needs an identity provider - this stack does not bundle one. Copy
 # frontend/.env.example to frontend/.env and point OIDC_ISSUER_URL/OIDC_CLIENT_ID/AUTH_* at
@@ -44,16 +44,6 @@ services:
             - ./dist-reports/preprocessed:/usr/src/dist/preprocessed:ro
         restart: unless-stopped
 
-    sample-db:
-        image: mysql:8.0
-        environment:
-            - MYSQL_ROOT_PASSWORD=development
-            - MYSQL_DATABASE=sampledb
-        volumes:
-            - ./sample-db-dump:/docker-entrypoint-initdb.d:ro
-        ports:
-            - "127.0.0.1:3306:3306"
-
     # Same API contract as azure-report-executor (see README), running as a plain Docker
     # container instead of an Azure Function - for local dev and self-hosted deployments.
     local-report-executor:
@@ -86,8 +76,3 @@ services:
             # local-dev-executor-api-key" except for GET /files/... (signed instead).
             - "127.0.0.1:8081:8080"
         restart: unless-stopped
-
-    whodb:
-        image: clidey/whodb
-        ports:
-            - "127.0.0.1:8080:8080"

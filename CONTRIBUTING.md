@@ -33,8 +33,7 @@ docker compose up
 
 This builds the frontend from its `dev` image stage (see [frontend/Dockerfile](frontend/Dockerfile)),
 bind-mounts `frontend/src` into the container so `nodemon` restarts on every change, reads
-`frontend/.env` for config, and starts it at http://localhost:3000, alongside `sample-db` / `whodb`
-(useful when working on report metadata queries).
+`frontend/.env` for config, and starts it at http://localhost:3000.
 
 Or run it directly on the host:
 
