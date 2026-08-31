@@ -39,8 +39,6 @@ jobs:
 
       - name: Lint
         run: npm run lint
-        # the codebase predates this lint config; tighten to a hard gate once it's clean
-        continue-on-error: true
 
       - name: Test
         run: npm test -- --ci
