@@ -52,9 +52,7 @@ npm run format       # prettier --write
 npm test
 ```
 
-`npm run lint` is also run in CI and will fail the build. Formatting is not yet enforced as a CI
-gate (the codebase predates the Prettier config), so `npm run format` is currently a courtesy, not a
-requirement.
+`npm run lint` and `npm run format:check` are also run in CI and will fail the build.
 
 ### Building the production image
 
