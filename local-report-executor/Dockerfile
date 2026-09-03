@@ -1,4 +1,4 @@
-FROM eclipse-temurin:21 AS jre-build
+FROM eclipse-temurin:25 AS jre-build
 
 # Fill/export touches AWT (font metrics/layout) and JDBC, unlike the
 # preprocessor's compile-only java.base image - verified empirically against
