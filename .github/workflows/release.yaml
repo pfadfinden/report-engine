@@ -40,7 +40,7 @@ jobs:
       # a plain push to main has no tag to attach a release to.
       - name: Upload JAR File as Release Artefact
         if: startsWith(github.ref, 'refs/tags/')
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@v3
         with:
           files: preprocessor/target/preprocessor.jar
 
@@ -103,7 +103,7 @@ jobs:
       # a plain push to main has no tag to attach a release to.
       - name: Upload JAR File as Release Artefact
         if: startsWith(github.ref, 'refs/tags/')
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@v3
         with:
           files: local-report-executor/target/local-report-executor.jar
 
