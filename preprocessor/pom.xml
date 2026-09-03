@@ -22,7 +22,7 @@
     <properties>
         <maven.compiler.source>25</maven.compiler.source>
         <maven.compiler.target>25</maven.compiler.target>
-        <hibernate.orm.version>7.0.2.Final</hibernate.orm.version>
+        <hibernate.orm.version>7.4.7.Final</hibernate.orm.version>
     </properties>
 
     <dependencies>
