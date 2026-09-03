@@ -11,6 +11,7 @@ import de.pfadfinden.reports_engine.executor.Port.ExecutionStatus;
 import de.pfadfinden.reports_engine.executor.Port.OutputFormat;
 import io.javalin.Javalin;
 import io.javalin.testtools.JavalinTest;
+import io.javalin.testtools.Response;
 import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -18,7 +19,6 @@ import java.nio.file.Files;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.Map;
-import okhttp3.Response;
 import org.junit.jupiter.api.Test;
 
 /**
@@ -210,7 +210,7 @@ class MainTest {
           Response response = client.get("/files/exec-1?expires=" + expires + "&sig=" + signature);
 
           assertEquals(200, response.code());
-          assertEquals("application/pdf", response.header("Content-Type"));
+          assertEquals("application/pdf", response.headers().get("Content-Type").get(0));
           assertEquals("fake pdf bytes", response.body().string());
         });
   }

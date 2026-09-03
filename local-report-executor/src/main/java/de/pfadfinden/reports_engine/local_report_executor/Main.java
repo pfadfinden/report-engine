@@ -39,32 +39,38 @@ public class Main {
       ExecutionStore executionStore,
       ReportExecutionRunner runner,
       DownloadUrlSigner signer) {
-    Javalin app = Javalin.create();
+    Javalin app =
+        Javalin.create(
+            javalinConfig -> {
+              // This service trusts its caller completely: it has no notion of which
+              // reports/parameters a given end-user is allowed to request, that
+              // authorization decision is made entirely by the frontend before it
+              // calls here. It must never be reachable by anything other than the
+              // frontend backend - not by end-user browsers, not on a public or
+              // shared network. This check is defense-in-depth for that boundary,
+              // not a substitute for keeping this service off any network an
+              // untrusted caller could reach.
+              //
+              // /files/* is deliberately exempt: it's protected by its own signed,
+              // short-lived, single-purpose URL (see serveFile) instead, mirroring
+              // how the Azure executor's equivalent is a SAS blob URL - neither
+              // needs the API key on top, and this keeps the two backends'
+              // returned download URLs interchangeable for the frontend proxy.
+              javalinConfig.routes.before("/reports/*", ctx -> requireApiKey(ctx, config.apiKey()));
+              javalinConfig.routes.before(
+                  "/executions/*", ctx -> requireApiKey(ctx, config.apiKey()));
 
-    // This service trusts its caller completely: it has no notion of which
-    // reports/parameters a given end-user is allowed to request, that
-    // authorization decision is made entirely by the frontend before it
-    // calls here. It must never be reachable by anything other than the
-    // frontend backend - not by end-user browsers, not on a public or
-    // shared network. This check is defense-in-depth for that boundary,
-    // not a substitute for keeping this service off any network an
-    // untrusted caller could reach.
-    //
-    // /files/* is deliberately exempt: it's protected by its own signed,
-    // short-lived, single-purpose URL (see serveFile) instead, mirroring
-    // how the Azure executor's equivalent is a SAS blob URL - neither
-    // needs the API key on top, and this keeps the two backends'
-    // returned download URLs interchangeable for the frontend proxy.
-    app.before("/reports/*", ctx -> requireApiKey(ctx, config.apiKey()));
-    app.before("/executions/*", ctx -> requireApiKey(ctx, config.apiKey()));
-
-    app.post(
-        "/reports/{reportId}/executions", ctx -> triggerExecution(ctx, executionStore, runner));
-    app.get("/executions/{executionId}/status", ctx -> getStatus(ctx, executionStore));
-    app.get(
-        "/executions/{executionId}/download",
-        ctx -> getDownloadUrl(ctx, executionStore, signer, config));
-    app.get("/files/{executionId}", ctx -> serveFile(ctx, executionStore, signer));
+              javalinConfig.routes.post(
+                  "/reports/{reportId}/executions",
+                  ctx -> triggerExecution(ctx, executionStore, runner));
+              javalinConfig.routes.get(
+                  "/executions/{executionId}/status", ctx -> getStatus(ctx, executionStore));
+              javalinConfig.routes.get(
+                  "/executions/{executionId}/download",
+                  ctx -> getDownloadUrl(ctx, executionStore, signer, config));
+              javalinConfig.routes.get(
+                  "/files/{executionId}", ctx -> serveFile(ctx, executionStore, signer));
+            });
 
     return app;
   }

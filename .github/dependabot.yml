@@ -25,7 +25,9 @@ updates:
         patterns:
           - "org.junit*:*"
           - "org.mockito:*"
-          - "io.javalin:javalin-testtools"
+      javalin:
+        patterns:
+          - "io.javalin:*"
       quality-tooling:
         patterns:
           - "org.jacoco:*"
