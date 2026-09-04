@@ -49,9 +49,9 @@ jobs:
           --health-retries 5
 
     steps:
-    - uses: actions/checkout@v7
+    - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
     - name: Set up JDK 25
-      uses: actions/setup-java@v6
+      uses: actions/setup-java@dd06d9cba3e5552c54d9f8ea23572deb30010f7c # v6.0.0
       with:
         java-version: '25'
         distribution: 'temurin'
@@ -65,7 +65,7 @@ jobs:
     # HTML report per module under <module>/target/site/jacoco/ as part of `mvn package` above -
     # nothing to generate here, just publish what already exists.
     - name: Upload coverage reports
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
       with:
         name: java-coverage-reports
         path: '*/target/site/jacoco/'
@@ -84,12 +84,12 @@ jobs:
       contents: write
 
     steps:
-    - uses: actions/checkout@v7
+    - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
     - name: Set up JDK 25
-      uses: actions/setup-java@v6
+      uses: actions/setup-java@dd06d9cba3e5552c54d9f8ea23572deb30010f7c # v6.0.0
       with:
         java-version: '25'
         distribution: 'temurin'
         cache: maven
     - name: Update dependency graph
-      uses: advanced-security/maven-dependency-submission-action@b275d12641ac2d2108b2cbb7598b154ad2f2cee8 # v5.0.0
+      uses: advanced-security/maven-dependency-submission-action@a64327a7329c9939cf675e458452febe1894a70c # v6.0.1

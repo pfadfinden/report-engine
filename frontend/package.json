@@ -6,7 +6,7 @@
   "license": "ISC",
   "description": "",
   "engines": {
-    "node": "^20.19.0 || >=22.12.0"
+    "node": "^26.0.0"
   },
   "scripts": {
     "start": "ts-node -r tsconfig-paths/register src/bin/www",
