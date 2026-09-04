@@ -3,12 +3,12 @@
     <modelVersion>4.0.0</modelVersion>
 
     <parent>
-        <groupId>de.pfadfinden.reports_engine</groupId>
-        <artifactId>reports-engine</artifactId>
+        <groupId>de.pfadfinden.report_engine</groupId>
+        <artifactId>report-engine</artifactId>
         <version>1.0-SNAPSHOT</version>
     </parent>
 
-    <groupId>de.pfadfinden.reports-engine.azure-report-executor</groupId>
+    <groupId>de.pfadfinden.report_engine.azure_report_executor</groupId>
     <artifactId>azure-report-executor</artifactId>
     <version>1.0-SNAPSHOT</version>
     <packaging>jar</packaging>
@@ -50,7 +50,7 @@
         </dependency>
 
         <dependency>
-            <groupId>de.pfadfinden.reports_engine.executor</groupId>
+            <groupId>de.pfadfinden.report_engine.executor</groupId>
             <artifactId>executor</artifactId>
             <version>1.0-SNAPSHOT</version>
         </dependency>

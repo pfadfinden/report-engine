@@ -1,9 +1,7 @@
 name: Java CI
 
 env:
-  # Use docker.io for Docker Hub if empty
   REGISTRY: ghcr.io
-  # github.repository as <account>/<repo>
   IMAGE_NAME: ${{ github.repository }}
 
 on:
@@ -31,6 +29,25 @@ jobs:
 
     runs-on: ubuntu-latest
 
+    # Backs ReportExecutionIntegrationTest (local-report-executor), which needs a real Postgres -
+    # it skips itself when REPORT_SOURCEDATA_DATABASE_URL isn't set (e.g. a local `mvn test` run
+    # without one), but here it's set below so the test actually runs. Values match
+    # frontend/e2e/test.env's Postgres defaults, though nothing here depends on that - this
+    # service and that one are unrelated, disposable databases.
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: report_engine_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
     steps:
     - uses: actions/checkout@v7
     - name: Set up JDK 25
@@ -41,7 +58,38 @@ jobs:
         cache: maven
     - name: Build with Maven
       run: mvn -B package --file pom.xml
+      env:
+        REPORT_SOURCEDATA_DATABASE_URL: jdbc:postgresql://localhost:5432/report_engine_test?user=postgres&password=postgres
 
-    # Uploads the full dependency graph to GitHub to improve the quality of Dependabot alerts this repository can receive
+    # jacoco-maven-plugin (bound in the root pom, inherited by every module) already writes an
+    # HTML report per module under <module>/target/site/jacoco/ as part of `mvn package` above -
+    # nothing to generate here, just publish what already exists.
+    - name: Upload coverage reports
+      uses: actions/upload-artifact@v4
+      with:
+        name: java-coverage-reports
+        path: '*/target/site/jacoco/'
+        retention-days: 14
+
+  # Uploads the full dependency graph to GitHub to improve the quality of Dependabot alerts this repository can receive.
+  # Kept in a separate job so the write-capable token is never present while the untrusted Maven build lifecycle
+  # (compile/test/package plugins) runs.
+  dependency-graph:
+    needs: build
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: write
+
+    steps:
+    - uses: actions/checkout@v7
+    - name: Set up JDK 25
+      uses: actions/setup-java@v6
+      with:
+        java-version: '25'
+        distribution: 'temurin'
+        cache: maven
     - name: Update dependency graph
       uses: advanced-security/maven-dependency-submission-action@b275d12641ac2d2108b2cbb7598b154ad2f2cee8 # v5.0.0

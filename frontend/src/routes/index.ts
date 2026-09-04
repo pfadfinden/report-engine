@@ -23,6 +23,7 @@ export function createIndexRouter(services: AppServices): Router {
 
       const principal = req.principal as Principal;
       res.locals.principal = principal;
+      res.locals.title = 'Bericht erstellen';
 
       const availableGroups = await groupsService.findFor(principal);
       const groupOptions = sortGroupsHierarchically(availableGroups);

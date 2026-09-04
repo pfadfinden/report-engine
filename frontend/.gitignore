@@ -5,3 +5,7 @@ node_modules/
 .env
 .env.*
 !.env.example
+e2e/.runtime/
+playwright-report/
+test-results/
+coverage/

@@ -8,79 +8,79 @@
 -->
 <FindBugsFilter>
     <Match>
-        <Class name="de.pfadfinden.reports_engine.preprocessor.AbstractFollowUpTaskCommand" />
+        <Class name="de.pfadfinden.report_engine.preprocessor.AbstractFollowUpTaskCommand" />
         <Bug pattern="PATH_TRAVERSAL_IN" />
     </Match>
     <Match>
-        <Class name="de.pfadfinden.reports_engine.preprocessor.Adapter.SqliteMetadataRepository" />
+        <Class name="de.pfadfinden.report_engine.preprocessor.Adapter.SqliteMetadataRepository" />
         <Bug pattern="CT_CONSTRUCTOR_THROW" />
     </Match>
     <Match>
-        <Class name="de.pfadfinden.reports_engine.preprocessor.Adapter.YamlMetadataReader" />
+        <Class name="de.pfadfinden.report_engine.preprocessor.Adapter.YamlMetadataReader" />
         <Bug pattern="BC_VACUOUS_INSTANCEOF" />
     </Match>
     <Match>
-        <Class name="de.pfadfinden.reports_engine.preprocessor.DefaultCommand" />
+        <Class name="de.pfadfinden.report_engine.preprocessor.DefaultCommand" />
         <Bug pattern="RV_RETURN_VALUE_IGNORED_BAD_PRACTICE" />
     </Match>
     <Match>
-        <Class name="de.pfadfinden.reports_engine.preprocessor.Metadata.ParameterMetadata" />
+        <Class name="de.pfadfinden.report_engine.preprocessor.Metadata.ParameterMetadata" />
         <Bug pattern="PA_PUBLIC_PRIMITIVE_ATTRIBUTE" />
     </Match>
     <Match>
-        <Class name="de.pfadfinden.reports_engine.preprocessor.Metadata.VersionMetadata" />
+        <Class name="de.pfadfinden.report_engine.preprocessor.Metadata.VersionMetadata" />
         <Bug pattern="PA_PUBLIC_PRIMITIVE_ATTRIBUTE" />
     </Match>
     <Match>
-        <Class name="de.pfadfinden.reports_engine.preprocessor.MetadataIngestService" />
+        <Class name="de.pfadfinden.report_engine.preprocessor.MetadataIngestService" />
         <Bug pattern="EI_EXPOSE_REP2" />
     </Match>
     <Match>
-        <Class name="de.pfadfinden.reports_engine.preprocessor.MetadataIngestService" />
+        <Class name="de.pfadfinden.report_engine.preprocessor.MetadataIngestService" />
         <Bug pattern="NP_NULL_ON_SOME_PATH_FROM_RETURN_VALUE" />
     </Match>
     <Match>
-        <Class name="de.pfadfinden.reports_engine.preprocessor.Tasks.CompileJasperReportsTask" />
+        <Class name="de.pfadfinden.report_engine.preprocessor.Tasks.CompileJasperReportsTask" />
         <Bug pattern="BC_VACUOUS_INSTANCEOF" />
     </Match>
     <Match>
-        <Class name="de.pfadfinden.reports_engine.preprocessor.Tasks.CompileJasperReportsTask" />
+        <Class name="de.pfadfinden.report_engine.preprocessor.Tasks.CompileJasperReportsTask" />
         <Bug pattern="PATH_TRAVERSAL_IN" />
     </Match>
     <Match>
-        <Class name="de.pfadfinden.reports_engine.preprocessor.Tasks.CompileJasperReportsTask" />
+        <Class name="de.pfadfinden.report_engine.preprocessor.Tasks.CompileJasperReportsTask" />
         <Bug pattern="RV_RETURN_VALUE_IGNORED_BAD_PRACTICE" />
     </Match>
     <Match>
-        <Class name="de.pfadfinden.reports_engine.preprocessor.Tasks.CopySourceTask" />
+        <Class name="de.pfadfinden.report_engine.preprocessor.Tasks.CopySourceTask" />
         <Bug pattern="PATH_TRAVERSAL_IN" />
     </Match>
     <Match>
-        <Class name="de.pfadfinden.reports_engine.preprocessor.Tasks.CopySourceTask" />
+        <Class name="de.pfadfinden.report_engine.preprocessor.Tasks.CopySourceTask" />
         <Bug pattern="RV_RETURN_VALUE_IGNORED_BAD_PRACTICE" />
     </Match>
     <Match>
-        <Class name="de.pfadfinden.reports_engine.preprocessor.Tasks.GenerateMarkdownDetailsPublicTask" />
+        <Class name="de.pfadfinden.report_engine.preprocessor.Tasks.GenerateMarkdownDetailsPublicTask" />
         <Bug pattern="DM_DEFAULT_ENCODING" />
     </Match>
     <Match>
-        <Class name="de.pfadfinden.reports_engine.preprocessor.Tasks.GenerateMarkdownDetailsPublicTask" />
+        <Class name="de.pfadfinden.report_engine.preprocessor.Tasks.GenerateMarkdownDetailsPublicTask" />
         <Bug pattern="PATH_TRAVERSAL_IN" />
     </Match>
     <Match>
-        <Class name="de.pfadfinden.reports_engine.preprocessor.Tasks.GenerateMarkdownDetailsPublicTask" />
+        <Class name="de.pfadfinden.report_engine.preprocessor.Tasks.GenerateMarkdownDetailsPublicTask" />
         <Bug pattern="PATH_TRAVERSAL_OUT" />
     </Match>
     <Match>
-        <Class name="de.pfadfinden.reports_engine.preprocessor.Tasks.GenerateMarkdownDetailsPublicTask" />
+        <Class name="de.pfadfinden.report_engine.preprocessor.Tasks.GenerateMarkdownDetailsPublicTask" />
         <Bug pattern="RV_RETURN_VALUE_IGNORED_BAD_PRACTICE" />
     </Match>
     <Match>
-        <Class name="de.pfadfinden.reports_engine.preprocessor.Tasks.GenerateMarkdownOverviewTask" />
+        <Class name="de.pfadfinden.report_engine.preprocessor.Tasks.GenerateMarkdownOverviewTask" />
         <Bug pattern="DM_DEFAULT_ENCODING" />
     </Match>
     <Match>
-        <Class name="de.pfadfinden.reports_engine.preprocessor.Tasks.GenerateMarkdownOverviewTask" />
+        <Class name="de.pfadfinden.report_engine.preprocessor.Tasks.GenerateMarkdownOverviewTask" />
         <Bug pattern="PATH_TRAVERSAL_OUT" />
     </Match>
 </FindBugsFilter>

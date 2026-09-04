@@ -4,12 +4,12 @@
     xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <parent>
-        <groupId>de.pfadfinden.reports_engine</groupId>
-        <artifactId>reports-engine</artifactId>
+        <groupId>de.pfadfinden.report_engine</groupId>
+        <artifactId>report-engine</artifactId>
         <version>1.0-SNAPSHOT</version>
     </parent>
 
-    <groupId>de.pfadfinden.reports_engine.local_report_executor</groupId>
+    <groupId>de.pfadfinden.report_engine.local_report_executor</groupId>
     <artifactId>local-report-executor</artifactId>
     <version>1.0-SNAPSHOT</version>
 
@@ -22,7 +22,7 @@
 
     <dependencies>
         <dependency>
-            <groupId>de.pfadfinden.reports_engine.executor</groupId>
+            <groupId>de.pfadfinden.report_engine.executor</groupId>
             <artifactId>executor</artifactId>
             <version>1.0-SNAPSHOT</version>
         </dependency>
@@ -95,7 +95,7 @@
                             <outputFile>${project.build.directory}/local-report-executor.jar</outputFile>
                             <transformers>
                                 <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
-                                    <mainClass>de.pfadfinden.reports_engine.local_report_executor.Main</mainClass>
+                                    <mainClass>de.pfadfinden.report_engine.local_report_executor.Main</mainClass>
                                 </transformer>
                                 <transformer implementation="org.apache.maven.plugins.shade.resource.ServicesResourceTransformer"/>
                                 <transformer implementation="org.apache.maven.plugins.shade.resource.AppendingTransformer">

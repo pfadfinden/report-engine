@@ -1,0 +1,39 @@
+package de.pfadfinden.report_engine.preprocessor;
+
+import de.pfadfinden.report_engine.preprocessor.Adapter.SqliteMetadataRepository;
+import de.pfadfinden.report_engine.preprocessor.Port.MetadataRepository;
+import java.io.File;
+import picocli.CommandLine.Option;
+
+public class TaskOptions {
+
+  // @Option(names = {"--source-dir"}, defaultValue = "./reports", description =
+  // "Path to directory with report definitions (default: '${DEFAULT-VALUE}')",
+  // scope = ScopeType.INHERIT)
+  // private File sourceDir;
+
+  @Option(
+      names = {"--output-base-dir"},
+      defaultValue = "./dist/preprocessed",
+      description = "root directory for all generated output (default: '${DEFAULT-VALUE}')")
+  private File outputDir;
+
+  @Option(
+      names = {"--sqlite-db"},
+      defaultValue = "reports.db")
+  private String sqliteDatabase;
+
+  /*
+   * public File inputDir() {
+   * return sourceDir;
+   * }
+   */
+
+  public File outputDir() {
+    return outputDir;
+  }
+
+  public MetadataRepository metadataRepository() {
+    return new SqliteMetadataRepository(this.outputDir().getPath(), this.sqliteDatabase);
+  }
+}

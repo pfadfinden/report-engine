@@ -37,12 +37,8 @@ services:
         extra_hosts:
             - "host.docker.internal:host-gateway"
         volumes:
-            - ./frontend/src:/usr/src/app/src
-            - ./frontend/eslint.config.js:/usr/src/app/eslint.config.js
-            - ./frontend/tsconfig.json:/usr/src/app/tsconfig.json
-            - ./frontend/nodemon.json:/usr/src/app/nodemon.json
-            - ./frontend/.prettierrc.json:/usr/src/app/.prettierrc.json
-            - ./frontend/.prettierignore:/usr/src/app/.prettierignore
+            - ./frontend:/usr/src/app
+            - /usr/src/app/node_modules
             - ./dist-reports/preprocessed:/usr/src/dist/preprocessed:ro
         restart: unless-stopped
 

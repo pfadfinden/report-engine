@@ -1,4 +1,4 @@
-import { Request, Response, NextFunction } from 'express';
+import { Request, Response, NextFunction, RequestHandler } from 'express';
 import { AppServices } from './composition-root';
 import { AppConfig } from './config';
 import { createIndexRouter } from './routes/index';
@@ -12,7 +12,7 @@ var path = require('path');
 var logger = require('morgan');
 var session = require('express-session');
 
-export function createApp(services: AppServices, config: AppConfig) {
+export function createApp(services: AppServices, config: AppConfig, extraMiddleware: RequestHandler[] = []) {
   var app = express();
 
   // view engine setup
@@ -47,6 +47,8 @@ export function createApp(services: AppServices, config: AppConfig) {
     }),
   );
 
+  extraMiddleware.forEach((middleware) => app.use(middleware));
+
   app.use('/auth', createAuthRouter(services.authClient, config.auth, config.groups.hitobitoApiUrl));
 
   app.use('/', requireAuth, createReportExecutionRouter(services, config));
@@ -62,6 +64,7 @@ export function createApp(services: AppServices, config: AppConfig) {
     // set locals, only providing error in development
     res.locals.message = err.message;
     res.locals.error = req.app.get('env') === 'development' ? err : {};
+    res.locals.title = 'Fehler';
 
     // render the error page
     res.status(err.status || 500);

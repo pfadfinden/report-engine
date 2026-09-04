@@ -17,8 +17,8 @@ block content
           legend Gruppe
           
           div.question
-            label Für welche Gruppe soll der Bericht erstellt werden?
-            select(name="groupId")
+            label(for="groupId") Für welche Gruppe soll der Bericht erstellt werden?
+            select(name="groupId", id="groupId")
               each item in groupOptions
                 option(value=item.group.id, selected=(selectedGroup && selectedGroup.id === item.group.id), autocomplete='off')= item.label 
             if !selectedGroup && requestParams.groupId
@@ -32,8 +32,8 @@ block content
           
           if availableReports && availableReports.length
             div.question
-              label Welcher Bericht soll erstellt werden?
-              select(name="reportId")
+              label(for="reportId") Welcher Bericht soll erstellt werden?
+              select(name="reportId", id="reportId")
                 each report in availableReports
                   option(value=report.id)= report.title
               if !selectedReport && requestParams.reportId
@@ -61,14 +61,14 @@ block content
             each parameter in parameterToFill
 
               div.question
-                label= parameter.label
-                input(type=parameter.type,name="p_" + parameter.name)
+                label(for="p_" + parameter.name)= parameter.label
+                input(type=parameter.type,name="p_" + parameter.name, id="p_" + parameter.name)
                 if parameter.description
                   small= parameter.description
-            
+
             div.question
-              label In welchem Format soll der Bericht ausgegeben werden?
-              select(name="outputFormat")
+              label(for="outputFormat") In welchem Format soll der Bericht ausgegeben werden?
+              select(name="outputFormat", id="outputFormat")
                 each outputFormat in selectedReport.outputFormats
                   option(value=outputFormat, selected=(outputFormat === requestParams.outputFormat))
                     case outputFormat
