@@ -83,4 +83,13 @@
         <Class name="de.pfadfinden.report_engine.preprocessor.Tasks.GenerateMarkdownOverviewTask" />
         <Bug pattern="PATH_TRAVERSAL_OUT" />
     </Match>
+    <Match>
+        <!-- Same accepted trust boundary as CompileJasperReportsTask/CopySourceTask above: the
+             subreport path comes from report.jrxml under source-dir, which is author-controlled.
+             subreportExists() already canonicalizes and confines the result to the report's own
+             directory before checking it, but findsecbugs still flags the File(File,String)
+             construction itself as the taint sink. -->
+        <Class name="de.pfadfinden.report_engine.preprocessor.Tasks.ValidateJasperReportsTask" />
+        <Bug pattern="PATH_TRAVERSAL_IN" />
+    </Match>
 </FindBugsFilter>
