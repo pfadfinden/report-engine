@@ -24,11 +24,12 @@ import picocli.CommandLine;
  * (see local-report-executor's ReportExecutionIntegrationTest for the equivalent on the executor
  * side; a true e2e test would additionally involve the frontend talking to the executor).
  *
- * <p>Runs the same task pipeline the mv_reports CI workflow runs against a real reports repository
- * (see mv_reports' .github/workflows/ci.yaml: {@code clean read-metadata copy-source
- * --matchingGlob=* compile-jasper-reports generate-md-details-public generate-md-overview}),
- * against the small report bundle under ../test-fixtures/reports, then checks the produced output
- * against ../test-fixtures/reference-output.
+ * <p>Runs the task pipeline the mv_reports CI workflow runs against a real reports repository (see
+ * mv_reports' .github/workflows/ci.yaml: {@code clean read-metadata copy-source --matchingGlob=*
+ * compile-jasper-reports generate-md-details-public generate-md-overview}), plus
+ * validate-jasper-reports ahead of compile-jasper-reports (not yet in that CI workflow), against
+ * the small report bundle under ../test-fixtures/reports, then checks the produced output against
+ * ../test-fixtures/reference-output.
  *
  * <p>The fixture directory is shared with other modules' tests (see ../test-fixtures) rather than
  * living under this module's test resources, since both the preprocessor (which turns report
@@ -79,6 +80,8 @@ class PipelineIntegrationTest {
       "read-metadata",
       "copy-source",
       "--matchingGlob=*",
+      "--output-base-dir=" + outputDir,
+      "validate-jasper-reports",
       "--output-base-dir=" + outputDir,
       "compile-jasper-reports",
       "--output-base-dir=" + outputDir,
