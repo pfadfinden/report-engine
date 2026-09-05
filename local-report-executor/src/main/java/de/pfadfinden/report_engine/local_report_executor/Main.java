@@ -62,7 +62,7 @@ public class Main {
     Javalin app =
         Javalin.create(
             javalinConfig -> {
-              javalinConfig.showJavalinBanner = false;
+              javalinConfig.startup.showJavalinBanner = false;
 
               // This service trusts its caller completely: it has no notion of which
               // reports/parameters a given end-user is allowed to request, that
