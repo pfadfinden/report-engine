@@ -81,4 +81,21 @@ class LoggerTest {
         log.getAttributes()
             .get(io.opentelemetry.api.common.AttributeKey.stringKey("error.message")));
   }
+
+  @Test
+  void errorRedactsJdbcCredentialsFromTheExceptionMessage() {
+    Logger.error(
+        "report.execution.failed",
+        Attributes.empty(),
+        new RuntimeException(
+            "Connection to jdbc:postgresql://host:5432/db?user=hitobito&password=hitobito failed"));
+
+    List<LogRecordData> logs = logExporter.getFinishedLogRecordItems();
+    assertEquals(1, logs.size());
+    assertEquals(
+        "Connection to jdbc:postgresql://host:5432/db?user=REDACTED&password=REDACTED failed",
+        logs.get(0)
+            .getAttributes()
+            .get(io.opentelemetry.api.common.AttributeKey.stringKey("error.message")));
+  }
 }

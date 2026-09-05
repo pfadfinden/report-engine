@@ -77,6 +77,15 @@ public class ExecuteReportFunction {
           .getLogger()
           .severe("Failed to execute report " + task.reportId() + ": " + safeMessage);
       statusStore.markFailed(task.executionId(), safeMessage);
+
+      // Rethrown (with only the already-redacted message, not the original exception as a cause -
+      // an unhandled exception's toString()/cause chain is also something the Functions host logs
+      // on its own, which would otherwise reopen the same credential-leak this redaction closes)
+      // so the queue trigger's built-in retry/poison-queue handling applies: a transient failure
+      // (a momentary DB blip, a Blob Storage hiccup) gets retried automatically instead of this
+      // execution being permanently FAILED after a single attempt.
+      throw new RuntimeException(
+          "Failed to execute report " + task.reportId() + ": " + safeMessage);
     }
   }
 }

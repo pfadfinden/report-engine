@@ -12,12 +12,15 @@ import java.sql.Connection;
 import java.sql.DriverManager;
 import java.util.Map;
 
-/**
- * Pure JasperReports mechanics - no tracing/audit/metrics, that's TracingReportExecutionWorker's
- * job. Takes a ReportFiller as a dependency rather than constructing FillReportService itself, so
- * the caller decides whether the inner fill step also gets its own (nested) report.fill span.
- */
 public class DefaultReportExecutionWorker implements ReportExecutionWorker {
+
+  // A JVM-global setting; without it, an unreachable source DB hangs DriverManager.getConnection
+  // indefinitely, eventually exhausting the fixed-size background thread pool (see Main).
+  private static final int CONNECTION_TIMEOUT_SECONDS = 10;
+
+  static {
+    DriverManager.setLoginTimeout(CONNECTION_TIMEOUT_SECONDS);
+  }
 
   private final File reportsDir;
   private final File sharedAssetsDir;

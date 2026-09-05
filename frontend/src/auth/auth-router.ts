@@ -12,6 +12,7 @@ import {
 import { AppConfig } from '../config';
 import { claimsToPrincipal } from './claims-to-principal';
 import { fetchHitobitoRoles } from './hitobito-roles';
+import * as logger from '../telemetry/logger';
 
 var express = require('express');
 
@@ -107,6 +108,7 @@ export function createAuthRouter(
             next(saveErr);
             return;
           }
+          logger.event('auth.login', { 'principal.id': principal.id, 'principal.name': principal.name });
           res.redirect(returnTo);
         });
       });
@@ -117,12 +119,15 @@ export function createAuthRouter(
 
   router.get('/logout', function (req: Request, res: Response, next: NextFunction) {
     const idToken = req.session.idToken;
+    const principal = req.session.principal;
 
     req.session.destroy(function (err) {
       if (err) {
         next(err);
         return;
       }
+
+      logger.event('auth.logout', principal ? { 'principal.id': principal.id, 'principal.name': principal.name } : {});
 
       const endSessionEndpoint = configuration.serverMetadata().end_session_endpoint;
 

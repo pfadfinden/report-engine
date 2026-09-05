@@ -6,18 +6,6 @@ import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.logs.LogRecordBuilder;
 import io.opentelemetry.api.logs.Severity;
 
-/**
- * Structured events - both audit events (report trigger/execution/download, at INFO/ERROR) and
- * operational/debugging ones (cache hits, retries, connection issues, at DEBUG/WARN) - emitted
- * directly through the OTel Logs Bridge API, the same signal pipeline as traces/metrics, exported
- * wherever azure-report-executor/local-report-executor's Telemetry bootstrap sends logs. Not cached
- * in a static field: GlobalOpenTelemetry's logs bridge is fetched fresh on each call so this works
- * correctly regardless of whether the SDK has been registered yet.
- *
- * <p>LOG_LEVEL (debug|info|warn|error, default info) sets the minimum severity actually emitted -
- * DEBUG-level operational detail stays quiet by default so it doesn't crowd out the audit trail,
- * and is available on demand for troubleshooting without a code change.
- */
 public final class Logger {
 
   private static final String SCOPE = "report-engine";
@@ -62,7 +50,9 @@ public final class Logger {
     if (error != null) {
       builder
           .setAttribute(ERROR_TYPE, error.getClass().getName())
-          .setAttribute(ERROR_MESSAGE, String.valueOf(error.getMessage()));
+          .setAttribute(
+              ERROR_MESSAGE,
+              CredentialRedaction.redactJdbcCredentials(String.valueOf(error.getMessage())));
     }
     builder.emit();
   }

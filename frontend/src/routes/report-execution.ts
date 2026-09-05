@@ -6,7 +6,8 @@ import { AppConfig } from '../config';
 import { Principal } from '../domain/model/principal';
 import { Parameter } from '../domain/model/report';
 import { ReportExecutionStatus } from '../domain/model/report-execution-task.model';
-import { captureCurrentTraceContext, withStoredTraceContext } from '../trace-context';
+import { captureCurrentTraceContext, withStoredTraceContext } from '../telemetry/trace-context';
+import * as logger from '../telemetry/logger';
 
 var express = require('express');
 var createError = require('http-errors');
@@ -66,13 +67,11 @@ export function createReportExecutionRouter(services: AppServices, config: AppCo
       const outputFormat = req.body.outputFormat as string;
 
       // Re-check authorization here rather than trusting the form fields:
-      // the GET / route only filters what an honest browser can *submit*,
-      // it doesn't stop a crafted POST from naming a group/report the
-      // caller has no access to.
       const principal = req.principal as Principal;
       const availableGroups = await groupsService.findFor(principal);
       const selectedGroup = availableGroups.find((group) => group.id === groupId);
       if (!selectedGroup) {
+        logger.warn('authz.denied', { 'principal.id': principal.id, reason: 'group', 'group.id': groupId });
         res.status(403).send('Not authorized for this group.');
         return;
       }
@@ -80,6 +79,12 @@ export function createReportExecutionRouter(services: AppServices, config: AppCo
       const availableReports = await metadataService.findFor(selectedGroup.type);
       const selectedReport = availableReports.find((report) => report.id === reportId);
       if (!selectedReport) {
+        logger.warn('authz.denied', {
+          'principal.id': principal.id,
+          reason: 'report',
+          'group.id': groupId,
+          'report.id': reportId,
+        });
         res.status(403).send('Not authorized for this report.');
         return;
       }
@@ -117,6 +122,13 @@ export function createReportExecutionRouter(services: AppServices, config: AppCo
 
       (req.session.ownedExecutionIds ??= []).push(executionId);
       (req.session.executionTraceContext ??= {})[executionId] = captureCurrentTraceContext();
+
+      logger.event('report.trigger', {
+        'principal.id': principal.id,
+        'report.id': reportId,
+        'execution.id': executionId,
+        'group.id': groupId,
+      });
 
       res.redirect(`/executions/${executionId}`);
     } catch (err) {

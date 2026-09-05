@@ -5,10 +5,8 @@ import crypto from 'crypto';
 import { MetadataLoaderService } from '../port/metadata-loader.service';
 import { MetadataService } from '../port/metadata.service';
 import { SqliteMetadataService } from './sqlite-metadata.service';
-import * as auditLog from '../../audit-log';
+import * as logger from '../../telemetry/logger';
 
-// The DB file is small but a hung remote host would otherwise block startup (and every
-// cache-refresh afterwards) forever.
 const DOWNLOAD_TIMEOUT_MS = 30_000;
 
 export class RemoteMetadataLoaderService implements MetadataLoaderService {
@@ -27,7 +25,7 @@ export class RemoteMetadataLoaderService implements MetadataLoaderService {
 
     const shouldDownload = await this.hasNoUpToDateLocalCopy(cachePath);
     if (shouldDownload) {
-      auditLog.debug('metadata.cache.refresh', { 'metadata.source_url': url });
+      logger.debug('metadata.cache.refresh', { 'metadata.source_url': url });
       const startedAt = Date.now();
 
       const res = await fetch(url, {
@@ -35,7 +33,7 @@ export class RemoteMetadataLoaderService implements MetadataLoaderService {
         signal: AbortSignal.timeout(DOWNLOAD_TIMEOUT_MS),
       });
       if (!res.ok) {
-        auditLog.warn('metadata.download.failed', {
+        logger.warn('metadata.download.failed', {
           'metadata.source_url': url,
           'http.status_code': res.status,
         });
@@ -45,7 +43,7 @@ export class RemoteMetadataLoaderService implements MetadataLoaderService {
       const buffer = Buffer.from(await res.arrayBuffer());
       await fs.writeFile(cachePath, buffer);
 
-      auditLog.debug('metadata.cache.refreshed', {
+      logger.debug('metadata.cache.refreshed', {
         'download.size_bytes': buffer.byteLength,
         'duration.ms': Date.now() - startedAt,
       });
@@ -63,7 +61,7 @@ export class RemoteMetadataLoaderService implements MetadataLoaderService {
 
       if (age < this.ttlMs) {
         shouldDownload = false;
-        auditLog.debug('metadata.cache.hit', { 'cache.age_ms': age });
+        logger.debug('metadata.cache.hit', { 'cache.age_ms': age });
       }
     } catch {
       // file does not exist → must download

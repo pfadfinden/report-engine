@@ -4,6 +4,7 @@ import de.pfadfinden.report_engine.executor.Observability.AuditAttributes;
 import de.pfadfinden.report_engine.executor.Observability.Logger;
 import de.pfadfinden.report_engine.executor.Observability.ReportMetrics;
 import de.pfadfinden.report_engine.executor.Observability.TraceContextPropagation;
+import de.pfadfinden.report_engine.executor.Port.ExecutionIdFormat;
 import de.pfadfinden.report_engine.executor.Port.ExecutionStatus;
 import de.pfadfinden.report_engine.executor.Port.OutputFormat;
 import io.javalin.Javalin;
@@ -61,6 +62,8 @@ public class Main {
     Javalin app =
         Javalin.create(
             javalinConfig -> {
+              javalinConfig.showJavalinBanner = false;
+
               // This service trusts its caller completely: it has no notion of which
               // reports/parameters a given end-user is allowed to request, that
               // authorization decision is made entirely by the frontend before it
@@ -131,6 +134,14 @@ public class Main {
       return;
     }
 
+    // executionId is used unsanitized as part of the output file's path (see
+    // ReportExecutionRunner) - rejecting anything that isn't a well-formed UUID/ULID here stops
+    // a crafted id (e.g. containing "../") from escaping OUTPUT_DIR.
+    if (!ExecutionIdFormat.isValid(request.executionId())) {
+      ctx.status(400).result("executionId must be a valid UUID or ULID");
+      return;
+    }
+
     Span span =
         tracer()
             .spanBuilder("report.trigger")
@@ -171,6 +182,10 @@ public class Main {
 
   private static void getStatus(Context ctx, ExecutionStore executionStore) {
     String executionId = ctx.pathParam("executionId");
+    if (!ExecutionIdFormat.isValid(executionId)) {
+      ctx.status(400);
+      return;
+    }
     Span span =
         tracer()
             .spanBuilder("report.status")
@@ -193,6 +208,10 @@ public class Main {
   private static void getDownloadUrl(
       Context ctx, ExecutionStore executionStore, DownloadUrlSigner signer, Config config) {
     String executionId = ctx.pathParam("executionId");
+    if (!ExecutionIdFormat.isValid(executionId)) {
+      ctx.status(400);
+      return;
+    }
     Span span =
         tracer()
             .spanBuilder("report.download.url_issued")

@@ -16,6 +16,7 @@ import de.pfadfinden.report_engine.executor.Observability.AuditAttributes;
 import de.pfadfinden.report_engine.executor.Observability.Logger;
 import de.pfadfinden.report_engine.executor.Observability.ReportMetrics;
 import de.pfadfinden.report_engine.executor.Observability.TraceContextPropagation;
+import de.pfadfinden.report_engine.executor.Port.ExecutionIdFormat;
 import de.pfadfinden.report_engine.executor.Port.OutputFormat;
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.Attributes;
@@ -71,6 +72,16 @@ public class TriggerReportExecutionFunction {
       return request
           .createResponseBuilder(HttpStatus.BAD_REQUEST)
           .body("Unsupported outputFormat: " + body.outputFormat())
+          .build();
+    }
+
+    // executionId is used unsanitized as a Table Storage row key and (via the queue message) a
+    // blob name - rejecting anything that isn't a well-formed UUID/ULID here stops a crafted id
+    // from reaching either of those sinks.
+    if (!ExecutionIdFormat.isValid(body.executionId())) {
+      return request
+          .createResponseBuilder(HttpStatus.BAD_REQUEST)
+          .body("executionId must be a valid UUID or ULID")
           .build();
     }
 

@@ -16,8 +16,8 @@ type AuditAttributes = Record<string, string | number | boolean>;
  * Structured events - both audit events (report trigger, at INFO/ERROR) and operational/debugging
  * ones (cache hits, download retries, at DEBUG/WARN) - emitted directly through the OTel Logs
  * API, the same signal pipeline telemetry.ts wires up. The Java-side counterpart is
- * executor's AuditLog.java - see that class for the full rationale (same emission shape, same
- * LOG_LEVEL-gated severity filtering) kept in sync here.
+ * executor's Observability/Logger.java - see that class for the full rationale (same emission
+ * shape, same LOG_LEVEL-gated severity filtering) kept in sync here.
  *
  * LOG_LEVEL (debug|info|warn|error, default info) sets the minimum severity actually emitted -
  * DEBUG-level operational detail stays quiet by default so it doesn't crowd out the audit trail,

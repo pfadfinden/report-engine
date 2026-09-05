@@ -75,6 +75,19 @@ No component-specific env vars.
 | `metadata.cache.refresh` | DEBUG | Frontend `RemoteMetadataLoaderService` | `metadata.source_url` |
 | `metadata.cache.refreshed` | DEBUG | Frontend `RemoteMetadataLoaderService` | `download.size_bytes`, `duration.ms` |
 | `metadata.download.failed` | WARN | Frontend `RemoteMetadataLoaderService` | `metadata.source_url`, `http.status_code` |
+| `auth.login` | INFO | Frontend `auth-router`, on successful login | `principal.id`, `principal.name` |
+| `auth.logout` | INFO | Frontend `auth-router`, on logout | `principal.id`, `principal.name` (if the session still had one) |
+| `report.trigger` | INFO | Frontend `report-execution` router, on a successful `POST /generate` | `principal.id`, `report.id`, `execution.id`, `group.id` |
+| `authz.denied` | WARN | Frontend `report-execution` router, on a 403 (group/report not authorized) | `principal.id`, `reason` (`group`\|`report`), `group.id`, `report.id` (if applicable) |
+| `http.request.failed` | ERROR | Frontend Express error handler, on any unhandled request error | `http.status_code`, `http.method`, `http.path`, `error.type`, `error.message` |
+| `http.access` | INFO | Frontend, one per request (morgan, piped through the OTel logger instead of straight to stdout) | `message` (the formatted access line) |
+| `healthz.check_failed` | ERROR | Frontend `GET /healthz`, per failed dependency check | `check`, `error.type`, `error.message` |
+| `server.listening` | INFO | Frontend `bin/www`, once the HTTP server is accepting connections | `bind` |
+| `server.listen.failed` | ERROR | Frontend `bin/www`, on `EACCES`/`EADDRINUSE` at startup | `bind`, `error.type`, `error.message` |
+| `server.shutdown.started` | INFO | Frontend `bin/www`, on `SIGTERM`/`SIGINT` | `signal` |
+| `server.shutdown.timed_out` | ERROR | Frontend `bin/www`, if graceful shutdown exceeds 10s | `error.type`, `error.message` |
+| `server.shutdown.failed` | ERROR | Frontend `bin/www`, if `server.close` errors | `error.type`, `error.message` |
+| `server.startup.failed` | ERROR | Frontend `bin/www`, if `main()` rejects | `error.type`, `error.message` |
 
 ### Metrics
 

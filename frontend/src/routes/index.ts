@@ -73,11 +73,10 @@ export function createIndexRouter(services: AppServices): Router {
           const parameter = await metadataService.getParameterFor(selectedReport.id);
           const parameterToFill = parameter.filter((p) => p.name !== 'p_gruppe_id' && p.name !== 'groupId');
 
-          // cleanup unused request parameter from url
           Object.keys(requestParams)
             .filter((key) => key.startsWith('p_'))
-            .filter((key) => parameter.findIndex((p) => p.name === key.substring(3)) === 0)
-            .forEach((key) => delete requestParams.key);
+            .filter((key) => !parameter.some((p) => p.name === key.substring(2)))
+            .forEach((key) => delete requestParams[key]);
 
           res.render('index', {
             availableGroups,

@@ -11,6 +11,7 @@ import com.microsoft.azure.functions.annotation.BindingName;
 import com.microsoft.azure.functions.annotation.FunctionName;
 import com.microsoft.azure.functions.annotation.HttpTrigger;
 import de.pfadfinden.report_engine.executor.Observability.TraceContextPropagation;
+import de.pfadfinden.report_engine.executor.Port.ExecutionIdFormat;
 import de.pfadfinden.report_engine.executor.Port.ExecutionStatus;
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.trace.Span;
@@ -37,6 +38,10 @@ public class GetExecutionStatusFunction {
       final ExecutionContext context)
       throws Exception {
     Telemetry.get();
+
+    if (!ExecutionIdFormat.isValid(executionId)) {
+      return request.createResponseBuilder(HttpStatus.BAD_REQUEST).build();
+    }
 
     Span span =
         GlobalOpenTelemetry.getTracer("de.pfadfinden.report_engine.azure_report_executor")

@@ -40,7 +40,7 @@ public class GenerateMarkdownOverviewTask extends AbstractFollowUpTaskCommand {
           .append("\n");
 
     } catch (IOException e) {
-      e.printStackTrace();
+      throw new RuntimeException("Failed to generate reports overview", e);
     }
   }
 }

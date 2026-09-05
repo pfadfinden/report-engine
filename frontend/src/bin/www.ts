@@ -6,12 +6,11 @@
 
 import type { Server } from 'http';
 
-require('dotenv').config();
+require('dotenv').config({ quiet: true });
 
-// Must run before any other require() below: OpenTelemetry instrumentation patches modules
-// (http, express, undici) at require() time, so anything importing them first would bypass it.
-var shutdownTelemetry = require('../telemetry').initTelemetry();
+var shutdownTelemetry = require('../telemetry/telemetry').initTelemetry();
 
+var logger = require('../telemetry/logger');
 var http = require('http');
 var { loadConfig } = require('../config');
 var { createServices } = require('../composition-root');
@@ -52,11 +51,11 @@ function onError(port: number | string | false) {
     // handle specific listen errors with friendly messages
     switch (error.code) {
       case 'EACCES':
-        console.error(bind + ' requires elevated privileges');
+        logger.error('server.listen.failed', { bind }, error);
         process.exit(1);
         break;
       case 'EADDRINUSE':
-        console.error(bind + ' is already in use');
+        logger.error('server.listen.failed', { bind }, error);
         process.exit(1);
         break;
       default:
@@ -73,7 +72,7 @@ function onListening(server: Server) {
   return function () {
     var addr = server.address();
     var bind = typeof addr === 'string' ? 'pipe ' + addr : 'port ' + addr?.port;
-    console.log('Listening on ' + bind);
+    logger.event('server.listening', { bind });
   };
 }
 
@@ -90,17 +89,17 @@ function shutdown(server: Server) {
     }
     shuttingDown = true;
 
-    console.log(`Received ${signal}, shutting down gracefully...`);
+    logger.event('server.shutdown.started', { signal });
 
     const forceExit = setTimeout(() => {
-      console.error('Graceful shutdown timed out, forcing exit');
+      logger.error('server.shutdown.timed_out', {}, new Error('graceful shutdown timed out, forcing exit'));
       process.exit(1);
     }, 10000);
     forceExit.unref();
 
     server.close(async (err) => {
       if (err) {
-        console.error('Error while closing server:', err);
+        logger.error('server.shutdown.failed', {}, err);
       }
       await shutdownTelemetry();
       process.exit(err ? 1 : 0);
@@ -138,6 +137,6 @@ async function main() {
 }
 
 main().catch(function (err) {
-  console.error('Failed to start application:', err);
+  logger.error('server.startup.failed', {}, err);
   process.exit(1);
 });

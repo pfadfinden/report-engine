@@ -53,13 +53,23 @@ class GetExecutionStatusFunctionTest {
   }
 
   @Test
+  void invalidExecutionIdFormatReturnsBadRequest() throws Exception {
+    HttpResponseMessage response = function.run(request(), "../../etc/passwd", context());
+
+    assertEquals(HttpStatus.BAD_REQUEST, response.getStatus());
+  }
+
+  @Test
   void unknownExecutionIdReturnsNotFound() throws Exception {
     try (MockedConstruction<TableExecutionStatusStore> ignored =
         mockConstruction(
             TableExecutionStatusStore.class,
-            (mock, mockContext) -> when(mock.getStatus("missing")).thenReturn(Optional.empty()))) {
+            (mock, mockContext) ->
+                when(mock.getStatus("99999999-9999-9999-9999-999999999999"))
+                    .thenReturn(Optional.empty()))) {
 
-      HttpResponseMessage response = function.run(request(), "missing", context());
+      HttpResponseMessage response =
+          function.run(request(), "99999999-9999-9999-9999-999999999999", context());
 
       assertEquals(HttpStatus.NOT_FOUND, response.getStatus());
     }
@@ -71,9 +81,11 @@ class GetExecutionStatusFunctionTest {
         mockConstruction(
             TableExecutionStatusStore.class,
             (mock, mockContext) ->
-                when(mock.getStatus("exec-1")).thenReturn(Optional.of(ExecutionStatus.PENDING)))) {
+                when(mock.getStatus("11111111-1111-1111-1111-111111111111"))
+                    .thenReturn(Optional.of(ExecutionStatus.PENDING)))) {
 
-      HttpResponseMessage response = function.run(request(), "exec-1", context());
+      HttpResponseMessage response =
+          function.run(request(), "11111111-1111-1111-1111-111111111111", context());
 
       assertEquals(HttpStatus.OK, response.getStatus());
       Map<?, ?> body = objectMapper.readValue((String) response.getBody(), Map.class);

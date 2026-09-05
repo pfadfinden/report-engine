@@ -73,8 +73,10 @@ public class MetadataIngestService {
 
   private File getFileIn(File reportDir, String withName) {
     FilenameFilter filter = (dir, name) -> name.endsWith(withName);
+    // listFiles returns null (not an empty array) if reportDir isn't a directory or an I/O error
+    // occurs reading it - without this check that case NPEs instead of being treated like "no
+    // matching file found", which tryToProcess's caller already handles per-report.
     File[] results = reportDir.listFiles(filter);
-    File file = results.length > 0 ? results[0] : null;
-    return file;
+    return results != null && results.length > 0 ? results[0] : null;
   }
 }

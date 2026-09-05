@@ -74,7 +74,8 @@ class TriggerReportExecutionFunctionTest {
   void unsupportedOutputFormatReturnsBadRequestWithoutEnqueueing() throws Exception {
     String requestBody =
         objectMapper.writeValueAsString(
-            new TriggerReportExecutionRequestBody("exec-1", Map.of(), "docx"));
+            new TriggerReportExecutionRequestBody(
+                "11111111-1111-1111-1111-111111111111", Map.of(), "docx"));
     HttpRequestMessage<Optional<String>> request = requestWithBody(requestBody);
     OutputBinding<String> queueMessage = mock(OutputBinding.class);
 
@@ -86,10 +87,26 @@ class TriggerReportExecutionFunctionTest {
   }
 
   @Test
+  void invalidExecutionIdFormatReturnsBadRequestWithoutEnqueueing() throws Exception {
+    String requestBody =
+        objectMapper.writeValueAsString(
+            new TriggerReportExecutionRequestBody("../../etc/passwd", Map.of(), "pdf"));
+    HttpRequestMessage<Optional<String>> request = requestWithBody(requestBody);
+    OutputBinding<String> queueMessage = mock(OutputBinding.class);
+
+    HttpResponseMessage response = function.run(request, "report-1", queueMessage, context());
+
+    assertEquals(HttpStatus.BAD_REQUEST, response.getStatus());
+    assertTrue(((String) response.getBody()).startsWith("executionId must be"));
+    verifyNoInteractions(queueMessage);
+  }
+
+  @Test
   void validRequestRecordsPendingStatusAndEnqueuesMessage() throws Exception {
     String requestBody =
         objectMapper.writeValueAsString(
-            new TriggerReportExecutionRequestBody("exec-1", Map.of("year", 2026), "pdf"));
+            new TriggerReportExecutionRequestBody(
+                "11111111-1111-1111-1111-111111111111", Map.of("year", 2026), "pdf"));
     HttpRequestMessage<Optional<String>> request = requestWithBody(requestBody);
     OutputBinding<String> queueMessage = mock(OutputBinding.class);
 
@@ -100,13 +117,14 @@ class TriggerReportExecutionFunctionTest {
 
       assertEquals(HttpStatus.ACCEPTED, response.getStatus());
       assertEquals(1, storeConstruction.constructed().size());
-      verify(storeConstruction.constructed().get(0)).putPending("exec-1", "pdf");
+      verify(storeConstruction.constructed().get(0))
+          .putPending("11111111-1111-1111-1111-111111111111", "pdf");
 
       ArgumentCaptor<String> enqueued = ArgumentCaptor.forClass(String.class);
       verify(queueMessage).setValue(enqueued.capture());
       ReportExecutionMessage message =
           objectMapper.readValue(enqueued.getValue(), ReportExecutionMessage.class);
-      assertEquals("exec-1", message.executionId());
+      assertEquals("11111111-1111-1111-1111-111111111111", message.executionId());
       assertEquals("report-1", message.reportId());
       assertEquals("pdf", message.outputFormat());
     }
@@ -116,7 +134,8 @@ class TriggerReportExecutionFunctionTest {
   void statusStoreFailureReturnsInternalServerError() throws Exception {
     String requestBody =
         objectMapper.writeValueAsString(
-            new TriggerReportExecutionRequestBody("exec-1", Map.of(), "pdf"));
+            new TriggerReportExecutionRequestBody(
+                "11111111-1111-1111-1111-111111111111", Map.of(), "pdf"));
     HttpRequestMessage<Optional<String>> request = requestWithBody(requestBody);
     OutputBinding<String> queueMessage = mock(OutputBinding.class);
 

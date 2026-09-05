@@ -58,8 +58,10 @@ class MainTest {
         app,
         (server, client) -> {
           assertEquals(401, client.post("/reports/report-1/executions").code());
-          assertEquals(401, client.get("/executions/exec-1/status").code());
-          assertEquals(401, client.get("/executions/exec-1/download").code());
+          assertEquals(
+              401, client.get("/executions/11111111-1111-1111-1111-111111111111/status").code());
+          assertEquals(
+              401, client.get("/executions/11111111-1111-1111-1111-111111111111/download").code());
         });
   }
 
@@ -85,7 +87,8 @@ class MainTest {
         app,
         (server, client) -> {
           TriggerReportExecutionRequest requestBody =
-              new TriggerReportExecutionRequest("exec-1", Map.of("year", 2026), "docx");
+              new TriggerReportExecutionRequest(
+                  "11111111-1111-1111-1111-111111111111", Map.of("year", 2026), "docx");
 
           Response response =
               client.post(
@@ -94,7 +97,30 @@ class MainTest {
                   builder -> builder.header("Authorization", "Bearer " + API_KEY));
 
           assertEquals(400, response.code());
-          assertNull(store.get("exec-1"));
+          assertNull(store.get("11111111-1111-1111-1111-111111111111"));
+          verifyNoInteractions(runner);
+        });
+  }
+
+  @Test
+  void triggerExecutionRejectsInvalidExecutionIdFormatWithoutDelegatingToRunner() {
+    ExecutionStore store = new ExecutionStore();
+    ReportExecutionRunner runner = mock(ReportExecutionRunner.class);
+    Javalin app = Main.createApp(config(), store, runner, new DownloadUrlSigner(SIGNING_SECRET));
+
+    JavalinTest.test(
+        app,
+        (server, client) -> {
+          TriggerReportExecutionRequest requestBody =
+              new TriggerReportExecutionRequest("../../etc/passwd", Map.of("year", 2026), "pdf");
+
+          Response response =
+              client.post(
+                  "/reports/report-1/executions",
+                  requestBody,
+                  builder -> builder.header("Authorization", "Bearer " + API_KEY));
+
+          assertEquals(400, response.code());
           verifyNoInteractions(runner);
         });
   }
@@ -109,7 +135,8 @@ class MainTest {
         app,
         (server, client) -> {
           TriggerReportExecutionRequest requestBody =
-              new TriggerReportExecutionRequest("exec-1", Map.of("year", 2026), "pdf");
+              new TriggerReportExecutionRequest(
+                  "11111111-1111-1111-1111-111111111111", Map.of("year", 2026), "pdf");
 
           Response response =
               client.post(
@@ -118,10 +145,36 @@ class MainTest {
                   builder -> builder.header("Authorization", "Bearer " + API_KEY));
 
           assertEquals(202, response.code());
-          assertNotNull(store.get("exec-1"));
-          assertEquals(ExecutionStatus.PENDING, store.get("exec-1").status);
+          assertNotNull(store.get("11111111-1111-1111-1111-111111111111"));
+          assertEquals(
+              ExecutionStatus.PENDING, store.get("11111111-1111-1111-1111-111111111111").status);
           verify(runner)
-              .runAsync(eq("report-1"), eq("exec-1"), eq(Map.of("year", 2026)), eq("pdf"));
+              .runAsync(
+                  eq("report-1"),
+                  eq("11111111-1111-1111-1111-111111111111"),
+                  eq(Map.of("year", 2026)),
+                  eq("pdf"));
+        });
+  }
+
+  @Test
+  void getStatusRejectsInvalidExecutionIdFormat() {
+    Javalin app =
+        Main.createApp(
+            config(),
+            new ExecutionStore(),
+            mock(ReportExecutionRunner.class),
+            new DownloadUrlSigner(SIGNING_SECRET));
+
+    JavalinTest.test(
+        app,
+        (server, client) -> {
+          Response response =
+              client.get(
+                  "/executions/not-a-valid-id/status",
+                  builder -> builder.header("Authorization", "Bearer " + API_KEY));
+
+          assertEquals(400, response.code());
         });
   }
 
@@ -139,7 +192,7 @@ class MainTest {
         (server, client) -> {
           Response response =
               client.get(
-                  "/executions/missing/status",
+                  "/executions/99999999-9999-9999-9999-999999999999/status",
                   builder -> builder.header("Authorization", "Bearer " + API_KEY));
 
           assertEquals(404, response.code());
@@ -149,7 +202,7 @@ class MainTest {
   @Test
   void getStatusReturnsCurrentStatusForKnownExecution() {
     ExecutionStore store = new ExecutionStore();
-    store.createPending("exec-1", "report-1");
+    store.createPending("11111111-1111-1111-1111-111111111111", "report-1");
     Javalin app =
         Main.createApp(
             config(),
@@ -162,7 +215,7 @@ class MainTest {
         (server, client) -> {
           Response response =
               client.get(
-                  "/executions/exec-1/status",
+                  "/executions/11111111-1111-1111-1111-111111111111/status",
                   builder -> builder.header("Authorization", "Bearer " + API_KEY));
 
           assertEquals(200, response.code());
@@ -171,9 +224,30 @@ class MainTest {
   }
 
   @Test
+  void getDownloadUrlRejectsInvalidExecutionIdFormat() {
+    Javalin app =
+        Main.createApp(
+            config(),
+            new ExecutionStore(),
+            mock(ReportExecutionRunner.class),
+            new DownloadUrlSigner(SIGNING_SECRET));
+
+    JavalinTest.test(
+        app,
+        (server, client) -> {
+          Response response =
+              client.get(
+                  "/executions/not-a-valid-id/download",
+                  builder -> builder.header("Authorization", "Bearer " + API_KEY));
+
+          assertEquals(400, response.code());
+        });
+  }
+
+  @Test
   void getDownloadUrlReturnsConflictWhenNotYetDone() {
     ExecutionStore store = new ExecutionStore();
-    store.createPending("exec-1", "report-1");
+    store.createPending("11111111-1111-1111-1111-111111111111", "report-1");
     Javalin app =
         Main.createApp(
             config(),
@@ -186,7 +260,7 @@ class MainTest {
         (server, client) -> {
           Response response =
               client.get(
-                  "/executions/exec-1/download",
+                  "/executions/11111111-1111-1111-1111-111111111111/download",
                   builder -> builder.header("Authorization", "Bearer " + API_KEY));
 
           assertEquals(409, response.code());
@@ -197,8 +271,8 @@ class MainTest {
   @Test
   void getDownloadUrlReturnsSignedUrlWhenDone() {
     ExecutionStore store = new ExecutionStore();
-    store.createPending("exec-1", "report-1");
-    store.get("exec-1").status = ExecutionStatus.DONE;
+    store.createPending("11111111-1111-1111-1111-111111111111", "report-1");
+    store.get("11111111-1111-1111-1111-111111111111").status = ExecutionStatus.DONE;
     Javalin app =
         Main.createApp(
             config(),
@@ -211,12 +285,14 @@ class MainTest {
         (server, client) -> {
           Response response =
               client.get(
-                  "/executions/exec-1/download",
+                  "/executions/11111111-1111-1111-1111-111111111111/download",
                   builder -> builder.header("Authorization", "Bearer " + API_KEY));
 
           assertEquals(200, response.code());
           String body = response.body().string();
-          assertTrue(body.contains("http://executor.internal/files/exec-1?expires="));
+          assertTrue(
+              body.contains(
+                  "http://executor.internal/files/11111111-1111-1111-1111-111111111111?expires="));
           assertTrue(body.contains("&sig="));
         });
   }
@@ -228,15 +304,15 @@ class MainTest {
     Files.write(outputFile.toPath(), "fake pdf bytes".getBytes(StandardCharsets.UTF_8));
 
     ExecutionStore store = new ExecutionStore();
-    store.createPending("exec-1", "report-1");
-    ExecutionState state = store.get("exec-1");
+    store.createPending("11111111-1111-1111-1111-111111111111", "report-1");
+    ExecutionState state = store.get("11111111-1111-1111-1111-111111111111");
     state.status = ExecutionStatus.DONE;
     state.outputFile = outputFile;
     state.outputFormat = OutputFormat.PDF;
 
     DownloadUrlSigner signer = new DownloadUrlSigner(SIGNING_SECRET);
     long expires = Instant.now().plus(15, ChronoUnit.MINUTES).getEpochSecond();
-    String signature = signer.sign("exec-1", expires);
+    String signature = signer.sign("11111111-1111-1111-1111-111111111111", expires);
 
     Javalin app = Main.createApp(config(), store, mock(ReportExecutionRunner.class), signer);
 
@@ -245,7 +321,12 @@ class MainTest {
         (server, client) -> {
           // Deliberately no Authorization header: /files/* is exempt from the API-key
           // middleware and relies solely on the signed URL below.
-          Response response = client.get("/files/exec-1?expires=" + expires + "&sig=" + signature);
+          Response response =
+              client.get(
+                  "/files/11111111-1111-1111-1111-111111111111?expires="
+                      + expires
+                      + "&sig="
+                      + signature);
 
           assertEquals(200, response.code());
           assertEquals("application/pdf", response.headers().get("Content-Type").get(0));
@@ -267,7 +348,10 @@ class MainTest {
         (server, client) -> {
           long expires = Instant.now().plus(15, ChronoUnit.MINUTES).getEpochSecond();
           Response response =
-              client.get("/files/exec-1?expires=" + expires + "&sig=not-a-real-signature");
+              client.get(
+                  "/files/11111111-1111-1111-1111-111111111111?expires="
+                      + expires
+                      + "&sig=not-a-real-signature");
 
           assertEquals(401, response.code());
         });

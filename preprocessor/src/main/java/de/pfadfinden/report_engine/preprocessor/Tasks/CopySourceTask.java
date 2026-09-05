@@ -8,6 +8,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
+import java.util.ArrayList;
 import java.util.List;
 import picocli.CommandLine.Command;
 import picocli.CommandLine.Option;
@@ -29,6 +30,17 @@ public class CopySourceTask extends AbstractFollowUpTaskCommand {
       description = "glob pattern to describe which files top copy from source")
   private String pattern;
 
+  private final List<String> failedFiles = new ArrayList<>();
+
+  @Override
+  public void run() {
+    super.run();
+    if (!failedFiles.isEmpty()) {
+      throw new RuntimeException(
+          "Failed to copy " + failedFiles.size() + " file(s): " + String.join(", ", failedFiles));
+    }
+  }
+
   public void export(ReportMetadata report) {
     List<Path> files = findMatchingFiles(pattern);
 
@@ -44,7 +56,8 @@ public class CopySourceTask extends AbstractFollowUpTaskCommand {
             Files.copy(source, outputFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
           } catch (IOException e) {
             e.printStackTrace();
-            System.out.println("Failed to copy one file");
+            System.out.println("Failed to copy file " + source);
+            failedFiles.add(source.toString());
           }
         });
   }

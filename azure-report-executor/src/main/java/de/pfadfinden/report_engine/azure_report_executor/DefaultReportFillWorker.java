@@ -22,6 +22,14 @@ public class DefaultReportFillWorker implements ReportFillWorker {
 
   private static final Duration REPORTS_CACHE_TTL = Duration.ofHours(1);
 
+  // A JVM-global setting; without it, an unreachable source DB hangs DriverManager.getConnection
+  // indefinitely.
+  private static final int CONNECTION_TIMEOUT_SECONDS = 10;
+
+  static {
+    DriverManager.setLoginTimeout(CONNECTION_TIMEOUT_SECONDS);
+  }
+
   private final String reportsSourceUrl;
   private final String datasourceUrl;
   private final ReportFiller reportFiller;

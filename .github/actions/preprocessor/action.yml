@@ -1,5 +1,15 @@
 name: "Reports Engine Preprocessor"
 description: "Runs the preprocessor package on a reports directory"
+inputs:
+  args:
+    required: false
+    default: ""
+  github-token:
+    description: >
+      Token used to query the GitHub API for releases, to avoid the public API's 60 req/hour
+      unauthenticated rate limit. Optional - pass secrets.GITHUB_TOKEN from the calling workflow.
+    required: false
+    default: ""
 runs:
   using: "composite"
   steps:
@@ -9,16 +19,76 @@ runs:
         java-version: '25'
         distribution: 'temurin'
 
-    - name: Download CLI JAR 
-      run: | 
-        curl -L -o preprocessor.jar \
-        https://github.com/pfadfinden/report-engine/releases/latest/download/preprocessor.jar 
+    # The action and the preprocessor JAR are released together from this repo under the same
+    # vX.Y.Z tag, so a consumer that pins `uses: .../preprocessor@vX.Y.Z` has already told us
+    # exactly which JAR to fetch - no lookup needed.
+    #
+    # A consumer following the recommended practice of pinning to a commit SHA instead (as we
+    # do above for actions/setup-java) gives us a 40-char hex `github.action_ref` rather than a
+    # semver string. That SHA still names one exact commit, so it resolves to exactly one tag -
+    # look it up via the Tags API rather than falling back to "highest release", which would
+    # silently substitute a different (possibly newer) version than the one actually pinned.
+    #
+    # Only a floating ref (e.g. `@main`) - neither a semver tag nor a full SHA - falls back to
+    # resolving the highest published release via the GitHub Releases API. That fallback can't
+    # just use GitHub's "latest release" marker (releases/latest/download/...) since it's
+    # chronological by publish time, not highest-semver - a hotfix tag for an older release line
+    # (e.g. v1.0.1 published after v2.0.0 already exists) would become "latest" here, silently
+    # regressing consumers to an older preprocessor. Same bug class already fixed for the Docker
+    # image tags - see .github/actions/docker-release-tags - just against the GitHub Releases API
+    # instead of git tags, since this action runs in a consumer's own checkout with no
+    # report-engine tag history.
+    - name: Resolve preprocessor release tag
+      id: latest
       shell: bash
+      env:
+        GH_TOKEN: ${{ inputs.github-token }}
+        ACTION_REF: ${{ github.action_ref }}
+      run: |
+        auth=()
+        if [[ -n "$GH_TOKEN" ]]; then
+          auth=(-H "Authorization: Bearer $GH_TOKEN")
+        fi
+
+        if [[ "$ACTION_REF" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+          echo "tag=$ACTION_REF" >> "$GITHUB_OUTPUT"
+          exit 0
+        fi
+
+        if [[ "$ACTION_REF" =~ ^[0-9a-fA-F]{40}$ ]]; then
+          tag=$(curl -fsSL "${auth[@]}" \
+              -H "Accept: application/vnd.github+json" \
+              "https://api.github.com/repos/pfadfinden/report-engine/tags?per_page=100" \
+            | jq -r --arg sha "${ACTION_REF,,}" '.[] | select(.commit.sha == $sha) | .name' \
+            | grep -E '^v[0-9]+\.[0-9]+\.[0-9]+$' \
+            | head -n1)
+          if [[ -z "$tag" ]]; then
+            echo "No release tag found for pinned commit $ACTION_REF in pfadfinden/report-engine" >&2
+            exit 1
+          fi
+          echo "tag=$tag" >> "$GITHUB_OUTPUT"
+          exit 0
+        fi
+
+        highest=$(curl -fsSL "${auth[@]}" \
+            -H "Accept: application/vnd.github+json" \
+            "https://api.github.com/repos/pfadfinden/report-engine/releases?per_page=100" \
+          | jq -r '.[] | select(.prerelease == false) | .tag_name' \
+          | grep -E '^v[0-9]+\.[0-9]+\.[0-9]+$' \
+          | sort -V \
+          | tail -n1)
+        if [[ -z "$highest" ]]; then
+          echo "No published non-prerelease release found for pfadfinden/report-engine" >&2
+          exit 1
+        fi
+        echo "tag=$highest" >> "$GITHUB_OUTPUT"
+
+    - name: Download CLI JAR
+      shell: bash
+      run: |
+        curl -fL -o preprocessor.jar \
+          "https://github.com/pfadfinden/report-engine/releases/download/${{ steps.latest.outputs.tag }}/preprocessor.jar"
 
     - name: Run CLI
       shell: bash
       run: java -jar preprocessor.jar ${{ inputs.args }}
-inputs:
-  args:
-    required: false
-    default: ""
