@@ -14,4 +14,5 @@ public class ExecutionState {
   public volatile File outputFile;
   public volatile String errorMessage;
   public volatile OutputFormat outputFormat;
+  public volatile String reportId;
 }

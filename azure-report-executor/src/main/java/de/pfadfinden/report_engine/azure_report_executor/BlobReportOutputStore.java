@@ -5,9 +5,11 @@ import com.azure.storage.blob.BlobContainerClient;
 import com.azure.storage.blob.BlobServiceClient;
 import com.azure.storage.blob.BlobServiceClientBuilder;
 import com.azure.storage.blob.models.BlobHttpHeaders;
+import com.azure.storage.blob.options.BlockBlobOutputStreamOptions;
 import com.azure.storage.blob.sas.BlobSasPermission;
 import com.azure.storage.blob.sas.BlobServiceSasSignatureValues;
-import java.io.InputStream;
+import com.azure.storage.blob.specialized.BlobOutputStream;
+import com.azure.storage.blob.specialized.BlockBlobClient;
 import java.time.OffsetDateTime;
 
 /**
@@ -29,11 +31,15 @@ public class BlobReportOutputStore {
     this.containerClient = serviceClient.getBlobContainerClient(CONTAINER_NAME);
   }
 
-  public void upload(
-      String executionId, String extension, String contentType, InputStream content, long length) {
-    BlobClient blob = containerClient.getBlobClient(blobName(executionId, extension));
-    blob.upload(content, length, true);
-    blob.setHttpHeaders(new BlobHttpHeaders().setContentType(contentType));
+  /**
+   * Opens a stream to write a report's output directly to blob storage, without buffering the whole
+   * (potentially large) output in memory first. The caller closes the returned stream.
+   */
+  public BlobOutputStream open(String executionId, String extension, String contentType) {
+    BlockBlobClient blob =
+        containerClient.getBlobClient(blobName(executionId, extension)).getBlockBlobClient();
+    BlobHttpHeaders headers = new BlobHttpHeaders().setContentType(contentType);
+    return blob.getBlobOutputStream(new BlockBlobOutputStreamOptions().setHeaders(headers));
   }
 
   public String generateDownloadUrl(String executionId, String extension) {

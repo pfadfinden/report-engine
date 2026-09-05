@@ -1,10 +1,15 @@
-# Production stack: builds the hardened "production" image (see frontend/Dockerfile) and
-# runs only the frontend - no sample DB, no bundled Keycloak. Point OIDC_ISSUER_URL at a
-# real identity provider and REPORTS_DB_SOURCE at "remote" (the production image does not
-# contain a local reports.db - see .env.example).
+# Production stack: builds the hardened "production" images for both the frontend (see
+# frontend/Dockerfile) and local-report-executor (see local-report-executor/Dockerfile) - no
+# sample DB, no bundled Keycloak. Point OIDC_ISSUER_URL at a real identity provider and
+# REPORTS_DB_SOURCE at "remote" (the production frontend image does not contain a local
+# reports.db - see .env.example). local-report-executor reads its report bundle from
+# ./dist-reports/preprocessed (bind-mounted read-only - populate it with a real preprocessor
+# run) and writes generated output to the local-report-executor-output named volume, not the
+# host filesystem directly.
 #
 # Usage:
 #   cp frontend/.env.example frontend/.env   # fill in real secrets, never commit this file
+#   cp local-report-executor/.env.example local-report-executor/.env
 #   docker compose -f docker-compose.prod.yml up -d --build
 services:
     frontend:
@@ -29,6 +34,7 @@ services:
             NODE_ENV: production
             REPORTS_DB_SOURCE: remote
             REPORTS_DB_CACHE_DIR: /usr/src/app/.cache/reports-db
+            REPORT_EXECUTION_API_URL: http://local-report-executor:8080
         volumes:
             # the only writable path the app needs: the downloaded/cached remote reports.db
             - reports-db-cache:/usr/src/app/.cache
@@ -50,6 +56,51 @@ services:
             options:
                 max-size: "10m"
                 max-file: "3"
+        depends_on:
+            - local-report-executor
+
+    local-report-executor:
+        build:
+            context: ./local-report-executor
+        restart: unless-stopped
+        read_only: true
+        tmpfs:
+            - /tmp
+        cap_drop:
+            - ALL
+        security_opt:
+            - no-new-privileges:true
+        env_file:
+            - ./local-report-executor/.env
+        environment:
+            REPORTS_DIR: /reports
+            SHARED_ASSETS_DIR: /shared
+            OUTPUT_DIR: /output
+        volumes:
+            - ./dist-reports/preprocessed/reports:/reports:ro
+            - ./dist-reports/preprocessed/_shared:/shared:ro
+            - local-report-executor-output:/output
+        # Not published to the host - only the frontend (over the compose network) needs to
+        # reach this, matching the trust model documented in README.md.
+        healthcheck:
+            test: ["CMD", "curl", "-f", "http://127.0.0.1:8080/healthz"]
+            interval: 30s
+            timeout: 3s
+            start_period: 10s
+            retries: 3
+        deploy:
+            resources:
+                limits:
+                    cpus: "2.0"
+                    memory: 1G
+                reservations:
+                    memory: 256M
+        logging:
+            driver: json-file
+            options:
+                max-size: "10m"
+                max-file: "3"
 
 volumes:
+    local-report-executor-output:
     reports-db-cache:

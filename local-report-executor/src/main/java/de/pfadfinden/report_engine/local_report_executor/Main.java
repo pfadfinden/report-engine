@@ -1,9 +1,22 @@
 package de.pfadfinden.report_engine.local_report_executor;
 
+import de.pfadfinden.report_engine.executor.Observability.AuditAttributes;
+import de.pfadfinden.report_engine.executor.Observability.Logger;
+import de.pfadfinden.report_engine.executor.Observability.ReportMetrics;
+import de.pfadfinden.report_engine.executor.Observability.TraceContextPropagation;
 import de.pfadfinden.report_engine.executor.Port.ExecutionStatus;
+import de.pfadfinden.report_engine.executor.Port.OutputFormat;
 import io.javalin.Javalin;
 import io.javalin.http.Context;
 import io.javalin.http.UnauthorizedResponse;
+import io.opentelemetry.api.GlobalOpenTelemetry;
+import io.opentelemetry.api.common.AttributeKey;
+import io.opentelemetry.api.common.Attributes;
+import io.opentelemetry.api.common.AttributesBuilder;
+import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.api.trace.Tracer;
+import io.opentelemetry.context.Scope;
+import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.nio.charset.StandardCharsets;
@@ -22,9 +35,15 @@ public class Main {
   private static final long DOWNLOAD_URL_TTL_SECONDS = 15 * 60;
 
   public static void main(String[] args) {
+    Telemetry.init();
     Config config = Config.fromEnv();
     ExecutionStore executionStore = new ExecutionStore();
-    ExecutorService backgroundExecutor = Executors.newFixedThreadPool(4);
+    // Wrapped so a task submitted here captures whatever OTel context is active at submission
+    // time (report.trigger's, in particular) and restores it on the worker thread - otherwise
+    // report.execution would start as a disconnected new trace instead of a child span, since
+    // plain ExecutorService.submit() doesn't carry context across threads on its own.
+    ExecutorService backgroundExecutor =
+        io.opentelemetry.context.Context.taskWrapping(Executors.newFixedThreadPool(4));
     ReportExecutionRunner runner =
         new ReportExecutionRunner(config, executionStore, backgroundExecutor);
     DownloadUrlSigner signer = new DownloadUrlSigner(config.downloadUrlSigningSecret());
@@ -60,6 +79,7 @@ public class Main {
               javalinConfig.routes.before(
                   "/executions/*", ctx -> requireApiKey(ctx, config.apiKey()));
 
+              javalinConfig.routes.get("/healthz", ctx -> ctx.status(200));
               javalinConfig.routes.post(
                   "/reports/{reportId}/executions",
                   ctx -> triggerExecution(ctx, executionStore, runner));
@@ -101,43 +121,107 @@ public class Main {
     String reportId = ctx.pathParam("reportId");
     TriggerReportExecutionRequest request = ctx.bodyAsClass(TriggerReportExecutionRequest.class);
 
-    executionStore.createPending(request.executionId());
-    runner.runAsync(reportId, request.executionId(), request.parameter(), request.outputFormat());
+    // Validated synchronously rather than left for the background fill to discover: without
+    // this, an unsupported outputFormat still returns 202 here and only surfaces later as an
+    // async FAILED status, instead of an immediate, actionable 400.
+    try {
+      OutputFormat.fromValue(request.outputFormat());
+    } catch (IllegalArgumentException e) {
+      ctx.status(400).result("Unsupported outputFormat: " + request.outputFormat());
+      return;
+    }
 
-    ctx.status(202);
+    Span span =
+        tracer()
+            .spanBuilder("report.trigger")
+            .setParent(TraceContextPropagation.extract(ctx.headerMap()))
+            .setAttribute("report.id", reportId)
+            .setAttribute("execution.id", request.executionId())
+            .setAttribute("output.format", request.outputFormat())
+            .startSpan();
+    try (Scope scope = span.makeCurrent()) {
+      executionStore.createPending(request.executionId(), reportId);
+      runner.runAsync(reportId, request.executionId(), request.parameter(), request.outputFormat());
+
+      AttributesBuilder attributes =
+          Attributes.builder()
+              .put("report.id", reportId)
+              .put("execution.id", request.executionId())
+              .put("output.format", request.outputFormat());
+      AuditAttributes.extractGroupId(request.parameter())
+          .ifPresent(groupId -> attributes.put("group.id", groupId));
+      Logger.event("report.trigger.requested", attributes.build());
+      ReportMetrics.recordTrigger(reportId);
+
+      ctx.status(202);
+    } finally {
+      span.end();
+    }
+  }
+
+  /**
+   * Fetched fresh on every call rather than cached in a static field: a Tracer built against a
+   * not-yet-registered (no-op) OpenTelemetry instance stays bound to it forever, and this makes the
+   * correctness of instrumentation independent of exactly when Telemetry.init() runs relative to
+   * this class loading.
+   */
+  private static Tracer tracer() {
+    return GlobalOpenTelemetry.getTracer("de.pfadfinden.report_engine.local_report_executor");
   }
 
   private static void getStatus(Context ctx, ExecutionStore executionStore) {
-    ExecutionState state = executionStore.get(ctx.pathParam("executionId"));
-    if (state == null) {
-      ctx.status(404);
-      return;
+    String executionId = ctx.pathParam("executionId");
+    Span span =
+        tracer()
+            .spanBuilder("report.status")
+            .setParent(TraceContextPropagation.extract(ctx.headerMap()))
+            .setAttribute("execution.id", executionId)
+            .startSpan();
+    try (Scope scope = span.makeCurrent()) {
+      ExecutionState state = executionStore.get(executionId);
+      if (state == null) {
+        ctx.status(404);
+        return;
+      }
+      span.setAttribute("status", state.status.name());
+      ctx.json(Map.of("status", state.status.name()));
+    } finally {
+      span.end();
     }
-    ctx.json(Map.of("status", state.status.name()));
   }
 
   private static void getDownloadUrl(
       Context ctx, ExecutionStore executionStore, DownloadUrlSigner signer, Config config) {
     String executionId = ctx.pathParam("executionId");
-    ExecutionState state = executionStore.get(executionId);
-    if (state == null) {
-      ctx.status(404);
-      return;
-    }
-    if (state.status != ExecutionStatus.DONE) {
-      ctx.status(409);
-      ctx.json(Map.of("status", state.status.name()));
-      return;
-    }
+    Span span =
+        tracer()
+            .spanBuilder("report.download.url_issued")
+            .setParent(TraceContextPropagation.extract(ctx.headerMap()))
+            .setAttribute("execution.id", executionId)
+            .startSpan();
+    try (Scope scope = span.makeCurrent()) {
+      ExecutionState state = executionStore.get(executionId);
+      if (state == null) {
+        ctx.status(404);
+        return;
+      }
+      if (state.status != ExecutionStatus.DONE) {
+        ctx.status(409);
+        ctx.json(Map.of("status", state.status.name()));
+        return;
+      }
 
-    long expires =
-        Instant.now().plus(DOWNLOAD_URL_TTL_SECONDS, ChronoUnit.SECONDS).getEpochSecond();
-    String signature = signer.sign(executionId, expires);
-    String url =
-        "%s/files/%s?expires=%d&sig=%s"
-            .formatted(config.publicBaseUrl(), executionId, expires, signature);
+      long expires =
+          Instant.now().plus(DOWNLOAD_URL_TTL_SECONDS, ChronoUnit.SECONDS).getEpochSecond();
+      String signature = signer.sign(executionId, expires);
+      String url =
+          "%s/files/%s?expires=%d&sig=%s"
+              .formatted(config.publicBaseUrl(), executionId, expires, signature);
 
-    ctx.json(Map.of("url", url));
+      ctx.json(Map.of("url", url));
+    } finally {
+      span.end();
+    }
   }
 
   private static void serveFile(
@@ -157,13 +241,35 @@ public class Main {
       return;
     }
 
-    try {
+    Span span =
+        tracer()
+            .spanBuilder("report.download")
+            .setParent(TraceContextPropagation.extract(ctx.headerMap()))
+            .setAttribute("report.id", state.reportId)
+            .setAttribute("execution.id", executionId)
+            .startSpan();
+    try (Scope scope = span.makeCurrent()) {
+      File outputFile = state.outputFile;
+      long size = outputFile.length();
+      span.setAttribute(AttributeKey.longKey("output.size_bytes"), size);
+
       ctx.contentType(state.outputFormat.contentType());
-      ctx.header(
-          "Content-Disposition", "attachment; filename=\"" + state.outputFile.getName() + "\"");
-      ctx.result(new FileInputStream(state.outputFile));
+      ctx.header("Content-Disposition", "attachment; filename=\"" + outputFile.getName() + "\"");
+      ctx.result(new FileInputStream(outputFile));
+
+      Logger.event(
+          "report.download",
+          Attributes.builder()
+              .put("report.id", state.reportId)
+              .put("execution.id", executionId)
+              .put(AttributeKey.longKey("output.size_bytes"), size)
+              .build());
+      ReportMetrics.recordDownload(state.reportId);
     } catch (FileNotFoundException e) {
+      span.recordException(e);
       ctx.status(404);
+    } finally {
+      span.end();
     }
   }
 }

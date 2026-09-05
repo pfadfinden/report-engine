@@ -78,6 +78,28 @@
             <artifactId>azure-storage-blob</artifactId>
             <version>12.35.1</version>
         </dependency>
+
+        <dependency>
+            <groupId>io.opentelemetry</groupId>
+            <artifactId>opentelemetry-sdk</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>io.opentelemetry</groupId>
+            <artifactId>opentelemetry-exporter-logging</artifactId>
+        </dependency>
+        <!-- LOG_CONSOLE_FORMAT=json (see Telemetry.init()): a real OTLP/JSON exporter, not a
+             hand-rolled console format, so output matches what any OTLP-aware log tool expects. -->
+        <dependency>
+            <groupId>io.opentelemetry</groupId>
+            <artifactId>opentelemetry-exporter-logging-otlp</artifactId>
+        </dependency>
+        <!-- Azure's own OTel distro: reads APPLICATIONINSIGHTS_CONNECTION_STRING and wires
+             OTLP-shaped spans/metrics/logs into Azure Monitor. -->
+        <dependency>
+            <groupId>com.azure</groupId>
+            <artifactId>azure-monitor-opentelemetry-autoconfigure</artifactId>
+            <version>1.6.0</version>
+        </dependency>
         <!-- Test -->
         <dependency>
             <groupId>org.junit.jupiter</groupId>
@@ -90,6 +112,12 @@
             <groupId>org.mockito</groupId>
             <artifactId>mockito-core</artifactId>
             <version>5.23.0</version>
+            <scope>test</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>io.opentelemetry</groupId>
+            <artifactId>opentelemetry-sdk-testing</artifactId>
             <scope>test</scope>
         </dependency>
     </dependencies>

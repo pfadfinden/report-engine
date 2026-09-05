@@ -47,6 +47,10 @@ interface CacheEntry {
 
 const DEFAULT_CACHE_TTL_MS = 5 * 60 * 1000;
 
+// A hung Hitobito API would otherwise block every group lookup (and, via GroupsService, most of
+// the app's authorization checks) forever.
+const HITOBITO_REQUEST_TIMEOUT_MS = 15_000;
+
 /**
  * Resolves a principal's groups against the Hitobito API (see <apiUrl>/api/openapi.yaml).
  *
@@ -182,6 +186,7 @@ export class HitobitoGroupsService implements GroupsService {
         Accept: 'application/vnd.api+json',
         'X-TOKEN': this.apiToken,
       },
+      signal: AbortSignal.timeout(HITOBITO_REQUEST_TIMEOUT_MS),
     });
 
     if (!res.ok) {

@@ -6,6 +6,8 @@ import de.pfadfinden.report_engine.preprocessor.Port.MetadataRepository;
 import java.io.File;
 import java.io.FilenameFilter;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.stream.Stream;
 
 public class MetadataIngestService {
@@ -29,17 +31,27 @@ public class MetadataIngestService {
           "Input directory is empty. Make sure you provide the correct arguments.");
     }
 
+    List<String> failedReports = new ArrayList<>();
     Stream.of(inputDirContents)
         .filter(file -> file.isDirectory())
-        .forEach(dir -> tryToProcess(dir));
+        .forEach(dir -> tryToProcess(dir, failedReports));
+
+    if (!failedReports.isEmpty()) {
+      throw new RuntimeException(
+          "Failed to ingest "
+              + failedReports.size()
+              + " report(s): "
+              + String.join(", ", failedReports));
+    }
   }
 
-  public void tryToProcess(File reportDir) {
+  public void tryToProcess(File reportDir, List<String> failedReports) {
     try {
       process(reportDir);
     } catch (Exception e) {
       System.out.println("Failed to process " + reportDir.getName());
       e.printStackTrace();
+      failedReports.add(reportDir.getName());
     }
   }
 

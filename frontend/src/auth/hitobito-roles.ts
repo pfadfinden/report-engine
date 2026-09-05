@@ -12,6 +12,10 @@ interface HitobitoUserinfoResponse {
   roles?: unknown;
 }
 
+// A hung Keycloak/Hitobito call here would otherwise block login (this runs as part of the OIDC
+// callback) forever.
+const REQUEST_TIMEOUT_MS = 15_000;
+
 /**
  * Fetches the principal's roles directly from Hitobito, bypassing Keycloak's
  * own token claims entirely: Keycloak's built-in identity-provider mappers
@@ -43,6 +47,7 @@ export async function fetchHitobitoRoles(
       client_secret: clientSecret,
       token: keycloakAccessToken,
     }),
+    signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
   });
 
   const brokerBody = (await brokerRes.json()) as BrokerTokenResponse;
@@ -56,6 +61,7 @@ export async function fetchHitobitoRoles(
   const userinfoUrl = new URL('/oauth/userinfo', hitobitoApiUrl);
   const userinfoRes = await fetch(userinfoUrl, {
     headers: { Authorization: `Bearer ${brokerBody.access_token}` },
+    signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
   });
 
   if (!userinfoRes.ok) {

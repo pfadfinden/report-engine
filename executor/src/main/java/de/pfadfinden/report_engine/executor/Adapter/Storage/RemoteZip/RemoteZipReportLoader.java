@@ -2,8 +2,11 @@ package de.pfadfinden.report_engine.executor.Adapter.Storage.RemoteZip;
 
 import de.pfadfinden.report_engine.executor.Adapter.Storage.Filesystem.LocalFilesystemReportLoader;
 import de.pfadfinden.report_engine.executor.Exceptions.FailedToLoadReport;
+import de.pfadfinden.report_engine.executor.Observability.Logger;
 import de.pfadfinden.report_engine.executor.Port.ReportDefinition;
 import de.pfadfinden.report_engine.executor.Port.ReportLoader;
+import io.opentelemetry.api.common.AttributeKey;
+import io.opentelemetry.api.common.Attributes;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -61,13 +64,21 @@ public class RemoteZipReportLoader implements ReportLoader {
     if (marker.isFile()) {
       Instant downloadedAt = Instant.ofEpochMilli(marker.lastModified());
       if (Instant.now().isBefore(downloadedAt.plus(ttl))) {
+        Logger.debug(
+            "reports.cache.hit",
+            Attributes.of(AttributeKey.stringKey("cache.downloaded_at"), downloadedAt.toString()));
         return;
       }
     }
 
+    Logger.debug(
+        "reports.cache.refresh",
+        Attributes.of(AttributeKey.stringKey("reports.source_url"), reportsZipUrl));
+    long startNanos = System.nanoTime();
+
     File zipFile = File.createTempFile("reports", ".zip");
     try {
-      downloadTo(zipFile);
+      long bytes = downloadTo(zipFile);
 
       if (cacheDir.exists()) {
         deleteRecursively(cacheDir.toPath());
@@ -76,16 +87,30 @@ public class RemoteZipReportLoader implements ReportLoader {
       unzip(zipFile, cacheDir);
 
       marker.createNewFile();
+
+      double durationMs = (System.nanoTime() - startNanos) / 1_000_000.0;
+      Logger.debug(
+          "reports.cache.refreshed",
+          Attributes.of(
+              AttributeKey.longKey("download.size_bytes"), bytes,
+              AttributeKey.doubleKey("duration.ms"), durationMs));
     } finally {
       zipFile.delete();
     }
   }
 
-  private void downloadTo(File destination) throws IOException, InterruptedException {
+  private long downloadTo(File destination) throws IOException, InterruptedException {
     HttpRequest request = HttpRequest.newBuilder(URI.create(reportsZipUrl)).GET().build();
     HttpResponse<InputStream> response =
         httpClient.send(request, HttpResponse.BodyHandlers.ofInputStream());
     if (response.statusCode() != 200) {
+      Logger.warn(
+          "reports.download.failed",
+          Attributes.of(
+              AttributeKey.stringKey("reports.source_url"),
+              reportsZipUrl,
+              AttributeKey.longKey("http.status_code"),
+              (long) response.statusCode()));
       throw new IOException(
           "Failed to download reports bundle from "
               + reportsZipUrl
@@ -94,13 +119,22 @@ public class RemoteZipReportLoader implements ReportLoader {
     }
     try (InputStream in = response.body();
         OutputStream out = new FileOutputStream(destination)) {
-      in.transferTo(out);
+      return in.transferTo(out);
     }
   }
 
   private void deleteRecursively(Path root) throws IOException {
     try (var paths = Files.walk(root)) {
-      paths.sorted(Comparator.reverseOrder()).forEach(path -> path.toFile().delete());
+      paths
+          .sorted(Comparator.reverseOrder())
+          .forEach(
+              path -> {
+                if (!path.toFile().delete()) {
+                  Logger.warn(
+                      "reports.cache.stale_file_not_removed",
+                      Attributes.of(AttributeKey.stringKey("path"), path.toString()));
+                }
+              });
     }
   }
 

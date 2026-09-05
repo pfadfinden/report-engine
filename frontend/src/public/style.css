@@ -1,3 +1,16 @@
+/* Self-hosted to avoid the GDPR exposure of loading fonts from Google at request time
+   (LG München, 2022) - a single variable-weight file covers the 400/500/600/700/800 cuts
+   used below. */
+@font-face {
+  font-family: 'Jost';
+  font-style: normal;
+  font-weight: 100 900;
+  font-display: swap;
+  src:
+    url('/fonts/jost-latin.woff2') format('woff2-variations'),
+    url('/fonts/jost-latin.woff2') format('woff2');
+}
+
 /* 1. Use a more-intuitive box-sizing model */
 *,
 *::before,

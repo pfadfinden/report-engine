@@ -1,0 +1,54 @@
+name: "Docker release tags"
+description: >
+  Computes tags/labels for a release Docker image: the branch name on every push, and
+  additionally the release version on a version-tag push (vX.Y.Z). `latest` is added only
+  when that tag is both a final release (no prerelease/build suffix) and the highest such
+  tag reachable in the repository - a hotfix tag for an older release line (e.g. v1.0.1
+  pushed after v2.0.0 already exists) never moves `latest` backwards. Requires the calling
+  job to have already checked out the repository with full tag history (actions/checkout
+  with fetch-depth: 0), since the comparison reads `git tag -l` locally.
+inputs:
+  image:
+    description: "Fully-qualified image reference to tag (e.g. ghcr.io/org/repo-frontend)"
+    required: true
+outputs:
+  tags:
+    description: "Newline-separated tags, for docker/build-push-action's `tags` input"
+    value: ${{ steps.meta.outputs.tags }}
+  labels:
+    description: "OCI labels, for docker/build-push-action's `labels` input"
+    value: ${{ steps.meta.outputs.labels }}
+runs:
+  using: "composite"
+  steps:
+    # GITHUB_REF / GITHUB_REF_NAME are populated by the runner for every job - read from
+    # there rather than interpolating github.ref/github.ref_name into the script, so a
+    # crafted ref name is just a shell variable value, never text substituted into the
+    # script itself.
+    - name: Determine whether this tag push is the highest release
+      id: latest
+      shell: bash
+      run: |
+        is_latest=false
+        if [[ "$GITHUB_REF" == refs/tags/* && "$GITHUB_REF_NAME" != *-* ]]; then
+          highest=$(git tag -l 'v[0-9]*.[0-9]*.[0-9]*' | grep -v -- '-' | sort -V | tail -n1)
+          if [[ "$GITHUB_REF_NAME" == "$highest" ]]; then
+            is_latest=true
+          fi
+        fi
+        echo "is_latest=$is_latest" >> "$GITHUB_OUTPUT"
+
+    # flavor's own auto-latest is turned off since it can't do the "highest version" check
+    # above (it only knows whether the current tag is itself a prerelease) - `latest` is
+    # instead produced by the explicit `type=raw` rule, gated on the check above.
+    - name: Extract Docker metadata
+      id: meta
+      uses: docker/metadata-action@dc802804100637a589fabce1cb79ff13a1411302 # v6.2.0
+      with:
+        images: ${{ inputs.image }}
+        flavor: |
+          latest=false
+        tags: |
+          type=ref,event=branch
+          type=semver,pattern={{version}}
+          type=raw,value=latest,enable=${{ steps.latest.outputs.is_latest }}

@@ -71,6 +71,21 @@ class TriggerReportExecutionFunctionTest {
   }
 
   @Test
+  void unsupportedOutputFormatReturnsBadRequestWithoutEnqueueing() throws Exception {
+    String requestBody =
+        objectMapper.writeValueAsString(
+            new TriggerReportExecutionRequestBody("exec-1", Map.of(), "docx"));
+    HttpRequestMessage<Optional<String>> request = requestWithBody(requestBody);
+    OutputBinding<String> queueMessage = mock(OutputBinding.class);
+
+    HttpResponseMessage response = function.run(request, "report-1", queueMessage, context());
+
+    assertEquals(HttpStatus.BAD_REQUEST, response.getStatus());
+    assertTrue(((String) response.getBody()).startsWith("Unsupported outputFormat:"));
+    verifyNoInteractions(queueMessage);
+  }
+
+  @Test
   void validRequestRecordsPendingStatusAndEnqueuesMessage() throws Exception {
     String requestBody =
         objectMapper.writeValueAsString(

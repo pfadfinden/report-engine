@@ -8,6 +8,10 @@ import type { Server } from 'http';
 
 require('dotenv').config();
 
+// Must run before any other require() below: OpenTelemetry instrumentation patches modules
+// (http, express, undici) at require() time, so anything importing them first would bypass it.
+var shutdownTelemetry = require('../telemetry').initTelemetry();
+
 var http = require('http');
 var { loadConfig } = require('../config');
 var { createServices } = require('../composition-root');
@@ -73,6 +77,37 @@ function onListening(server: Server) {
   };
 }
 
+/**
+ * Stop accepting new connections, let in-flight requests finish, flush telemetry, then exit.
+ * Registered for SIGTERM/SIGINT so a rolling deploy or Ctrl+C doesn't drop requests mid-flight.
+ */
+function shutdown(server: Server) {
+  let shuttingDown = false;
+
+  return function (signal: NodeJS.Signals) {
+    if (shuttingDown) {
+      return;
+    }
+    shuttingDown = true;
+
+    console.log(`Received ${signal}, shutting down gracefully...`);
+
+    const forceExit = setTimeout(() => {
+      console.error('Graceful shutdown timed out, forcing exit');
+      process.exit(1);
+    }, 10000);
+    forceExit.unref();
+
+    server.close(async (err) => {
+      if (err) {
+        console.error('Error while closing server:', err);
+      }
+      await shutdownTelemetry();
+      process.exit(err ? 1 : 0);
+    });
+  };
+}
+
 async function main() {
   const config = loadConfig();
 
@@ -96,6 +131,10 @@ async function main() {
   server.listen(port);
   server.on('error', onError(port));
   server.on('listening', onListening(server));
+
+  var handleShutdown = shutdown(server);
+  process.on('SIGTERM', handleShutdown);
+  process.on('SIGINT', handleShutdown);
 }
 
 main().catch(function (err) {

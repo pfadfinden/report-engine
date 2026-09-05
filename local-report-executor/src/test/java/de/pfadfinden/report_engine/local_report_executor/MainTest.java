@@ -2,10 +2,12 @@ package de.pfadfinden.report_engine.local_report_executor;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
 
 import de.pfadfinden.report_engine.executor.Port.ExecutionStatus;
 import de.pfadfinden.report_engine.executor.Port.OutputFormat;
@@ -62,6 +64,42 @@ class MainTest {
   }
 
   @Test
+  void healthzIsReachableWithoutApiKey() {
+    Javalin app =
+        Main.createApp(
+            config(),
+            new ExecutionStore(),
+            mock(ReportExecutionRunner.class),
+            new DownloadUrlSigner(SIGNING_SECRET));
+
+    JavalinTest.test(app, (server, client) -> assertEquals(200, client.get("/healthz").code()));
+  }
+
+  @Test
+  void triggerExecutionRejectsUnsupportedOutputFormatWithoutDelegatingToRunner() {
+    ExecutionStore store = new ExecutionStore();
+    ReportExecutionRunner runner = mock(ReportExecutionRunner.class);
+    Javalin app = Main.createApp(config(), store, runner, new DownloadUrlSigner(SIGNING_SECRET));
+
+    JavalinTest.test(
+        app,
+        (server, client) -> {
+          TriggerReportExecutionRequest requestBody =
+              new TriggerReportExecutionRequest("exec-1", Map.of("year", 2026), "docx");
+
+          Response response =
+              client.post(
+                  "/reports/report-1/executions",
+                  requestBody,
+                  builder -> builder.header("Authorization", "Bearer " + API_KEY));
+
+          assertEquals(400, response.code());
+          assertNull(store.get("exec-1"));
+          verifyNoInteractions(runner);
+        });
+  }
+
+  @Test
   void triggerExecutionRecordsPendingAndDelegatesToRunner() {
     ExecutionStore store = new ExecutionStore();
     ReportExecutionRunner runner = mock(ReportExecutionRunner.class);
@@ -111,7 +149,7 @@ class MainTest {
   @Test
   void getStatusReturnsCurrentStatusForKnownExecution() {
     ExecutionStore store = new ExecutionStore();
-    store.createPending("exec-1");
+    store.createPending("exec-1", "report-1");
     Javalin app =
         Main.createApp(
             config(),
@@ -135,7 +173,7 @@ class MainTest {
   @Test
   void getDownloadUrlReturnsConflictWhenNotYetDone() {
     ExecutionStore store = new ExecutionStore();
-    store.createPending("exec-1");
+    store.createPending("exec-1", "report-1");
     Javalin app =
         Main.createApp(
             config(),
@@ -159,7 +197,7 @@ class MainTest {
   @Test
   void getDownloadUrlReturnsSignedUrlWhenDone() {
     ExecutionStore store = new ExecutionStore();
-    store.createPending("exec-1");
+    store.createPending("exec-1", "report-1");
     store.get("exec-1").status = ExecutionStatus.DONE;
     Javalin app =
         Main.createApp(
@@ -190,7 +228,7 @@ class MainTest {
     Files.write(outputFile.toPath(), "fake pdf bytes".getBytes(StandardCharsets.UTF_8));
 
     ExecutionStore store = new ExecutionStore();
-    store.createPending("exec-1");
+    store.createPending("exec-1", "report-1");
     ExecutionState state = store.get("exec-1");
     state.status = ExecutionStatus.DONE;
     state.outputFile = outputFile;

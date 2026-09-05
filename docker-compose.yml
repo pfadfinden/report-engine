@@ -67,10 +67,18 @@ services:
         volumes:
             - ./dist-reports/preprocessed/reports:/reports:ro
             - ./dist-reports/preprocessed/_shared:/shared:ro
-            - ./local-report-executor-output:/output
+            # Named volume rather than a host bind mount: the container writes this as its
+            # non-root "app" user (see local-report-executor/Dockerfile), whose UID won't
+            # necessarily match yours on the host, so a bind mount here can end up unwritable
+            # depending on your machine. Inspect its contents with e.g.
+            # `docker compose exec local-report-executor ls /output`.
+            - local-report-executor-output:/output
         ports:
             # Loopback-only, for direct backend curl-testing from the host - see the
             # security note above. Requests still need "Authorization: Bearer
             # local-dev-executor-api-key" except for GET /files/... (signed instead).
             - "127.0.0.1:8081:8080"
         restart: unless-stopped
+
+volumes:
+    local-report-executor-output:

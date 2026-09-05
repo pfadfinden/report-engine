@@ -52,6 +52,15 @@ Java library that wraps Jasper Reports: loads a precompiled report via a pluggab
 
 Resources a report references at fill time (a `<template>` pointing at a `.jrtx` style template, a custom font family's TTF files, an image) are resolved first from that report's own directory, then from a **shared assets directory** common to every report - in `mv_reports`, that's `reports/_shared/` (style template, fonts, logos live there; a report only needs its own copy of something to override the shared default). Both directories travel together in the same `reports.zip` release artifact, so Azure Report Executor gets both from one download.
 
+#### Executor API trust model
+Both executor deployments authenticate callers with a single shared secret - an Azure Functions
+function key, or `EXECUTOR_API_KEY` for the Local Report Executor - rather than per-caller
+identity. Anyone holding that key can trigger, poll, or download *any* execution, not just
+one they created. This is only safe because the executor's HTTP API is assumed to sit behind
+network isolation (private VNet/subnet, firewall rules, or a reverse proxy reachable only by
+the frontend) - it must never be exposed directly on the public internet as if the shared
+secret alone were sufficient protection.
+
 ### Azure Report Executor
 Exposes the trigger/status/download HTTP API via Azure Functions HTTP triggers, and hands the actual fill off to a queue-triggered worker (`report-tasks` queue) so the HTTP call returns immediately. Fetches the reports bundle from the repository's released `reports.zip` (cached locally per function instance) and persists execution status/output in the function app's own storage account (Table Storage for status, Blob Storage for output, downloaded via short-lived SAS URLs).
 
@@ -68,9 +77,12 @@ See the documentation [here](preprocessor/README.md) for further information.
 TypeScript/Express web app for selecting reports, triggering execution, and downloading generated output, with OIDC login.
 See [frontend/README.md](frontend/README.md) for details.
 
-## Notes
+## Telemetry
 
-- **JasperReports version**: pinned to 7.0.8 (see the root `pom.xml`'s `jasperreports.version` property). JasperReports 7 can no longer load `.jrxml`/`.jrtx` files authored under 6.x or older - they must be re-saved via Jaspersoft Studio 7+ first. The report content in `mv_reports` has not been converted yet, so **do not cut a release built against this version** until that conversion has happened.
+Every component (executor, both report executors, frontend) emits an OpenTelemetry-based audit
+log and usage-statistics metrics by default, plus opt-in distributed tracing across the whole
+trigger → execute → download flow. See [TELEMETRY.md](TELEMETRY.md) for what's recorded and how
+to configure it.
 
 ## Contributing
 

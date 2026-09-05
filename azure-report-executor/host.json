@@ -7,5 +7,10 @@
   "concurrency": {
     "dynamicConcurrencyEnabled": true,
     "snapshotPersistenceEnabled": true
+  },
+  "extensions": {
+    "queues": {
+      "visibilityTimeout": "00:15:00"
+    }
   }
 }

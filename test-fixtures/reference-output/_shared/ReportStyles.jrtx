@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<jasperTemplate>
+    <style name="Title" fontName="SansSerif" fontSize="18" bold="true" forecolor="#1F3864"/>
+    <style name="ColumnHeader" fontName="SansSerif" fontSize="10" bold="true" forecolor="#FFFFFF" mode="Opaque" backcolor="#1F3864"/>
+    <style name="DetailText" fontName="SansSerif" fontSize="9" forecolor="#000000"/>
+    <style name="Footer" fontName="SansSerif" fontSize="7" italic="true" forecolor="#808080"/>
+</jasperTemplate>

@@ -15,7 +15,7 @@ share one workflow (see [CI](#ci) below) that runs whenever any of them, or the 
 
 - Docker and the Docker Compose plugin (`docker compose ...`, not the old standalone `docker-compose`)
 - Node.js 22+ and npm, if you want to run the frontend outside of Docker
-- JDK 21 and Maven, if you're working on the preprocessor
+- JDK 25 and Maven, if you're working on the preprocessor
 
 ## Frontend
 
@@ -27,6 +27,15 @@ at your own Keycloak (or other OIDC-compliant provider) instance:
 ```sh
 cp frontend/.env.example frontend/.env
 # fill in OIDC_ISSUER_URL / OIDC_CLIENT_ID / (OIDC_CLIENT_SECRET if confidential) and AUTH_SESSION_SECRET
+```
+
+`local-report-executor`'s Docker image copies in a pre-built jar rather than building it itself
+(see [local-report-executor/Dockerfile](local-report-executor/Dockerfile)) - build it once via
+the Maven reactor before the first `docker compose up` / `docker compose build`, and again after
+changing `local-report-executor/` or `executor/`:
+
+```sh
+mvn -B -pl local-report-executor -am package
 ```
 
 Then either run it in Docker:
@@ -89,5 +98,9 @@ compile report definitions.
 - [.github/workflows/java-ci.yaml](.github/workflows/java-ci.yaml) - triggered by changes under
   `executor/**`, `azure-report-executor/**`, `preprocessor/**`, `local-report-executor/**`, or the
   root `pom.xml`: Maven build (builds and tests all four Java modules).
-- [.github/workflows/release.yaml](.github/workflows/release.yaml) - publishes the preprocessor JAR and
-  its Docker image on pushes to `main` and version tags.
+- [.github/workflows/release.yaml](.github/workflows/release.yaml) - on pushes to `main` and version
+  tags: publishes the preprocessor JAR as a release artefact (tag pushes only), and publishes Docker
+  images for the preprocessor, `local-report-executor`, and the frontend's production image to GHCR.
+  Images are tagged with the branch name (e.g. `main`) on every push; a version tag push (`vX.Y.Z`)
+  additionally tags the image `X.Y.Z` and `latest` - `latest` is never produced from a plain branch
+  push, only from an actual release tag.

@@ -92,10 +92,6 @@ export function createAuthRouter(
       const principal = claimsToPrincipal(claims, roles);
       const returnTo = pendingAuth.returnTo;
 
-      console.log(
-        `[auth] login callback: sub=${claims.sub}, resolved principal roles: ${JSON.stringify(principal.roles)}`,
-      );
-
       // regenerate the session on login to prevent session fixation
       req.session.regenerate(function (regenerateErr) {
         if (regenerateErr) {

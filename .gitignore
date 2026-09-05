@@ -31,6 +31,3 @@ buildNumber.properties
 ## Miscellaneous
 ##############################
 *.log
-
-# local-report-executor's mounted output dir (see docker-compose.yml)
-/local-report-executor-output/

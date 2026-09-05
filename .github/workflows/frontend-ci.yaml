@@ -56,10 +56,6 @@ jobs:
       - name: Build
         run: npm run build
 
-  # True e2e suite (frontend talking to a real running local-report-executor - see
-  # ReportExecutionIntegrationTest and PipelineIntegrationTest for the module-to-datasource
-  # integration tests this complements) plus WCAG AA accessibility checks on the same screens.
-  # See frontend/playwright.config.ts and frontend/e2e/*.
   e2e:
     runs-on: ubuntu-latest
     needs: build

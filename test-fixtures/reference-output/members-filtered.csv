@@ -1,0 +1,7 @@
+id,first_name,last_name,email,joined_on
+5,Elena,Lindner,elena.lindner@example.org,18.04.2021
+6,Finn,Meyer,finn.meyer@example.org,30.09.2021
+7,Greta,Neumann,greta.neumann@example.org,14.02.2022
+8,Hannes,Ott,,09.06.2022
+9,Ida,Petersen,ida.petersen@example.org,27.05.2023
+10,Jonas,Richter,jonas.richter@example.org,03.08.2024

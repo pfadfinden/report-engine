@@ -39,10 +39,46 @@
             <version>7.2.3</version>
         </dependency>
 
+        <!-- Javalin's own internal logging (startup, Jetty internals, and notably its
+             default unhandled-exception logging for routes with no explicit .exception()
+             mapping) goes through SLF4J, which OTel has no direct bridge for - only for
+             concrete backends. logback-classic is that backend, and the appender below
+             routes it into the same OTel Logs pipeline as our own AuditLog events (console
+             fallback or OTLP/Azure Monitor, whichever Telemetry.init() configured), instead
+             of a separate slf4j-simple sink nothing but stdout ever sees. Application code
+             itself still goes through the OTel API directly (see Telemetry.java) - nothing
+             application-level routes through SLF4J. -->
         <dependency>
-            <groupId>org.slf4j</groupId>
-            <artifactId>slf4j-simple</artifactId>
-            <version>2.0.16</version>
+            <groupId>ch.qos.logback</groupId>
+            <artifactId>logback-classic</artifactId>
+            <version>1.5.20</version>
+        </dependency>
+        <dependency>
+            <groupId>io.opentelemetry.instrumentation</groupId>
+            <artifactId>opentelemetry-logback-appender-1.0</artifactId>
+        </dependency>
+        <!-- LOG_CONSOLE_FORMAT=json (see Telemetry.init()): a real OTLP/JSON exporter, not a
+             hand-rolled console format, so output matches what any OTLP-aware log tool expects. -->
+        <dependency>
+            <groupId>io.opentelemetry</groupId>
+            <artifactId>opentelemetry-exporter-logging-otlp</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>io.opentelemetry</groupId>
+            <artifactId>opentelemetry-sdk</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>io.opentelemetry</groupId>
+            <artifactId>opentelemetry-sdk-extension-autoconfigure</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>io.opentelemetry</groupId>
+            <artifactId>opentelemetry-exporter-otlp</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>io.opentelemetry</groupId>
+            <artifactId>opentelemetry-exporter-logging</artifactId>
         </dependency>
 
         <dependency>
@@ -69,6 +105,12 @@
             <groupId>io.javalin</groupId>
             <artifactId>javalin-testtools</artifactId>
             <version>7.2.3</version>
+            <scope>test</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>io.opentelemetry</groupId>
+            <artifactId>opentelemetry-sdk-testing</artifactId>
             <scope>test</scope>
         </dependency>
     </dependencies>

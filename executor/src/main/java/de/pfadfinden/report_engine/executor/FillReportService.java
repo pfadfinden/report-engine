@@ -15,7 +15,8 @@ import net.sf.jasperreports.export.SimpleExporterInput;
 import net.sf.jasperreports.export.SimpleOutputStreamExporterOutput;
 import net.sf.jasperreports.pdf.JRPdfExporter;
 
-public class FillReportService {
+public class FillReportService implements ReportFiller {
+  @Override
   public void fill(
       ReportDefinition reportDefinition,
       Map<String, Object> parameter,

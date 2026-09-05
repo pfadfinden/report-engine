@@ -11,8 +11,10 @@ public class ExecutionStore {
 
   private final Map<String, ExecutionState> executions = new ConcurrentHashMap<>();
 
-  public void createPending(String executionId) {
-    executions.put(executionId, new ExecutionState());
+  public void createPending(String executionId, String reportId) {
+    ExecutionState state = new ExecutionState();
+    state.reportId = reportId;
+    executions.put(executionId, state);
   }
 
   public ExecutionState get(String executionId) {

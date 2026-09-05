@@ -3,6 +3,8 @@ package de.pfadfinden.report_engine.preprocessor.Tasks;
 import de.pfadfinden.report_engine.preprocessor.AbstractFollowUpTaskCommand;
 import de.pfadfinden.report_engine.preprocessor.Metadata.ReportMetadata;
 import java.io.File;
+import java.util.ArrayList;
+import java.util.List;
 import net.sf.jasperreports.engine.JRException;
 import net.sf.jasperreports.engine.JasperCompileManager;
 import picocli.CommandLine.Command;
@@ -17,6 +19,20 @@ public class CompileJasperReportsTask extends AbstractFollowUpTaskCommand {
       names = {"--processedReportsDir"},
       defaultValue = "reports")
   private String processedReportsDir;
+
+  private final List<String> failedReportIds = new ArrayList<>();
+
+  @Override
+  public void run() {
+    super.run();
+    if (!failedReportIds.isEmpty()) {
+      throw new RuntimeException(
+          "Failed to compile "
+              + failedReportIds.size()
+              + " report(s): "
+              + String.join(", ", failedReportIds));
+    }
+  }
 
   public void export(ReportMetadata report) {
     System.out.println(this.options.outputDir().toPath());
@@ -44,7 +60,8 @@ public class CompileJasperReportsTask extends AbstractFollowUpTaskCommand {
           new File(outputReportDir.toPath() + File.separator + "report.jasper").getAbsolutePath());
     } catch (JRException e) {
       e.printStackTrace();
-      System.out.println("Failed to compile report");
+      System.out.println("Failed to compile report " + report.id);
+      failedReportIds.add(report.id);
     }
   }
 }

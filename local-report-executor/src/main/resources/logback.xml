@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+    <!-- Routes Javalin's/Jetty's own SLF4J logging (startup, and notably its default
+         unhandled-exception logging for routes with no explicit .exception() mapping)
+         into the same OTel Logs pipeline as our own AuditLog events - console fallback
+         or OTLP/Azure Monitor, whichever Telemetry.init() configured - instead of a
+         separate sink nothing but stdout would ever see. See Telemetry.java's
+         OpenTelemetryAppender.install() call and local-report-executor/pom.xml for why
+         this needs a real SLF4J backend (Logback) rather than routing SLF4J directly. -->
+    <appender name="OpenTelemetry"
+        class="io.opentelemetry.instrumentation.logback.appender.v1_0.OpenTelemetryAppender">
+        <captureExperimentalAttributes>true</captureExperimentalAttributes>
+        <captureCodeAttributes>true</captureCodeAttributes>
+    </appender>
+
+    <root level="INFO">
+        <appender-ref ref="OpenTelemetry" />
+    </root>
+</configuration>
