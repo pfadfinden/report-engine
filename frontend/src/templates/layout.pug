@@ -11,6 +11,7 @@ html(lang='de')
         //- Left-hand slot. Kept (empty) so `justify-content: space-between` pushes
         //- the tab to the right edge exactly as it does on beitritt.pfadfinden.de.
         .metabar_start
+          a.skip-link(href="#content") Zum Hauptinhalt springen
         a.metabar_tab(href=memberManagementUrl target='_blank' rel='noopener') Zurück zur MV
       .masthead.container.container--masthead
         a.masthead_brand(href='/')
@@ -22,7 +23,7 @@ html(lang='de')
           nav.masthead_nav(aria-label='Benutzerkonto')
             span.masthead_user Angemeldet als #{principal.name}
             a.masthead_link(href='/auth/logout') Abmelden
-    #content
+    #content(tabindex="-1")
       block content
     footer.site-footer
       section.site-footer_top

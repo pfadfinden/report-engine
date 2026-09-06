@@ -263,6 +263,35 @@ body {
   padding-inline-start: 0.75rem; /* pl-3 */
 }
 
+/* Hidden until focused - the first tab stop on the page, sitting in the
+   blue bar's otherwise-empty left slot so it doesn't shift any visible
+   layout except while it itself has focus. */
+.skip-link {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+  color: var(--color-yellow-500);
+  text-decoration: underline;
+}
+
+.skip-link:focus-visible {
+  position: static;
+  width: auto;
+  height: auto;
+  padding: 0;
+  margin: 0;
+  overflow: visible;
+  clip: auto;
+  white-space: normal;
+  outline-offset: -2px;
+}
+
 @media (min-width: 64rem) {
   .metabar_start {
     padding-inline-start: 2rem; /* lg:pl-8 */
@@ -694,6 +723,13 @@ button:hover:not(:disabled),
   color: var(--interaction-fg);
 }
 
+/* currentColor (the global :focus-visible default) is --interaction-fg here,
+   i.e. white-on-blue - invisible against the page. Use a fixed dark ring instead. */
+button:focus-visible,
+.btn:focus-visible {
+  outline-color: var(--interaction-hover);
+}
+
 .btn--secondary {
   background-color: var(--color-white);
   color: var(--interaction);
@@ -841,7 +877,20 @@ a.debug-info:hover {
 }
 
 .collapsible > input[type='checkbox'] {
-  display: none;
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.collapsible > input:focus-visible + label {
+  outline: 2px solid currentColor;
+  outline-offset: 2px;
 }
 
 .collapsible label {
@@ -1102,13 +1151,14 @@ a.debug-info:hover {
 .site-footer_credit a {
   color: inherit;
   font-weight: inherit;
-  text-decoration: underline;
+  text-decoration: none;
   text-underline-offset: 2px;
 }
 
 .site-footer_credit a:hover,
 .site-footer_credit a:focus-visible {
   color: var(--color-yellow-light);
+  text-decoration: underline;
 }
 
 /* ###################################################################### */
