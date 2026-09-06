@@ -1,10 +1,14 @@
 import { ReportExecutionService } from '../port/report-execution.service';
 import { ReportExecutionStatus, ReportExecutionTask } from '../model/report-execution-task.model';
 
-// These are all small, synchronous-by-design API calls (trigger returns 202 immediately, status/
-// download-url are single lookups) - a fixed, generous timeout is enough to stop a hung executor
-// from hanging every request that talks to it forever.
 const EXECUTOR_REQUEST_TIMEOUT_MS = 15_000;
+const EXECUTION_ID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+function assertValidExecutionId(executionId: string): void {
+  if (!EXECUTION_ID_PATTERN.test(executionId)) {
+    throw new Error(`Invalid execution id: ${executionId}`);
+  }
+}
 
 /**
  * Calls the shared trigger/status/download HTTP API contract exposed by
@@ -38,6 +42,7 @@ export class HttpReportExecutionService implements ReportExecutionService {
   }
 
   public async status(executionId: string): Promise<ReportExecutionStatus> {
+    assertValidExecutionId(executionId);
     const res = await fetch(new URL(`/executions/${executionId}/status`, this.baseUrl), {
       headers: this.authHeader(),
       signal: AbortSignal.timeout(EXECUTOR_REQUEST_TIMEOUT_MS),
@@ -52,6 +57,7 @@ export class HttpReportExecutionService implements ReportExecutionService {
   }
 
   public async downloadUrl(executionId: string): Promise<string> {
+    assertValidExecutionId(executionId);
     const res = await fetch(new URL(`/executions/${executionId}/download`, this.baseUrl), {
       headers: this.authHeader(),
       signal: AbortSignal.timeout(EXECUTOR_REQUEST_TIMEOUT_MS),
