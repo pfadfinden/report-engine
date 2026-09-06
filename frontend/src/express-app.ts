@@ -6,7 +6,7 @@ import { createReportExecutionRouter } from './routes/report-execution';
 import { createAuthRouter } from './auth/auth-router';
 import { requireAuth } from './auth/require-auth';
 import { withBackendHost } from './auth/backend-host';
-import { ensureCsrfToken, requireCsrfToken } from './auth/csrf';
+import { verifyRequestOrigin } from './auth/csrf';
 import * as logger from './telemetry/logger';
 
 const GENERIC_ERROR_MESSAGE = 'Es ist ein Fehler aufgetreten. Bitte versuche es später erneut.';
@@ -109,8 +109,7 @@ export function createApp(services: AppServices, config: AppConfig, extraMiddlew
     }),
   );
 
-  app.use(ensureCsrfToken);
-  app.use(requireCsrfToken());
+  app.use(verifyRequestOrigin(new URL(config.auth.redirectUri).origin));
 
   extraMiddleware.forEach((middleware) => app.use(middleware));
 
