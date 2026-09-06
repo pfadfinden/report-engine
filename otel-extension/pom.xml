@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <parent>
+        <groupId>de.pfadfinden.report_engine</groupId>
+        <artifactId>report-engine</artifactId>
+        <version>1.0-SNAPSHOT</version>
+    </parent>
+
+    <groupId>de.pfadfinden.report_engine.otel_extension</groupId>
+    <artifactId>otel-extension</artifactId>
+    <version>1.0-SNAPSHOT</version>
+
+    <name>OpenTelemetry Config Extension</name>
+
+    <properties>
+        <maven.compiler.source>25</maven.compiler.source>
+        <maven.compiler.target>25</maven.compiler.target>
+    </properties>
+
+    <dependencies>
+        <dependency>
+            <groupId>io.opentelemetry</groupId>
+            <artifactId>opentelemetry-sdk-extension-autoconfigure-spi</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>io.opentelemetry</groupId>
+            <artifactId>opentelemetry-sdk-logs</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>io.opentelemetry</groupId>
+            <artifactId>opentelemetry-exporter-logging-otlp</artifactId>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <plugins>
+            <!-- Two consumers of this same jar: (1) local-report-executor depends on it normally,
+                 so its own AutoConfiguredOpenTelemetrySdk.builder().build() call (no agent
+                 attached) discovers LogFormatAutoConfigurationCustomizer via the standard
+                 ServiceLoader-based SPI mechanism; (2) the OpenTelemetry Java agent loads this
+                 same jar file directly as a -Dotel.javaagent.extensions entry (see
+                 local-report-executor/Dockerfile), into its own isolated classloader that does
+                 NOT see this module's dependency jars - only this module's own compiled output
+                 plus whatever's bundled into this jar. Shading (with no relocation - these are
+                 all already-published OTel artifacts, nothing third-party to hide) makes the same
+                 file work standalone for the agent case, not just as a regular dependency. -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-shade-plugin</artifactId>
+                <version>3.6.2</version>
+                <executions>
+                    <execution>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>shade</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
+
+</project>

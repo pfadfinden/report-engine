@@ -36,7 +36,20 @@ This project uses [OpenTelemetry](https://opentelemetry.io) across all runtime c
 
 ### Service: `local-report-executor`
 
-No component-specific env vars.
+Runs with the [OpenTelemetry Java instrumentation agent](https://github.com/open-telemetry/opentelemetry-java-instrumentation)
+attached (`-javaagent`, see Dockerfile) - it auto-instruments Jetty/JVM runtime metrics
+(`jvm.memory.*`, `jvm.thread.count`, ...) without this app having to hand-roll them. Manual
+instrumentation (Main.java, ReportMetrics, Logger) defers to the agent's global SDK when it's
+present rather than fighting it for `GlobalOpenTelemetry`, and falls back to building its own SDK
+identically when it's not (tests, or a bare `java -jar`) - see Telemetry.java. The "off by
+default, clean console logs otherwise" behavior above comes from the same
+`AutoConfigurationCustomizerProvider` either way (see the `otel-extension` module), so it can't
+drift between the two paths.
+
+| Variable | Effect |
+| --- | --- |
+| `OTEL_INSTRUMENTATION_JETTY_ENABLED` / `OTEL_INSTRUMENTATION_SERVLET_ENABLED` | Set to `false` by docker-compose.observability.yml - the agent's own Jetty/Servlet auto-instrumentation would otherwise emit a second, less useful `http.server.request.duration` (route always `"*"`, since it can't see Javalin's app-level routing) alongside Main.java's precise one, double-counting rate/error data. |
+| `OTEL_EXPORTER_OTLP_PROTOCOL` | Set to `grpc` by docker-compose.observability.yml, pairing with the `:4317` endpoint - without it, the agent defaults to `http/protobuf` (unlike a bare `AutoConfiguredOpenTelemetrySdk.builder()` call with only the grpc exporter artifact on the classpath, which defaults to `grpc`), and would fail every export by speaking the wrong wire protocol to that port. |
 
 ### Service: `azure-report-executor`
 
@@ -98,6 +111,7 @@ No component-specific env vars.
 | `report.execution.duration` | Histogram | `ms` | `report.id`, `status` |
 | `report.output.size` | Histogram | `By` | `report.id` (success only) |
 | `report.downloads` | Counter | - | `report.id` (local only) |
+| `http.server.request.duration` | Histogram | `s` | `http.request.method`, `http.route` (`(unmatched)` for a 404 or an API-key rejection), `http.response.status_code` (local only) - stable HTTP semconv, for RED dashboards; rate/error-rate derive from this histogram's count, not a separate counter |
 
 ### Tracing
 

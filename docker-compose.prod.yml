@@ -76,6 +76,7 @@ services:
             REPORTS_DIR: /reports
             SHARED_ASSETS_DIR: /shared
             OUTPUT_DIR: /output
+            OTEL_SERVICE_NAME: local-report-executor
         volumes:
             - ./dist-reports/preprocessed/reports:/reports:ro
             - ./dist-reports/preprocessed/_shared:/shared:ro

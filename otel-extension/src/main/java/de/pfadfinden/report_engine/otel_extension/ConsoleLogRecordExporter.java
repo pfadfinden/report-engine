@@ -1,4 +1,4 @@
-package de.pfadfinden.report_engine.azure_report_executor;
+package de.pfadfinden.report_engine.otel_extension;
 
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.sdk.common.CompletableResultCode;
@@ -10,11 +10,11 @@ import java.util.Collection;
 
 /**
  * Prints one human-readable line per log record to stdout - the plain-text alternative to
- * OtlpJsonLoggingLogRecordExporter (see Telemetry.init(), which switches between the two based on
- * LOG_CONSOLE_FORMAT). Not the SDK's own built-in "logging" LogRecordExporter: that one reads
- * getTimestampEpochNanos() directly, which stays 0 (and so prints as 1970-01-01) whenever a caller
- * (like Logger) never calls LogRecordBuilder.setTimestamp() itself - this falls back to
- * getObservedTimestampEpochNanos(), which the SDK reliably auto-populates instead.
+ * OtlpJsonLoggingLogRecordExporter (see LogFormatAutoConfigurationCustomizer, which switches
+ * between the two based on LOG_CONSOLE_FORMAT). Not the SDK's own built-in "logging"
+ * LogRecordExporter: that one reads getTimestampEpochNanos() directly, which stays 0 (and so prints
+ * as 1970-01-01) whenever a caller never calls LogRecordBuilder.setTimestamp() itself - this falls
+ * back to getObservedTimestampEpochNanos(), which the SDK reliably auto-populates instead.
  */
 public class ConsoleLogRecordExporter implements LogRecordExporter {
 

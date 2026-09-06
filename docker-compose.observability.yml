@@ -1,0 +1,76 @@
+# Observability overlay: adds grafana/otel-lgtm (https://github.com/grafana/docker-otel-lgtm) -
+# Grafana + Prometheus + Tempo + Loki + an OTel Collector, all in one container - as a local
+# metrics/traces/logs backend, and points frontend/local-report-executor's OTLP env vars at it.
+# See TELEMETRY.md for what each service emits, and why traces/metrics are off by default
+# (unconfigured) - setting OTEL_EXPORTER_OTLP_ENDPOINT below is what turns them on, for both
+# signals plus logs, per frontend/src/telemetry/telemetry.ts and local-report-executor's
+# Telemetry.java.
+#
+# Layer this on top of either base stack:
+#   docker compose -f docker-compose.yml -f docker-compose.observability.yml up
+#   docker compose -f docker-compose.prod.yml -f docker-compose.observability.yml up -d --build
+#
+# Grafana UI: http://localhost:3001 (3001, not 3000, to avoid clashing with docker-compose.prod.yml's
+# frontend port). The image ships with anonymous access enabled at the Admin org role and
+# Prometheus/Tempo/Loki datasources pre-provisioned - nothing to configure, but treat this as
+# local/throwaway only, never expose it beyond your own machine.
+services:
+    frontend:
+        environment:
+            # The Node SDK's default OTLP protocol is http/protobuf (see frontend's installed
+            # @opentelemetry/exporter-*-otlp-http packages) - port 4318, not 4317.
+            OTEL_EXPORTER_OTLP_ENDPOINT: http://otel-lgtm:4318
+        depends_on:
+            - otel-lgtm
+
+    local-report-executor:
+        environment:
+            # Port 4317, not 4318 - paired with OTEL_EXPORTER_OTLP_PROTOCOL below. Without an
+            # explicit protocol, the OpenTelemetry Java agent (see Dockerfile) defaults to
+            # http/protobuf - unlike a bare AutoConfiguredOpenTelemetrySdk.builder() call with
+            # only the opentelemetry-exporter-otlp (grpc) artifact on the classpath, which
+            # defaults to grpc - so it'd otherwise try to speak HTTP/1.1 to otel-lgtm's grpc
+            # port and fail every export (verified empirically: okhttp read garbage headers back
+            # from the grpc server). Pinning the protocol here keeps both the agent-attached and
+            # agent-absent paths (see Telemetry.java) on the same wire protocol/port.
+            OTEL_EXPORTER_OTLP_ENDPOINT: http://otel-lgtm:4317
+            OTEL_EXPORTER_OTLP_PROTOCOL: grpc
+            # AutoConfiguredOpenTelemetrySdk (see Telemetry.java) reads this the same way the
+            # OTel Java instrumentation agent would - it's a generic SDK autoconfigure property,
+            # not something only the agent provides. Needed for the RED dashboards' duration
+            # panels, which expect http.server.request.duration as a native/exponential
+            # histogram rather than the default fixed-bucket one.
+            OTEL_EXPORTER_OTLP_METRICS_DEFAULT_HISTOGRAM_AGGREGATION: base2_exponential_bucket_histogram
+            # The agent's own Jetty/Servlet auto-instrumentation (module names "jetty" and
+            # "servlet" - found by decompiling the agent jar, since neither is documented by
+            # name) would otherwise emit a *second*, less useful http.server.request.duration
+            # series for every request alongside Main.java's own hand-rolled one: Jetty/generic
+            # Servlet instrumentation only sees "this servlet is mapped to /*" (Javalin registers
+            # itself as a single catch-all servlet), so its http.route is always the literal
+            # string "*" - useless for a per-route RED dashboard, and duplicate/double-counted
+            # rate & error data alongside the precise one Main.java already produces. Disabling
+            # both leaves the agent's still-useful JVM runtime metrics (jvm.memory.*,
+            # jvm.thread.count, ...) untouched - only the request-level auto-instrumentation is
+            # off.
+            OTEL_INSTRUMENTATION_JETTY_ENABLED: "false"
+            OTEL_INSTRUMENTATION_SERVLET_ENABLED: "false"
+        depends_on:
+            - otel-lgtm
+
+    otel-lgtm:
+        image: grafana/otel-lgtm:latest
+        restart: unless-stopped
+        ports:
+            - "4001:3000"
+            # Not required by either service above - they reach this over the compose network
+            # (otel-lgtm:4317/4318). Published loopback-only so you can also point a host-side
+            # OTLP tool (otel-cli, another local service, ...) at it if you want to.
+            - "127.0.0.1:4317:4317"
+            - "127.0.0.1:4318:4318"
+        volumes:
+            # The image persists Grafana/Prometheus/Tempo/Loki state under /data when this is
+            # mounted - otherwise history is lost on every restart.
+            - otel-lgtm-data:/data
+
+volumes:
+    otel-lgtm-data:

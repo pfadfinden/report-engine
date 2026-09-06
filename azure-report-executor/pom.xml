@@ -83,15 +83,24 @@
             <groupId>io.opentelemetry</groupId>
             <artifactId>opentelemetry-sdk</artifactId>
         </dependency>
+        <!-- Needed so "otel.logs.exporter=logging" (set by otel-extension's customizer below)
+             resolves to something at all when APPLICATIONINSIGHTS_CONNECTION_STRING isn't set -
+             the instance it resolves to is immediately discarded and replaced by that same
+             customizer, only the property string needs to be a name this artifact registers. -->
         <dependency>
             <groupId>io.opentelemetry</groupId>
             <artifactId>opentelemetry-exporter-logging</artifactId>
         </dependency>
-        <!-- LOG_CONSOLE_FORMAT=json (see Telemetry.init()): a real OTLP/JSON exporter, not a
-             hand-rolled console format, so output matches what any OTLP-aware log tool expects. -->
+        <!-- Provides LogFormatAutoConfigurationCustomizer (the "off by default, clean console
+             logs otherwise" behavior, including the LOG_CONSOLE_FORMAT=json toggle), discovered
+             automatically via the standard AutoConfigurationCustomizerProvider SPI - see
+             Telemetry.java and this module's own class-level docs. Shared with
+             local-report-executor so there's one implementation instead of two hand-maintained
+             copies that can drift. -->
         <dependency>
-            <groupId>io.opentelemetry</groupId>
-            <artifactId>opentelemetry-exporter-logging-otlp</artifactId>
+            <groupId>de.pfadfinden.report_engine.otel_extension</groupId>
+            <artifactId>otel-extension</artifactId>
+            <version>1.0-SNAPSHOT</version>
         </dependency>
         <!-- Azure's own OTel distro: reads APPLICATIONINSIGHTS_CONNECTION_STRING and wires
              OTLP-shaped spans/metrics/logs into Azure Monitor. -->

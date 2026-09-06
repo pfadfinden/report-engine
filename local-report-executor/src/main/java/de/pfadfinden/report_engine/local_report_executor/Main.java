@@ -64,6 +64,9 @@ public class Main {
             javalinConfig -> {
               javalinConfig.startup.showJavalinBanner = false;
 
+              javalinConfig.routes.before(
+                  ctx -> ctx.attribute("otel.start.nanos", System.nanoTime()));
+
               // This service trusts its caller completely: it has no notion of which
               // reports/parameters a given end-user is allowed to request, that
               // authorization decision is made entirely by the frontend before it
@@ -93,6 +96,17 @@ public class Main {
                   ctx -> getDownloadUrl(ctx, executionStore, signer, config));
               javalinConfig.routes.get(
                   "/files/{executionId}", ctx -> serveFile(ctx, executionStore, signer));
+
+              javalinConfig.routes.after(
+                  ctx -> {
+                    Long startNanos = ctx.attribute("otel.start.nanos");
+                    double durationSeconds =
+                        startNanos == null ? 0 : (System.nanoTime() - startNanos) / 1_000_000_000.0;
+                    var matched = ctx.endpoints().matchedHttpEndpoint();
+                    String route = matched != null ? matched.path : "(unmatched)";
+                    HttpServerMetrics.recordRequest(
+                        ctx.method().name(), route, ctx.statusCode(), durationSeconds);
+                  });
             });
 
     return app;
