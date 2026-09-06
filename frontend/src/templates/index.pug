@@ -1,5 +1,8 @@
 extends layout
 
+mixin groupOptionsList(options, selectedGroup)
+  each item in options
+    option(value=item.group.id, selected=(selectedGroup && selectedGroup.id === item.group.id))= item.label
 
 block content
   .page-hero
@@ -10,18 +13,27 @@ block content
       p.w-text Auf dieser Seite kannst du erweiterte Berichte über Gruppen im BdP erstellen. Die Reportdaten werden täglich gegen 2 Uhr mit der Mitgliederverwaltung synchronisiert.<br/>Einfache Auswertungen und Exporte der aktuellen Daten lassen sich auch in der Mitgliederverwaltung selbst machen.
   main
 
-    if availableGroups.length
+    if groupOptions.length
 
       form(method="GET", id="requestReport")
-        input(type="hidden", name="_csrf", value=csrfToken)
         fieldset
           legend Gruppe
-          
+
+          //- Filtering only earns its keep for the few users whose accessible groups run long
+          //- (nationwide "layer and below" access) - everyone else has a short enough list that a
+          //- plain dropdown is faster to use than a search box would be.
+          - var LARGE_GROUP_LIST_THRESHOLD = 50
           div.question
-            label(for="groupId") Für welche Gruppe soll der Bericht erstellt werden?
-            select(name="groupId", id="groupId")
-              each item in groupOptions
-                option(value=item.group.id, selected=(selectedGroup && selectedGroup.id === item.group.id), autocomplete='off')= item.label 
+            if groupOptions.length >= LARGE_GROUP_LIST_THRESHOLD
+              label#groupLabel(for="groupFilter") Für welche Gruppe soll der Bericht erstellt werden?
+              input(type="text", id="groupFilter", autocomplete="off", placeholder="Gruppe suchen…", aria-controls="groupId")
+              select(name="groupId", id="groupId", size=8, aria-labelledby="groupLabel")
+                +groupOptionsList(groupOptions, selectedGroup)
+              p#groupFilterStatus(role="status", aria-live="polite")
+            else
+              label(for="groupId") Für welche Gruppe soll der Bericht erstellt werden?
+              select(name="groupId", id="groupId")
+                +groupOptionsList(groupOptions, selectedGroup)
             if !selectedGroup && requestParams.groupId
               small.form-error Die vorausgewählte Gruppe exisitert nicht oder du hast keine ausreichenden Rechte für diese Gruppe. Bitte wähle eine andere Gruppe.
             small Die verfügbaren Reports sind abhängig von der Gruppe und deiner Tätigkeit in dieser Gruppe.
@@ -91,7 +103,10 @@ block content
     else
       div.alert.alert--error
         div Fehlermeldung
-        p Keine Gruppen
+        if availableGroups.length
+          p Für keine deiner Gruppen ist aktuell ein Bericht verfügbar.
+        else
+          p Keine Gruppen
 
     aside
     
