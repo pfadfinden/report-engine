@@ -95,6 +95,10 @@ export function createReportExecutionRouter(services: AppServices, config: AppCo
       );
 
       const parameter: Record<string, unknown> = { p_gruppe_id: groupId };
+      // Mirrors the query string index.ts reads back to prefill the form (groupId/reportId/
+      // outputFormat/p_* - see requestParams there), so "regenerate" can link straight back to
+      // this exact selection instead of an empty form.
+      const regenerateParams = new URLSearchParams({ groupId, reportId, outputFormat });
       for (const [key, value] of Object.entries(req.body)) {
         if (!key.startsWith(PARAMETER_FIELD_PREFIX)) {
           continue;
@@ -110,6 +114,22 @@ export function createReportExecutionRouter(services: AppServices, config: AppCo
           return;
         }
         parameter[name] = value;
+        regenerateParams.set(key, String(value));
+      }
+
+      const selectionItems: { label: string; value: string }[] = [
+        { label: 'Gruppe', value: selectedGroup.name },
+        { label: 'Bericht', value: `${selectedReport.title} (Version ${selectedReport.version})` },
+        { label: 'Ausgabeformat', value: outputFormat },
+      ];
+      for (const declared of declaredParameters) {
+        if (declared.name === 'p_gruppe_id' || declared.name === 'groupId') {
+          continue;
+        }
+        const value = parameter[declared.name];
+        if (value !== undefined && value !== '') {
+          selectionItems.push({ label: declared.label ?? declared.name, value: String(value) });
+        }
       }
 
       const executionId = crypto.randomUUID();
@@ -122,6 +142,10 @@ export function createReportExecutionRouter(services: AppServices, config: AppCo
 
       (req.session.ownedExecutionIds ??= []).push(executionId);
       (req.session.executionTraceContext ??= {})[executionId] = captureCurrentTraceContext();
+      (req.session.executionSelections ??= {})[executionId] = {
+        items: selectionItems,
+        regenerateUrl: `/?${regenerateParams.toString()}`,
+      };
 
       logger.event('report.trigger', {
         'principal.id': principal.id,
@@ -143,6 +167,13 @@ export function createReportExecutionRouter(services: AppServices, config: AppCo
         return;
       }
 
+      const request = {
+        timestamp: new Date().toISOString(),
+        url: req.originalUrl,
+        method: req.method,
+      };
+      const selection = req.session.executionSelections?.[executionId];
+
       const traceContext = req.session.executionTraceContext?.[executionId];
       const { status, downloadUrl } = await withStoredTraceContext(traceContext, async () => {
         const status = await reportExecutionService.status(executionId);
@@ -162,12 +193,22 @@ export function createReportExecutionRouter(services: AppServices, config: AppCo
         return { status, downloadUrl };
       });
 
+      const debugLines = [
+        `# Angefragt: ${request.method} ${request.url}`,
+        `# Anfragedatum: ${request.timestamp}`,
+        `# Ausführungs-ID: ${executionId}`,
+        `# Status: ${ReportExecutionStatus[status]}`,
+      ];
+
       res.render('execution-status', {
         title: 'Bericht wird erstellt',
         executionId,
         status,
         statusLabel: ReportExecutionStatus[status],
         downloadUrl,
+        selectionItems: selection?.items,
+        regenerateUrl: selection?.regenerateUrl,
+        debugLines,
       });
     } catch (err) {
       next(err);

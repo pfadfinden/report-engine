@@ -64,6 +64,7 @@ export function createApp(services: AppServices, config: AppConfig, extraMiddlew
 
   app.use(function (req: Request, res: Response, next: NextFunction) {
     res.locals.memberManagementUrl = config.groups.hitobitoApiUrl;
+    res.locals.supportEmail = config.support.helpEmail;
     next();
   });
 

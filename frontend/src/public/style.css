@@ -321,20 +321,25 @@ select:focus {
   box-shadow: 0 0 0 0.2rem rgba(14, 66, 120, 0.5);
 }
 
-button {
+button,
+.btn {
+  display: inline-block;
   background-color: var(--interaction);
   color: var(--interaction-fg);
   border: 1px solid var(--interaction);
   padding: 0.5rem 0.75rem;
   border-radius: 6px;
   font-weight: 500;
+  text-decoration: none;
   cursor: pointer;
   transition: background-color 0.15s;
 }
 
-button:hover:not(:disabled) {
+button:hover:not(:disabled),
+.btn:hover {
   background-color: var(--interaction-hover);
   border-color: var(--interaction-hover);
+  color: var(--interaction-fg);
 }
 
 .question {
@@ -385,6 +390,33 @@ aside > div > * {
   background-color: #eee;
   border-radius: 3px;
   padding: 1rem;
+  overflow-x: auto;
+}
+
+a.debug-info {
+  display: block;
+  color: inherit;
+  text-decoration: none;
+}
+
+.selection-list {
+  background-color: #eee;
+  border-radius: 3px;
+  padding: 1rem;
+  margin: 0;
+}
+
+.selection-list dt {
+  font-weight: 700;
+}
+
+.selection-list dd {
+  margin-inline-start: 0;
+  margin-bottom: 0.5rem;
+}
+
+.selection-list dd:last-child {
+  margin-bottom: 0;
 }
 
 .debug-info .collapsible_content {
@@ -428,7 +460,8 @@ aside > div > * {
 
 .collapsible_content {
   max-height: 0px;
-  overflow: hidden;
+  overflow-x: auto;
+  overflow-y: hidden;
   transition: max-height 0.25s ease-in-out;
 }
 
@@ -440,6 +473,13 @@ aside > div > * {
 .toggle:checked + .lbl-toggle {
   border-bottom-right-radius: 0;
   border-bottom-left-radius: 0;
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem;
 }
 
 .btn--secondary {

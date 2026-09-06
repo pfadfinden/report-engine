@@ -1,5 +1,7 @@
 extends layout
 
+include _shared
+
 mixin groupOptionsList(options, selectedGroup)
   each item in options
     option(value=item.group.id, selected=(selectedGroup && selectedGroup.id === item.group.id))= item.label
@@ -110,24 +112,10 @@ block content
 
     aside
     
-      div.w-text
-        h3 Tipp: Du brauchst diesen Bericht häufiger oder möchtest diese Einstellungen mit anderen teilen?
-        p Lesezeichen hinzufügen oder URL mit anderen teilen:
-        .debug-info= request.url
+      +tippSection('Tipp: Du brauchst diesen Bericht häufiger oder möchtest diese Einstellungen mit anderen teilen?', 'Lesezeichen hinzufügen oder URL mit anderen teilen:', request.url)
         button.btn--secondary(form="requestReport", formmethod="get", formnovalidate=true) Link aktualisieren
-    
-      div.w-text
-        h3 Probleme beim Erstellen von Berichten?
-        p Bei Problemen kannst du dich per E-Mail bei mitglied@pfadfinden.de melden.
-        .debug-info.collapsible
-          input(id="debugInfoCollapsible",type="checkbox")
-          label(for="debugInfoCollapsible") Debug-Informationen anzeigen
-          .collapsible_content
-            pre
-              | # Angefragt: #{request.method} #{request.url}
-              | # Anfragedatum: #{request.timestamp}
-              | # Ausgewählte Gruppe: #{selectedGroup ? selectedGroup.id : "~Keine~"}
-              | # Ausgewählter Bericht: #{selectedReport ? selectedReport.id: "~Keiner~"}
-              | # Ausgewählte Berichtsversion: #{selectedReport ? selectedReport.version: "~Keine~"}
-        button.btn--secondary Support Ticket öffnen
-        button.btn--secondary Debug Informationen Kopieren
+
+      +problemeSection(debugLines)
+
+block scripts
+  script(src="/group-filter.js", defer)

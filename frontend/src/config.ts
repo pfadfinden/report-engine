@@ -45,6 +45,9 @@ export interface AppConfig {
     // carry Hitobito's nested role/permission objects through a claim.
     readonly brokerIdpAlias: string;
   };
+  readonly support: {
+    readonly helpEmail: string;
+  };
 }
 
 function optionalEnv(name: string): string | undefined {
@@ -118,6 +121,9 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): AppConfig {
       postLogoutRedirectUri: optionalEnv('AUTH_POST_LOGOUT_REDIRECT_URI') ?? '/',
       sessionSecret: requiredEnv('AUTH_SESSION_SECRET'),
       brokerIdpAlias: requiredEnv('OIDC_BROKER_IDP_ALIAS'),
+    },
+    support: {
+      helpEmail: env.SUPPORT_HELP_EMAIL ?? 'mitglied@pfadfinden.de',
     },
   };
 }

@@ -1,14 +1,15 @@
 extends layout
 
+include _shared
+
 block content
   main
     header
       h1 Bericht wird erstellt
 
     if downloadUrl
-      .alert.alert--info
+      .alert.alert--success
         .alert_title Dein Bericht ist fertig.
-      a.btn(href=downloadUrl) Bericht herunterladen
     else if statusLabel === "FAILED"
       .alert.alert--error
         .alert_title Die Berichtserstellung ist fehlgeschlagen.
@@ -19,5 +20,24 @@ block content
         .alert_title Status: #{statusLabel}
         p Diese Seite aktualisiert sich automatisch alle paar Sekunden.
 
-    p
-      a(href="/") Zurück zur Berichtsauswahl
+    p.actions
+      if downloadUrl
+        a.btn(href=downloadUrl) Bericht herunterladen
+      if regenerateUrl
+        a.btn.btn--secondary(href=regenerateUrl) Zurück
+      a.btn.btn--secondary(href="/") Neuer Bericht
+
+      if selectionItems && selectionItems.length
+        div.w-text
+          h3 Deine Auswahl
+          dl.selection-list
+            each item in selectionItems
+              dt= item.label
+              dd= item.value
+
+    aside
+
+      if regenerateUrl
+        +tippSection('Tipp: Bericht mit gleichen Einstellungen erneut erstellen?', 'Lesezeichen hinzufügen oder URL mit anderen teilen:', regenerateUrl)
+
+      +problemeSection(debugLines)

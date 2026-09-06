@@ -26,15 +26,42 @@ export function createIndexRouter(services: AppServices): Router {
       res.locals.title = 'Bericht erstellen';
 
       const availableGroups = await groupsService.findFor(principal);
-      const groupOptions = sortGroupsHierarchically(availableGroups);
 
       let selectedGroup: Group | undefined = undefined;
       let availableReports: readonly Report[] | undefined = undefined;
       let selectedReport: Report | undefined = undefined;
 
+      // Re-evaluated at each render call below since selectedGroup/selectedReport are only
+      // filled in progressively as the branches below narrow down the request.
+      const buildDebugLines = () => [
+        `# Angefragt: ${request.method} ${request.url}`,
+        `# Anfragedatum: ${request.timestamp}`,
+        `# Ausgewählte Gruppe: ${selectedGroup ? selectedGroup.id : '~Keine~'}`,
+        `# Ausgewählter Bericht: ${selectedReport ? selectedReport.id : '~Keiner~'}`,
+        `# Ausgewählte Berichtsversion: ${selectedReport ? selectedReport.version : '~Keine~'}`,
+      ];
+
       if (requestParams.groupId) {
         selectedGroup = availableGroups.find((group) => group.id === requestParams.groupId);
+      }
 
+      // Reports are looked up per group type anyway, so reuse those lookups
+      // to drop group types that have no report at all from the picker.
+      // A deep-linked group is kept regardless, so it still shows up
+      // selected and step 2 can explain that no report exists for it.
+      const reportsByType = new Map<string, readonly Report[]>(
+        await Promise.all(
+          [...new Set(availableGroups.map((group) => group.type))].map(
+            async (type) => [type, await metadataService.findFor(type)] as const,
+          ),
+        ),
+      );
+      const selectableGroups = availableGroups.filter(
+        (group) => group.id === selectedGroup?.id || (reportsByType.get(group.type)?.length ?? 0) > 0,
+      );
+      const groupOptions = sortGroupsHierarchically(selectableGroups, availableGroups);
+
+      if (requestParams.groupId) {
         if (!selectedGroup) {
           // -- Error: a non-existing group or one with insufficent access-rights was selected
 
@@ -46,11 +73,12 @@ export function createIndexRouter(services: AppServices): Router {
             selectedReport,
             requestParams,
             request,
+            debugLines: buildDebugLines(),
           });
           return;
         }
 
-        availableReports = await metadataService.findFor(selectedGroup.type);
+        availableReports = reportsByType.get(selectedGroup.type) ?? [];
 
         if (requestParams.reportId) {
           selectedReport = availableReports.find((report) => report.id === requestParams.reportId);
@@ -66,6 +94,7 @@ export function createIndexRouter(services: AppServices): Router {
               selectedReport,
               requestParams,
               request,
+              debugLines: buildDebugLines(),
             });
             return;
           }
@@ -87,6 +116,7 @@ export function createIndexRouter(services: AppServices): Router {
             parameterToFill,
             requestParams,
             request,
+            debugLines: buildDebugLines(),
           });
           return;
         }
@@ -100,6 +130,7 @@ export function createIndexRouter(services: AppServices): Router {
         selectedReport,
         requestParams,
         request,
+        debugLines: buildDebugLines(),
       });
     } catch (err) {
       next(err);

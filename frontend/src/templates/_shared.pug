@@ -1,0 +1,21 @@
+//- Sections reused across index.pug and execution-status.pug. Mixins (not `include`) because
+//- both pages fill in different data - the debug lines and Tipp text/link differ per page.
+
+mixin tippSection(title, description, url)
+  div.w-text
+    h3= title
+    p= description
+    a.debug-info(href=url)= url
+    block
+
+mixin problemeSection(debugLines)
+  div.w-text
+    h3 Probleme beim Erstellen von Berichten?
+    p Bei Problemen kannst du dich per E-Mail bei #{supportEmail} melden.
+    .debug-info.collapsible
+      input(id="debugInfoCollapsible",type="checkbox")
+      label(for="debugInfoCollapsible") Debug-Informationen anzeigen
+      .collapsible_content
+        pre= debugLines.join('\n')
+    a.btn.btn--secondary(href="mailto:" + supportEmail + "?subject=" + encodeURIComponent('Probleme mit MV Bericht') + "&body=" + encodeURIComponent(debugLines.join('\n'))) Support Ticket öffnen
+    //- button.btn--secondary Debug Informationen Kopieren
