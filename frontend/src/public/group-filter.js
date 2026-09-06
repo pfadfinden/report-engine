@@ -25,10 +25,7 @@
       }
     });
 
-    status.textContent =
-      query === ''
-        ? ''
-        : visibleCount + ' von ' + options.length + ' Gruppen gefunden';
+    status.textContent = query === '' ? '' : visibleCount + ' von ' + options.length + ' Gruppen gefunden';
   }
 
   filterInput.addEventListener('input', applyFilter);
