@@ -16,10 +16,6 @@
         <Bug pattern="CT_CONSTRUCTOR_THROW" />
     </Match>
     <Match>
-        <Class name="de.pfadfinden.report_engine.preprocessor.Adapter.YamlMetadataReader" />
-        <Bug pattern="BC_VACUOUS_INSTANCEOF" />
-    </Match>
-    <Match>
         <Class name="de.pfadfinden.report_engine.preprocessor.DefaultCommand" />
         <Bug pattern="RV_RETURN_VALUE_IGNORED_BAD_PRACTICE" />
     </Match>
@@ -41,10 +37,6 @@
     </Match>
     <Match>
         <Class name="de.pfadfinden.report_engine.preprocessor.Tasks.CompileJasperReportsTask" />
-        <Bug pattern="BC_VACUOUS_INSTANCEOF" />
-    </Match>
-    <Match>
-        <Class name="de.pfadfinden.report_engine.preprocessor.Tasks.CompileJasperReportsTask" />
         <Bug pattern="PATH_TRAVERSAL_IN" />
     </Match>
     <Match>
@@ -58,10 +50,6 @@
     <Match>
         <Class name="de.pfadfinden.report_engine.preprocessor.Tasks.CopySourceTask" />
         <Bug pattern="RV_RETURN_VALUE_IGNORED_BAD_PRACTICE" />
-    </Match>
-    <Match>
-        <Class name="de.pfadfinden.report_engine.preprocessor.Tasks.GenerateMarkdownDetailsPublicTask" />
-        <Bug pattern="DM_DEFAULT_ENCODING" />
     </Match>
     <Match>
         <Class name="de.pfadfinden.report_engine.preprocessor.Tasks.GenerateMarkdownDetailsPublicTask" />
@@ -74,10 +62,6 @@
     <Match>
         <Class name="de.pfadfinden.report_engine.preprocessor.Tasks.GenerateMarkdownDetailsPublicTask" />
         <Bug pattern="RV_RETURN_VALUE_IGNORED_BAD_PRACTICE" />
-    </Match>
-    <Match>
-        <Class name="de.pfadfinden.report_engine.preprocessor.Tasks.GenerateMarkdownOverviewTask" />
-        <Bug pattern="DM_DEFAULT_ENCODING" />
     </Match>
     <Match>
         <Class name="de.pfadfinden.report_engine.preprocessor.Tasks.GenerateMarkdownOverviewTask" />

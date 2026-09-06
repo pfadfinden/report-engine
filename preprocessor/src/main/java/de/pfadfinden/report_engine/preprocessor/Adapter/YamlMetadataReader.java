@@ -29,7 +29,7 @@ public class YamlMetadataReader implements MetadataReader {
   }
 
   private ObjectMapper objectMapper() {
-    if (!(this.objectMapper instanceof ObjectMapper)) {
+    if (this.objectMapper == null) {
       this.objectMapper = new ObjectMapper(new YAMLFactory()).findAndRegisterModules();
     }
     return this.objectMapper;

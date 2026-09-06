@@ -6,9 +6,11 @@ import de.pfadfinden.report_engine.preprocessor.Metadata.ReportMetadata;
 import de.pfadfinden.report_engine.preprocessor.Metadata.VersionMetadata;
 import java.io.BufferedWriter;
 import java.io.File;
-import java.io.FileWriter;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.OutputStreamWriter;
 import java.io.Writer;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.stream.Collectors;
 import net.steppschuh.markdowngenerator.table.Table;
@@ -79,7 +81,9 @@ public class GenerateMarkdownDetailsPublicTask extends AbstractFollowUpTaskComma
       // write Markdown file:
       try (Writer writer =
           new BufferedWriter(
-              new FileWriter(outputDir.getPath() + File.separator + report.id + ".md"))) {
+              new OutputStreamWriter(
+                  new FileOutputStream(outputDir.getPath() + File.separator + report.id + ".md"),
+                  StandardCharsets.UTF_8))) {
 
         writer
             .append(new Heading(report.title, 1).toString())

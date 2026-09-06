@@ -4,9 +4,11 @@ import de.pfadfinden.report_engine.preprocessor.AbstractFollowUpTaskCommand;
 import de.pfadfinden.report_engine.preprocessor.Metadata.ReportMetadata;
 import java.io.BufferedWriter;
 import java.io.File;
-import java.io.FileWriter;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.OutputStreamWriter;
 import java.io.Writer;
+import java.nio.charset.StandardCharsets;
 import java.util.stream.Stream;
 import net.steppschuh.markdowngenerator.table.Table;
 import net.steppschuh.markdowngenerator.text.Text;
@@ -29,7 +31,9 @@ public class GenerateMarkdownOverviewTask extends AbstractFollowUpTaskCommand {
 
     try (Writer writer =
         new BufferedWriter(
-            new FileWriter(this.options.outputDir() + File.separator + this.fileName))) {
+            new OutputStreamWriter(
+                new FileOutputStream(this.options.outputDir() + File.separator + this.fileName),
+                StandardCharsets.UTF_8))) {
 
       writer
           .append(new Heading("Reports Overview", 1).toString())

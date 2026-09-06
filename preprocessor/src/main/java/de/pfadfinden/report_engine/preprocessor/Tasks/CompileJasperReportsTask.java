@@ -39,7 +39,7 @@ public class CompileJasperReportsTask extends AbstractFollowUpTaskCommand {
     System.out.println(this.parent.inputDir().toPath());
 
     File jrxmlFile = getReportSourceFile(report, "report.jrxml");
-    if (!(jrxmlFile instanceof File)) {
+    if (jrxmlFile == null) {
       return;
     }
 
