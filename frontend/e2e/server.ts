@@ -54,6 +54,9 @@ async function main() {
       sessionSecret: process.env.E2E_SESSION_SECRET ?? 'e2e-test-session-secret',
       brokerIdpAlias: 'unused',
     },
+    support: {
+      helpEmail: 'e2e-support@invalid',
+    },
   };
 
   const services: AppServices = {
