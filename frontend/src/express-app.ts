@@ -121,7 +121,7 @@ export function createApp(services: AppServices, config: AppConfig, extraMiddlew
 
   // catch 404 and forward to error handler
   app.use(function (req: Request, res: Response, next: NextFunction) {
-    next(createError(404, 'Nicht gefunden'));
+    next(createError(404, 'Pfad nicht gefunden'));
   });
 
   // error handler
@@ -141,7 +141,6 @@ export function createApp(services: AppServices, config: AppConfig, extraMiddlew
 
     res.locals.message = err.expose ? err.message : GENERIC_ERROR_MESSAGE;
     res.locals.status = status;
-    res.locals.title = 'Fehler';
 
     res.status(status);
     res.render('error');

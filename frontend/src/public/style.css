@@ -8,33 +8,26 @@
     url('/fonts/jost-latin.woff2') format('woff2');
 }
 
-/* 1. Use a more-intuitive box-sizing model */
+/* ###################################################################### */
+/* Reset                                                                  */
+/* ###################################################################### */
+
 *,
 *::before,
 *::after {
   box-sizing: border-box;
 }
 
-/* 2. Remove default margin */
 * {
   margin: 0;
 }
 
-/* 3. Enable keyword animations */
 @media (prefers-reduced-motion: no-preference) {
   html {
     interpolate-size: allow-keywords;
   }
 }
 
-body {
-  /* 4. Add accessible line-height */
-  line-height: 1.5;
-  /* 5. Improve text rendering */
-  -webkit-font-smoothing: antialiased;
-}
-
-/* 6. Improve media defaults */
 img,
 picture,
 video,
@@ -44,7 +37,6 @@ svg {
   max-width: 100%;
 }
 
-/* 7. Inherit fonts for form controls */
 input,
 button,
 textarea,
@@ -52,7 +44,6 @@ select {
   font: inherit;
 }
 
-/* 8. Avoid text overflows */
 p,
 h1,
 h2,
@@ -63,7 +54,6 @@ h6 {
   overflow-wrap: break-word;
 }
 
-/* 9. Improve line wrapping */
 p {
   text-wrap: pretty;
 }
@@ -77,231 +67,545 @@ h6 {
   text-wrap: balance;
 }
 
-/*
-    10. Create a root stacking context
-  */
-#root,
-#__next {
-  isolation: isolate;
-}
-
-/* ##################################### */
+/* ###################################################################### */
+/* Design tokens                                                          */
+/*                                                                        */
+/* Mirrors the theme of beitritt.pfadfinden.de so this service sits next   */
+/* to it without a visible seam. Colours are copied as the oklch() values  */
+/* that site ships (they resolve to the BdP corporate hex codes noted in   */
+/* the comments); the spacing scale is Tailwind's 0.25rem step, and the    */
+/* breakpoints are Tailwind's defaults plus the 3xl (160rem) that site adds.*/
+/* ###################################################################### */
 
 :root {
-  /* BdP corporate design — Primärfarben */
-  --bdp-pfadiblau: #0e4278;
-  --bdp-woelflingsgelb: #ffd208;
-  --bdp-rr-rot: #971b2f;
+  /* Primärfarben */
+  --color-blue-500: oklch(37.8% 0.106 253.49); /* Pfadiblau  #0e4278 */
+  --color-yellow-500: oklch(87.7% 0.179 93.02); /* Wölflingsgelb #ffd208 */
+  --color-red-500: oklch(44.3% 0.158 18.65); /* RR-Rot #971b2f */
 
   /* Sekundärfarben */
-  --bdp-pfadiblau-hell: #a9bbce;
-  --bdp-woelflingsgelb-hell: #ffe984;
-  --bdp-pfadiblau-dunkel: #0b2341;
+  --color-blue-light: #a9bbce;
+  --color-yellow-light: #ffe894;
+  --color-kluft: #0b2341;
+  --color-kothe: #222423;
 
-  --interaction: var(--bdp-pfadiblau);
-  --interaction-hover: var(--bdp-pfadiblau-dunkel);
-  --interaction-fg: #fff;
-  --bdp-mitternachtsblau: var(--bdp-pfadiblau);
-  --bdp-sonnengelb: var(--bdp-woelflingsgelb);
-  --header-bg: var(--bdp-sonnengelb);
-  --w-text: 70ch;
+  --color-blue-50: oklch(94% 0.027 267.55);
+  --color-blue-600: oklch(32.9% 0.093 253.96);
+  --color-red-50: oklch(94.3% 0.024 14.51);
+  --color-red-600: oklch(37.9% 0.135 18.86);
+  --color-green-50: oklch(95.8% 0.07 149.29);
+  --color-green-700: oklch(41.7% 0.122 147.6);
+  /* Neutral surface ramp. The reference site puts its *form* chrome on this
+     (zinc) scale rather than on Pfadiblau, which is what keeps labels and help
+     text from competing with the blue reserved for links, buttons and headings.
+     Values are read off beitritt.pfadfinden.de's own form controls. */
+  --color-surface-50: #fafafa;
+  --color-surface-100: #f4f4f5;
+  --color-surface-200: #e4e4e7;
+  --color-surface-300: #d4d4d8;
+  --color-surface-400: #a1a1aa;
+  --color-surface-500: #71717a;
+  --color-surface-600: #52525b;
+  --color-surface-700: #3f3f46;
+  --color-white: #fff;
 
-  --font-sans:
-    Jost, system-ui, -apple-system, Segoe UI, Helvetica Neue, Arial, Noto Sans, sans-serif, Apple Color Emoji,
-    Segoe UI Emoji, Segoe UI Symbol, Noto Color Emoji;
+  /* Interaktion: primary = blue-500, hover/active = kluft */
+  --interaction: var(--color-blue-500);
+  --interaction-hover: var(--color-kluft);
+  --interaction-fg: var(--color-white);
+
+  --font-sans: 'Jost', -apple-system, system-ui, BlinkMacSystemFont, Segoe UI, Ubuntu, Helvetica Neue, sans-serif;
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace;
+
+  /* Type scale */
+  --text-xs: 0.75rem;
+  --text-xs--line-height: 1.33333;
+  --text-sm: 0.875rem;
+  --text-sm--line-height: 1.42857;
+  --text-base: 1rem;
+  --text-base--line-height: 1.5;
+  --text-lg: 1.125rem;
+  --text-lg--line-height: 1.55556;
+  --text-xl: 1.25rem;
+  --text-xl--line-height: 1.4;
+  --text-2xl: 1.5rem;
+  --text-2xl--line-height: 1.33333;
+  --text-4xl: 2.25rem;
+  --text-4xl--line-height: 1.11111;
+  --text-5xl: 3rem;
+  --text-5xl--line-height: 1;
+
+  /* Prose measure, as on the reference site */
+  --w-text: 65ch;
 }
 
 html {
   line-height: 1.5;
   -webkit-text-size-adjust: 100%;
   font-family: var(--font-sans);
-  font-feature-settings: normal;
-  font-variation-settings: normal;
   -moz-tab-size: 4;
-  -o-tab-size: 4;
   tab-size: 4;
   -webkit-tap-highlight-color: transparent;
+  /* No rubber-band bounce past the top or bottom of the page, and no scroll
+     chaining out of it. Set on the root, which is where the viewport takes it
+     from - `body` is not a reliable place for this the way it is for overflow. */
+  overscroll-behavior: none;
 }
 
-/* ##### Header ##### */
+body {
+  /* Sticky footer: the page is a column that is at least as tall as the
+     viewport, so short pages (the error page above all) still push the
+     footer to the bottom instead of leaving it floating mid-screen. */
+  display: flex;
+  min-height: 100dvh;
+  flex-direction: column;
+  color: var(--color-surface-700);
+  background-color: var(--color-white);
+  font-size: var(--text-base);
+  line-height: var(--text-base--line-height);
+  -webkit-font-smoothing: antialiased;
+}
+
+#content {
+  position: relative;
+  width: 100%;
+  flex: 1;
+}
+
+/* ###################################################################### */
+/* Container                                                              */
+/*                                                                        */
+/* The reference site has no max-width: every band is full-bleed and only  */
+/* the inline padding grows with the viewport. Line length is capped on    */
+/* the content block (.page-content) instead, so full-width bands like the */
+/* hero and the footer wave stay edge to edge.                             */
+/* ###################################################################### */
+
+.container {
+  position: relative;
+  margin-inline: auto;
+  width: 100%;
+  padding-inline: 0.75rem; /* px-3 */
+}
+
+@media (min-width: 48rem) {
+  .container {
+    padding-inline: 1.25rem; /* md:px-5 */
+  }
+}
+
+@media (min-width: 64rem) {
+  .container {
+    padding-inline: 2.5rem; /* lg:px-10 */
+  }
+}
+
+@media (min-width: 80rem) {
+  .container {
+    padding-inline: 5rem; /* xl:px-20 */
+  }
+}
+
+@media (min-width: 160rem) {
+  .container {
+    padding-inline: 6.25rem; /* 3xl:px-25 */
+  }
+}
+
+/* The masthead only grows its *leading* padding past lg (xl:pl-20 3xl:pl-25),
+   keeping the right-hand nav closer to the edge - same asymmetry as upstream. */
+@media (min-width: 80rem) {
+  .container--masthead {
+    padding-inline: 5rem 2.5rem;
+  }
+}
+
+@media (min-width: 160rem) {
+  .container--masthead {
+    padding-inline: 6.25rem 2.5rem;
+  }
+}
+
+/* ###################################################################### */
+/* Header                                                                 */
+/* ###################################################################### */
 
 .site-header {
-  position: sticky;
-  top: 0;
-  z-index: 10;
+  position: relative;
+  box-sizing: border-box;
 }
 
-.topbar {
-  background-color: var(--bdp-pfadiblau);
-  color: var(--bdp-woelflingsgelb);
-  min-height: 2rem;
-  display: flex;
-  justify-content: flex-end;
-  align-items: stretch;
-  font-size: 0.8125rem;
-  font-weight: 600;
-  letter-spacing: 0.03em;
+@media (min-width: 64rem) {
+  .site-header {
+    position: static;
+  }
 }
 
-.topbar_tab {
+/* --- Meta bar ------------------------------------------------------- */
+
+.metabar {
+  box-sizing: border-box;
   display: flex;
-  align-items: center;
-  padding-inline: 1.25rem;
-  color: inherit;
-  text-decoration: none;
+  height: 1.875rem; /* h-7.5 */
+  width: 100%;
+  flex-wrap: nowrap;
+  justify-content: space-between;
+  background-color: var(--color-blue-500);
+  color: var(--color-yellow-500);
+  font-size: var(--text-xs);
+  line-height: 1.875rem; /* leading-7.5 */
+  font-weight: 500;
+}
+
+/* Left-hand slot. Empty for this service, but kept so the yellow tab is
+   pushed right by the same `justify-between` the reference site uses. */
+.metabar_start {
+  padding-inline-start: 0.75rem; /* pl-3 */
+}
+
+@media (min-width: 64rem) {
+  .metabar_start {
+    padding-inline-start: 2rem; /* lg:pl-8 */
+  }
+}
+
+@media (min-width: 80rem) {
+  .metabar_start {
+    padding-inline-start: 4.5rem; /* xl:pl-18 */
+  }
+}
+
+@media (min-width: 160rem) {
+  .metabar_start {
+    padding-inline-start: 5.75rem; /* 3xl:pl-23 */
+  }
+}
+
+.metabar_tab {
+  display: block;
+  height: 1.875rem;
+  max-width: 25.875rem; /* max-w-103.5 */
+  padding-inline: 5rem 0.5rem; /* pl-20 pr-2 */
+  background-color: var(--color-yellow-500);
+  color: var(--color-blue-500);
+  text-align: center;
   text-transform: uppercase;
-  transition: background-color 0.15s;
+  text-decoration: none;
+  transition: background-color 0.15s ease-in-out;
+
+  /* The angled left edge is the same clip the reference site masks with. */
+  -webkit-mask-image: url('/header-clip-mask.svg');
+  mask-image: url('/header-clip-mask.svg');
+  -webkit-mask-size: cover;
+  mask-size: cover;
+  -webkit-mask-position: 0 0;
+  mask-position: 0 0;
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
 }
 
-.topbar_tab:hover {
-  background-color: var(--bdp-pfadiblau-dunkel);
+@media (min-width: 40rem) {
+  .metabar_tab {
+    width: 25.875rem; /* sm:w-103.5 */
+  }
 }
 
-.topbar_tab--yellow {
-  background-color: var(--bdp-woelflingsgelb);
-  color: var(--bdp-pfadiblau);
-  clip-path: polygon(0 0, 100% 0, 100% 100%, 14px 100%);
-  padding-inline-start: 1.75rem;
+.metabar_tab:hover,
+.metabar_tab:focus-visible {
+  background-color: var(--color-yellow-light);
+  color: var(--color-blue-500);
 }
 
-.topbar_tab--yellow:hover {
-  background-color: var(--bdp-woelflingsgelb-hell);
-}
+/* --- Masthead ------------------------------------------------------- */
 
 .masthead {
-  background-color: #fff;
-  border-bottom: 1px solid #eee;
-  padding-inline: 1rem;
-  min-height: 4.5rem;
   display: flex;
-  justify-content: space-between;
   align-items: center;
+  justify-content: space-between;
   gap: 1rem;
+  color: var(--color-blue-500);
 }
 
 .masthead_brand {
   display: flex;
+  height: 5rem; /* h-20 */
+  flex: none;
   align-items: center;
-  gap: 0.625rem;
-  color: var(--bdp-pfadiblau);
+  gap: 0.75rem;
+  padding-block: 0.75rem; /* py-3 */
+  color: inherit;
   text-decoration: none;
 }
 
+@media (min-width: 64rem) {
+  .masthead_brand {
+    margin-inline-end: 1.5rem; /* lg:mr-6 */
+  }
+}
+
 .masthead_logo {
-  display: block;
-  height: 2.5rem;
-  width: 2.5rem;
+  height: 3.5rem; /* h-14, same optical size as the reference wordmark */
+  width: 3.5rem;
 }
 
 .masthead_wordmark {
-  font-size: 1.0625rem;
+  font-size: var(--text-xl);
+  line-height: var(--text-xl--line-height);
   font-weight: 500;
 }
 
+@media (min-width: 48rem) {
+  .masthead_wordmark {
+    font-size: var(--text-2xl);
+    line-height: var(--text-2xl--line-height);
+  }
+}
+
 .masthead_wordmark strong {
-  font-weight: 800;
+  font-weight: 700;
 }
 
 .masthead_nav {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
-  gap: 0.5rem;
-  font-size: 0.875rem;
-  color: var(--bdp-pfadiblau);
+  justify-content: flex-end;
+  gap: 0.25rem 0.75rem;
+  font-size: var(--text-sm);
+  line-height: var(--text-sm--line-height);
+  font-weight: 500;
 }
 
-.masthead_nav a {
-  color: inherit;
-  font-weight: 600;
+@media (min-width: 64rem) {
+  .masthead_nav {
+    font-size: var(--text-base);
+    line-height: var(--text-base--line-height);
+  }
 }
 
 .masthead_user {
-  color: #555;
+  display: none;
+  color: var(--color-surface-500);
 }
 
-/* ##### Hero ##### */
+@media (min-width: 48rem) {
+  .masthead_user {
+    display: inline;
+  }
+}
+
+.masthead_link {
+  color: inherit;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.masthead_link:hover,
+.masthead_link:focus-visible {
+  color: var(--color-kluft);
+  text-decoration: underline;
+}
+
+/* ###################################################################### */
+/* Page hero                                                              */
+/* ###################################################################### */
 
 .page-hero {
-  background-color: var(--bdp-woelflingsgelb);
+  background-color: var(--color-yellow-500);
+  padding-bottom: 2.5rem; /* pb-10 */
+  color: var(--color-blue-500);
 }
 
-.page-hero_inner {
-  max-width: 920px;
-  margin-inline: auto;
-  padding: 2.5rem 1rem 3rem;
+.page-hero_title {
+  position: relative;
+  padding-top: 4rem; /* pt-16 */
+  font-size: var(--text-4xl);
+  line-height: var(--text-4xl--line-height);
+  font-weight: 700;
 }
 
-.page-hero_inner h1 {
-  color: var(--bdp-pfadiblau);
-  font-size: 2.25rem;
-  font-weight: 800;
-  line-height: 1.15;
+@media (min-width: 48rem) {
+  .page-hero_title {
+    font-size: var(--text-5xl); /* md:text-5xl */
+    line-height: var(--text-5xl--line-height);
+  }
 }
 
+/* Hand-drawn underline. Painted as a mask so it can inherit the RR-Rot
+   token instead of hard-coding the colour into the markup. */
 .page-hero_squiggle {
   display: block;
-  width: 9rem;
-  height: 1rem;
-  margin-top: 0.25rem;
-  margin-bottom: 1.25rem;
+  width: 220px;
+  aspect-ratio: 244 / 24; /* the artwork's own ratio */
+  margin-top: 0.5rem; /* mt-2 */
+  margin-left: -0.5rem; /* -ml-2 */
+  background-color: var(--color-red-500);
+  -webkit-mask-image: url('/hero-squiggle.svg');
+  mask-image: url('/hero-squiggle.svg');
+  -webkit-mask-size: contain;
+  mask-size: contain;
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
 }
 
-.page-hero_inner .w-text {
-  color: var(--bdp-pfadiblau-dunkel);
+@media (min-width: 64rem) {
+  .page-hero_squiggle {
+    margin-left: -1.5rem; /* lg:-ml-6 */
+  }
 }
+
+.page-hero_lead {
+  max-width: var(--w-text);
+  margin-top: 1.5rem;
+  font-size: var(--text-lg);
+  line-height: var(--text-lg--line-height);
+}
+
+/* ###################################################################### */
+/* Content                                                                */
+/* ###################################################################### */
 
 main {
-  max-width: 920px;
-  margin-inline: auto;
-  margin-bottom: 5rem;
-  padding: 1rem;
+  min-height: 20rem; /* min-h-80 */
 }
 
-main > *:first-child {
-  margin-top: 2rem;
+/* Line length ladder taken from the reference site's article container:
+   sm:max-w-xl md:max-w-2xl lg:max-w-4xl xl:max-w-6xl, with py-6. */
+.page-content {
+  width: 100%;
+  padding-block: 1.5rem;
 }
+
+@media (min-width: 40rem) {
+  .page-content {
+    max-width: 36rem;
+  }
+}
+
+@media (min-width: 48rem) {
+  .page-content {
+    max-width: 42rem;
+  }
+}
+
+@media (min-width: 64rem) {
+  .page-content {
+    max-width: 56rem;
+  }
+}
+
+@media (min-width: 80rem) {
+  .page-content {
+    max-width: 72rem;
+  }
+}
+
+.w-text {
+  max-width: var(--w-text);
+}
+
+/* Running text sits on the reference site's prose leading; form chrome keeps
+   the tighter 1.5 so labels and controls stay compact. */
+.page-content p {
+  line-height: 1.75;
+}
+
+/* Forms read as a column of fields, so the fieldset borders track the field
+   measure rather than the (much wider) content column. */
+.page-content form {
+  max-width: var(--w-text);
+}
+
+/* Prose rhythm, matching the reference site's typography plugin settings. */
+h1,
+h2,
+h3,
+h4 {
+  color: var(--color-blue-500);
+}
+
+h2 {
+  margin-top: 2em;
+  margin-bottom: 1em;
+  font-size: var(--text-2xl);
+  line-height: var(--text-2xl--line-height);
+  font-weight: 700;
+}
+
+h3 {
+  margin-top: 1.6em;
+  margin-bottom: 0.6em;
+  font-size: 1.25rem;
+  line-height: 1.6;
+  font-weight: 600;
+}
+
+h4 {
+  margin-top: 1.5em;
+  margin-bottom: 0.5em;
+  line-height: 1.5;
+  font-weight: 600;
+}
+
+a {
+  color: var(--color-kluft);
+  font-weight: 500;
+}
+
+a:hover,
+a:focus-visible {
+  text-decoration-style: solid;
+}
+
+strong {
+  font-weight: 600;
+}
+
+/* ###################################################################### */
+/* Forms                                                                  */
+/* ###################################################################### */
 
 fieldset {
   margin-bottom: 1.5rem;
-  border: 1px solid #e2e8f0;
-  padding: 0.75rem 1.125rem 1.125rem;
+  border: 1px solid var(--color-surface-200);
+  padding: 0.75rem 1.125rem 1.5rem;
   border-radius: 6px;
-  color: #334155;
 }
 
 fieldset legend {
-  background: #f8fafc;
+  background: var(--color-surface-50);
+  border: 1px solid var(--color-surface-200);
   border-radius: 6px;
-  border-width: 1px;
-  border-style: solid;
-  border-color: #e2e8f0;
-  padding: 1rem 0.75rem;
+  padding: 0.75rem 1rem;
+  font-size: var(--text-lg);
+  line-height: var(--text-lg--line-height);
   font-weight: 700;
   color: inherit;
 }
 
 .form-error {
-  color: #d30014;
+  color: var(--color-red-500);
 }
 
 label {
+  display: block;
   padding-bottom: 0.5rem;
+  font-weight: 500;
 }
 
 input,
 select {
   width: 100%;
-  --form-border: #cbd5e1;
-  border-width: 1px;
-  border-style: solid;
-  border-color: var(--form-border);
+  color: var(--color-surface-700);
+  --form-border: var(--color-surface-300);
+  border: 1px solid var(--form-border);
   border-radius: 6px;
-  background-color: white;
+  background-color: var(--color-white);
   padding-block: 0.5rem;
   padding-inline: 0.75rem;
   outline: transparent;
   line-height: 1.25;
-  box-shadow: 0 1px 2px 0 rgba(18, 18, 23, 0.05);
+  box-shadow: 0 1px 2px 0 rgb(18 18 23 / 5%);
   transition:
     background 0.2s,
     color 0.2s,
@@ -310,15 +614,61 @@ select {
     box-shadow 0.2s;
 }
 
+::placeholder {
+  color: var(--color-surface-500);
+  opacity: 1;
+}
+
 input:hover,
 select:hover {
-  --form-border: #94a3b8;
+  --form-border: var(--color-surface-400);
 }
 
 input:focus,
 select:focus {
   --form-border: var(--interaction);
-  box-shadow: 0 0 0 0.2rem rgba(14, 66, 120, 0.5);
+  box-shadow: 0 0 0 0.2rem oklch(37.8% 0.106 253.49 / 40%);
+}
+
+.question {
+  max-width: var(--w-text);
+}
+
+/* The filter box and the list it narrows are one control, so only the outer
+   corners round and the shared edge collapses to a single 1px line. */
+.group-picker_filter {
+  border-end-start-radius: 0;
+  border-end-end-radius: 0;
+}
+
+.group-picker_list {
+  margin-top: -1px;
+  border-start-start-radius: 0;
+  border-start-end-radius: 0;
+}
+
+/* The overlap means one of the pair is painted over the other - whichever has
+   focus has to be the one on top, or its focus ring is clipped by its neighbour. */
+.group-picker_filter:focus,
+.group-picker_list:focus {
+  position: relative;
+  z-index: 1;
+}
+
+.question > * {
+  display: block;
+}
+
+.question > small {
+  display: block;
+  margin-top: 0.25rem;
+  font-size: var(--text-sm);
+  line-height: var(--text-sm--line-height);
+}
+
+.question ~ .question,
+.question ~ button {
+  margin-top: 1.5rem;
 }
 
 button,
@@ -327,12 +677,14 @@ button,
   background-color: var(--interaction);
   color: var(--interaction-fg);
   border: 1px solid var(--interaction);
-  padding: 0.5rem 0.75rem;
+  padding: 0.5rem 1rem;
   border-radius: 6px;
   font-weight: 500;
   text-decoration: none;
   cursor: pointer;
-  transition: background-color 0.15s;
+  transition:
+    background-color 0.15s ease-in-out,
+    border-color 0.15s ease-in-out;
 }
 
 button:hover:not(:disabled),
@@ -342,68 +694,128 @@ button:hover:not(:disabled),
   color: var(--interaction-fg);
 }
 
-.question {
-  max-width: var(--w-text);
+.btn--secondary {
+  background-color: var(--color-white);
+  color: var(--interaction);
+  border-color: var(--interaction);
 }
 
-.question > * {
-  display: block;
+.btn--secondary:hover:not(:disabled) {
+  background-color: var(--color-blue-50);
+  color: var(--interaction-hover);
+  border-color: var(--interaction-hover);
 }
 
-.question ~ .question,
-.question ~ button {
-  margin-top: 1rem;
+/* Legible rather than ghosted: the download button on the status page sits disabled in
+   plain sight for as long as the report takes to render, so its label has to stay readable
+   (white on light grey was about 1.5:1). Grey-600 on grey-200 clears AA at ~7:1. */
+button:disabled {
+  background-color: var(--color-surface-200);
+  border-color: var(--color-surface-300);
+  color: var(--color-surface-600);
+  cursor: not-allowed;
 }
+
+/* ###################################################################### */
+/* Alerts                                                                 */
+/* ###################################################################### */
 
 .alert {
-  --alert-bg: #ccc;
-  --alert-fg: #111;
-  padding: 1rem;
+  --alert-bg: var(--color-surface-100);
+  --alert-fg: var(--color-surface-700);
+  --alert-accent: var(--color-surface-400);
+  max-width: var(--w-text);
+  padding: 1rem 1.25rem;
+  border-inline-start: 4px solid var(--alert-accent);
   background-color: var(--alert-bg);
   color: var(--alert-fg);
-  border-radius: 4px;
+  border-radius: 6px;
 }
 
 .alert_title {
   font-weight: 700;
 }
 
-.alert--info {
-  --alert-bg: var(--bdp-pfadiblau-hell);
-  --alert-fg: var(--bdp-pfadiblau-dunkel);
+.alert > * + * {
+  margin-top: 0.5rem;
 }
 
+.alert--info {
+  --alert-bg: var(--color-blue-50);
+  --alert-fg: var(--color-blue-500);
+  --alert-accent: var(--color-blue-500);
+}
+
+.alert--error {
+  --alert-bg: var(--color-red-50);
+  --alert-fg: var(--color-red-600);
+  --alert-accent: var(--color-red-500);
+}
+
+.alert--success {
+  --alert-bg: var(--color-green-50);
+  --alert-fg: var(--color-green-700);
+  --alert-accent: var(--color-green-700);
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem;
+  margin-top: 1.5rem;
+}
+
+/* ###################################################################### */
+/* Aside: Tipps & Support                                                 */
+/* ###################################################################### */
+
 aside {
-  margin-top: 2rem;
-  border-top: 1px solid #ccc;
+  /* The rule reads as a divider for the column it separates, so it tracks the
+     text measure rather than the full content width. */
+  max-width: var(--w-text);
+  margin-top: 3rem;
+  border-top: 1px solid var(--color-surface-200);
 }
 
 aside > div {
   margin-top: 2rem;
 }
 
-aside > div > * {
-  margin-top: 0.5rem;
+aside h3 {
+  margin-top: 0;
+  margin-bottom: 0.5rem;
+}
+
+aside > div > * + * {
+  margin-top: 0.75rem;
 }
 
 .debug-info {
-  background-color: #eee;
-  border-radius: 3px;
+  background-color: var(--color-surface-100);
+  border-radius: 6px;
   padding: 1rem;
   overflow-x: auto;
+  font-size: var(--text-sm);
+  line-height: var(--text-sm--line-height);
 }
 
 a.debug-info {
   display: block;
   color: inherit;
+  font-weight: 400;
   text-decoration: none;
 }
 
+a.debug-info:hover {
+  color: var(--color-kluft);
+  text-decoration: underline;
+}
+
 .selection-list {
-  background-color: #eee;
-  border-radius: 3px;
+  background-color: var(--color-surface-100);
+  border-radius: 6px;
   padding: 1rem;
-  margin: 0;
 }
 
 .selection-list dt {
@@ -420,8 +832,7 @@ a.debug-info {
 }
 
 .debug-info .collapsible_content {
-  box-sizing: border-box;
-  font-family: monospace;
+  font-family: var(--font-mono);
 }
 
 .debug-info label:hover {
@@ -435,11 +846,10 @@ a.debug-info {
 
 .collapsible label {
   display: block;
-  font-weight: bold;
+  font-weight: 700;
   cursor: pointer;
-  border-radius: 7px;
-  transition: all 0.25s ease-out;
   padding: 0;
+  transition: all 0.25s ease-out;
 }
 
 .collapsible label::before {
@@ -454,12 +864,12 @@ a.debug-info {
   transition: transform 0.2s ease-out;
 }
 
-.toggle:checked + .lbl-toggle::before {
+.collapsible > input:checked + label::before {
   transform: rotate(90deg) translateX(-3px);
 }
 
 .collapsible_content {
-  max-height: 0px;
+  max-height: 0;
   overflow-x: auto;
   overflow-y: hidden;
   transition: max-height 0.25s ease-in-out;
@@ -470,235 +880,260 @@ a.debug-info {
   max-height: 350px;
 }
 
-.toggle:checked + .lbl-toggle {
-  border-bottom-right-radius: 0;
-  border-bottom-left-radius: 0;
-}
-
-.actions {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 0.75rem;
-}
-
-.btn--secondary {
-  background-color: #fff;
-  color: var(--interaction);
-  border-color: var(--interaction);
-}
-
-.btn--secondary:hover:not(:disabled) {
-  background-color: var(--bdp-pfadiblau-hell);
-  color: var(--interaction);
-  border-color: var(--interaction);
-}
-
-button:has(+ button) {
-  margin-inline-end: 1rem;
-}
-
-button:disabled {
-  background-color: #bbb;
-  border-color: #bbb;
-  color: #fff;
-}
-
-.w-text {
-  max-width: var(--w-text);
-}
-
-/* ##### Footer ##### */
+/* ###################################################################### */
+/* Footer                                                                 */
+/* ###################################################################### */
 
 .site-footer {
-  margin-top: 4rem;
-  color: var(--bdp-pfadiblau);
+  padding-top: 5rem; /* pt-20 */
+  color: var(--color-blue-500);
 }
 
 .site-footer_top {
-  background-color: #fff;
-  padding-block: 3rem;
+  position: relative;
+  z-index: 2;
+  font-size: var(--text-base);
+  line-height: var(--text-base--line-height);
 }
 
+@media (min-width: 64rem) {
+  .site-footer_top {
+    min-height: 11.25rem; /* lg:min-h-45 - reserves the room the wave pulls up into */
+  }
+}
+
+/* Explicit placement (rather than source order) so the columns keep the
+   reference layout even though this service has no social-media column. */
 .site-footer_grid {
-  max-width: 1200px;
-  margin-inline: auto;
-  padding-inline: 1.25rem;
   display: grid;
   grid-template-columns: 1fr;
-  gap: 2.5rem;
+  grid-template-rows: repeat(2, auto);
 }
 
 .site-footer_brand {
-  order: 1;
-}
-
-.site-footer_social {
-  order: 2;
+  grid-column: 1;
+  grid-row: 1;
 }
 
 .site-footer_address {
-  order: 3;
+  grid-column: 1;
+  grid-row: 2;
+  padding-block: 2.5rem; /* pt-10 pb-10 */
 }
 
-@media (min-width: 768px) {
+@media (min-width: 48rem) {
   .site-footer_grid {
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: repeat(2, 1fr);
   }
 
   .site-footer_address {
-    order: 2;
+    grid-column: 2;
+    grid-row: 1 / span 2;
     justify-self: end;
-  }
-
-  .site-footer_social {
-    order: 3;
+    padding-block: 0.5rem 2.5rem; /* md:pt-2 */
   }
 }
 
-@media (min-width: 1024px) {
+@media (min-width: 64rem) {
   .site-footer_grid {
-    grid-template-columns: 1fr 1fr 1fr;
+    grid-template-columns: repeat(3, 1fr);
   }
 
-  .site-footer_social {
-    order: 2;
+  .site-footer_brand {
+    grid-row: 1 / span 2;
   }
 
   .site-footer_address {
-    order: 3;
-    justify-self: start;
+    grid-column: 3;
+    padding-block: 1.5rem 0; /* lg:pt-6 lg:pb-0 */
   }
 }
 
 .site-footer_brand img {
-  height: 3.5rem;
+  height: 4rem; /* h-16 */
   width: auto;
-}
-
-.site-footer_social {
-  display: flex;
-  flex-direction: column;
-  gap: 1.25rem;
-}
-
-.site-footer_social a {
-  display: flex;
-  align-items: center;
-  gap: 0.625rem;
-  color: inherit;
-  text-decoration: none;
-  font-size: 1.125rem;
-  font-weight: 700;
-}
-
-.site-footer_social a:hover {
-  color: var(--bdp-pfadiblau-dunkel);
-  text-decoration: underline;
 }
 
 .site-footer_address {
   font-style: normal;
-  font-size: 1rem;
-  line-height: 1.7;
 }
 
 .site-footer_address_title {
-  font-size: 1.125rem;
+  font-size: var(--text-lg);
+  line-height: var(--text-lg--line-height);
   font-weight: 700;
 }
 
 .site-footer_address a {
   color: inherit;
+  font-weight: inherit;
+  text-decoration: none;
 }
 
-.site-footer_address a:hover {
-  color: var(--bdp-pfadiblau-dunkel);
+.site-footer_address a:hover,
+.site-footer_address a:focus-visible {
+  color: var(--color-kluft);
   text-decoration: underline;
 }
 
-.site-footer_bottom {
-  background-color: var(--bdp-pfadiblau);
-  color: var(--bdp-woelflingsgelb);
+/* --- Wave band ------------------------------------------------------ */
+
+/*
+ * The wave is a mask sized `100% auto`, so its artwork is always
+ * 1760:2750 of the band's *width* - which only lines up with the band if the
+ * band's height tracks its width too. Hence the aspect-ratio: without it the
+ * band is content-height and the crest lands at an arbitrary spot, which is
+ * what made the old footer look like it was scaling on its own.
+ */
+.site-footer_wave {
+  position: relative;
+  z-index: 1;
+  height: auto;
+  width: 100%;
+  background-color: var(--color-blue-500);
+  color: var(--color-yellow-500);
   -webkit-mask-image: url('/footer-wave-mask.svg');
   mask-image: url('/footer-wave-mask.svg');
   -webkit-mask-size: 100% auto;
   mask-size: 100% auto;
-  -webkit-mask-position: top left;
-  mask-position: top left;
+  -webkit-mask-position: 0 0;
+  mask-position: 0 0;
   -webkit-mask-repeat: no-repeat;
   mask-repeat: no-repeat;
-  margin-top: -1.5rem;
 }
 
-@media (min-width: 1024px) {
-  .site-footer_bottom {
-    margin-top: -4rem;
+@media (min-width: 64rem) {
+  .site-footer_wave {
+    margin-top: -7.5rem; /* lg:-mt-30 */
+    aspect-ratio: 1760 / 464;
   }
 }
 
-.site-footer_bottom_inner {
-  max-width: 1200px;
-  margin-inline: auto;
-  padding: 3.5rem 1.25rem 1.5rem;
+@media (min-width: 80rem) {
+  .site-footer_wave {
+    aspect-ratio: 1760 / 380;
+  }
 }
 
-@media (min-width: 1024px) {
-  .site-footer_bottom_inner {
-    padding-top: 7rem;
+.site-footer_wave_inner {
+  padding-top: 3.5rem; /* pt-14 */
+}
+
+@media (min-width: 48rem) {
+  .site-footer_wave_inner {
+    padding-top: 4.5rem; /* md:pt-18 */
+  }
+}
+
+@media (min-width: 64rem) {
+  .site-footer_wave_inner {
+    padding-top: 7.5rem; /* lg:pt-30 */
   }
 }
 
 .site-footer_legal ul {
   list-style: none;
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
+  padding: 0;
+  font-size: var(--text-lg);
+  line-height: var(--text-lg--line-height);
+  font-weight: 700;
+}
+
+.site-footer_legal li + li {
+  margin-top: 0.5rem; /* mt-2 */
 }
 
 .site-footer_legal a {
   position: relative;
   display: inline-block;
-  padding-block: 0.25rem;
+  padding-block: 0.25rem; /* py-1 */
   color: inherit;
+  font-weight: inherit;
   text-decoration: none;
-  font-size: 1.125rem;
-  font-weight: 700;
 }
 
+.site-footer_legal a:hover,
+.site-footer_legal a:focus-visible {
+  color: var(--color-yellow-light);
+}
+
+/* Hand-drawn underline, clipped to a fixed width so it reads as a stroke
+   that runs out rather than a rule sized to the label. */
 .site-footer_underline {
   display: block;
   overflow: hidden;
-  max-width: 6rem;
-  margin-top: 0.125rem;
+  height: 6px;
+  width: 6rem; /* max-w-24 */
+  background-color: currentColor;
+  -webkit-mask-image: url('/link-squiggle.svg');
+  mask-image: url('/link-squiggle.svg');
+  -webkit-mask-size: 286.36px 6px; /* the artwork at its natural 6px height */
+  mask-size: 286.36px 6px;
+  -webkit-mask-position: 0 0;
+  mask-position: 0 0;
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
 }
 
 .site-footer_underline--wide {
-  max-width: 12rem;
-}
-
-.site-footer_underline svg {
-  display: block;
-}
-
-.site-footer_legal a:hover {
-  color: var(--bdp-woelflingsgelb-hell);
-  text-decoration: underline;
+  width: 12rem; /* max-w-48 */
 }
 
 .site-footer_credit {
-  margin-top: 1.5rem;
-  padding-top: 1rem;
-  font-size: 0.875rem;
+  margin-top: 1.5rem; /* mt-6 */
+  padding-bottom: 1rem; /* pb-4 */
+  font-size: var(--text-sm);
+  line-height: var(--text-sm--line-height);
   font-weight: 600;
+}
+
+@media (min-width: 64rem) {
+  .site-footer_credit {
+    margin-top: 2.5rem; /* lg:mt-10 */
+  }
+}
+
+@media (min-width: 80rem) {
+  .site-footer_credit {
+    margin-top: 4rem; /* xl:mt-16 */
+  }
 }
 
 .site-footer_credit a {
   color: inherit;
+  font-weight: inherit;
   text-decoration: underline;
   text-underline-offset: 2px;
 }
 
-.site-footer_credit a:hover {
-  color: var(--bdp-woelflingsgelb-hell);
+.site-footer_credit a:hover,
+.site-footer_credit a:focus-visible {
+  color: var(--color-yellow-light);
+}
+
+/* ###################################################################### */
+/* Report selection summary                                               */
+/* ###################################################################### */
+
+.selection {
+  margin-top: 2rem;
+}
+
+.selection h3 {
+  margin-top: 0;
+  margin-bottom: 0.5rem;
+}
+
+/* ###################################################################### */
+/* Focus                                                                  */
+/* ###################################################################### */
+
+:focus-visible {
+  outline: 2px solid currentColor;
+  outline-offset: 2px;
+}
+
+input:focus-visible,
+select:focus-visible {
+  outline-offset: 0;
 }

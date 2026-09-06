@@ -30,6 +30,7 @@ declare module 'express-session' {
     executionSelections?: Record<
       string,
       {
+        reportTitle: string;
         items: { label: string; value: string }[];
         regenerateUrl: string;
       }

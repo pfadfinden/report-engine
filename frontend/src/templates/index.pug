@@ -8,114 +8,115 @@ mixin groupOptionsList(options, selectedGroup)
 
 block content
   .page-hero
-    .page-hero_inner
-      h1 Bericht erstellen
-      svg.page-hero_squiggle(viewBox='0 0 200 16' preserveAspectRatio='none' aria-hidden='true')
-        path(d='M2 12 C 20 2, 36 2, 52 9 S 86 16, 102 9 S 136 2, 152 9 S 186 16, 198 8' fill='none' stroke='#971b2f' stroke-width='4' stroke-linecap='round')
-      p.w-text Auf dieser Seite kannst du erweiterte Berichte über Gruppen im BdP erstellen. Die Reportdaten werden täglich gegen 2 Uhr mit der Mitgliederverwaltung synchronisiert.<br/>Einfache Auswertungen und Exporte der aktuellen Daten lassen sich auch in der Mitgliederverwaltung selbst machen.
+    .container
+      h1.page-hero_title Bericht erstellen
+      span.page-hero_squiggle(aria-hidden='true')
+      p.page-hero_lead Auf dieser Seite kannst du erweiterte Berichte über Gruppen im BdP erstellen. Die Berichtsdaten werden täglich gegen 2 Uhr mit der Mitgliederverwaltung synchronisiert.<br/>Einfache Auswertungen und Exporte der aktuellen Daten lassen sich auch in der Mitgliederverwaltung selbst machen.
   main
+    .container
+      .page-content
 
-    if groupOptions.length
+        if groupOptions.length
 
-      form(method="GET", id="requestReport")
-        fieldset
-          legend Gruppe
+          form(method="GET", id="requestReport")
+            fieldset
+              legend Gruppe
 
-          //- Filtering only earns its keep for the few users whose accessible groups run long
-          //- (nationwide "layer and below" access) - everyone else has a short enough list that a
-          //- plain dropdown is faster to use than a search box would be.
-          - var LARGE_GROUP_LIST_THRESHOLD = 50
-          div.question
-            if groupOptions.length >= LARGE_GROUP_LIST_THRESHOLD
-              label#groupLabel(for="groupFilter") Für welche Gruppe soll der Bericht erstellt werden?
-              input(type="text", id="groupFilter", autocomplete="off", placeholder="Gruppe suchen…", aria-controls="groupId")
-              select(name="groupId", id="groupId", size=8, aria-labelledby="groupLabel")
-                +groupOptionsList(groupOptions, selectedGroup)
-              p#groupFilterStatus(role="status", aria-live="polite")
-            else
-              label(for="groupId") Für welche Gruppe soll der Bericht erstellt werden?
-              select(name="groupId", id="groupId")
-                +groupOptionsList(groupOptions, selectedGroup)
-            if !selectedGroup && requestParams.groupId
-              small.form-error Die vorausgewählte Gruppe exisitert nicht oder du hast keine ausreichenden Rechte für diese Gruppe. Bitte wähle eine andere Gruppe.
-            small Die verfügbaren Reports sind abhängig von der Gruppe und deiner Tätigkeit in dieser Gruppe.
-          
-          button Gruppe auswählen
-       
-        fieldset
-          legend Bericht
-          
-          if availableReports && availableReports.length
-            div.question
-              label(for="reportId") Welcher Bericht soll erstellt werden?
-              select(name="reportId", id="reportId")
-                each report in availableReports
-                  option(value=report.id)= report.title
-              if !selectedReport && requestParams.reportId
-                small.form-error Der vorausgewählte Report exisitert nicht oder du hast keine ausreichenden Rechte für diese Gruppe. Bitte wähle eine andere Gruppe oder einen anderen Report.
-             
-            button Report auswählen
-          else if requestParams.reportId
-            //- Since no reports can be selected, keep previous reportId around until the user selected a suitable group
-            input(type="hidden", name="reportId", value=requestParams.reportId)
-           
-          if availableReports && availableReports.length === 0
-            //-- group was selected, but no reports are available / permission missing
-            .alert.alert--error
-              .alert_title Du hast keine Berechtigung, für die ausgewählte Gruppe Berichte zu erstellen.
-          else if availableReports === undefined
-            .alert.alert--info
-              .alert_title Bitte wähle zuerst eine Gruppe aus.
-            
-          
-        
-        fieldset
-          legend Berichtseinstellungen
-          if selectedReport
-
-            each parameter in parameterToFill
-
+              //- Filtering only earns its keep for the few users whose accessible groups run long
+              //- (nationwide "layer and below" access) - everyone else has a short enough list that a
+              //- plain dropdown is faster to use than a search box would be.
+              - var LARGE_GROUP_LIST_THRESHOLD = 50
               div.question
-                label(for="p_" + parameter.name)= parameter.label
-                input(type=parameter.type,name="p_" + parameter.name, id="p_" + parameter.name)
-                if parameter.description
-                  small= parameter.description
+                if groupOptions.length >= LARGE_GROUP_LIST_THRESHOLD
+                  label#groupLabel(for="groupFilter") Für welche Gruppe soll der Bericht erstellt werden?
+                  input.group-picker_filter(type="text", id="groupFilter", autocomplete="off", placeholder="Gruppe suchen…", aria-controls="groupId")
+                  select.group-picker_list(name="groupId", id="groupId", size=8, aria-labelledby="groupLabel")
+                    +groupOptionsList(groupOptions, selectedGroup)
+                  p#groupFilterStatus(role="status", aria-live="polite")
+                else
+                  label(for="groupId") Für welche Gruppe soll der Bericht erstellt werden?
+                  select(name="groupId", id="groupId")
+                    +groupOptionsList(groupOptions, selectedGroup)
+                if !selectedGroup && requestParams.groupId
+                  small.form-error Die vorausgewählte Gruppe existiert nicht oder du hast keine ausreichenden Rechte für diese Gruppe. Bitte wähle eine andere Gruppe.
+                
+              button Gruppe auswählen
 
-            div.question
-              label(for="outputFormat") In welchem Format soll der Bericht ausgegeben werden?
-              select(name="outputFormat", id="outputFormat")
-                each outputFormat in selectedReport.outputFormats
-                  option(value=outputFormat, selected=(outputFormat === requestParams.outputFormat))
-                    case outputFormat
-                      when 'pdf': | Portable-Document-Format (*.pdf)
-                      when 'xlsx': | Microsoft Excel (*.xlsx)
-                      when 'xls': | Microsoft Excel (*.xls)
-                      when 'csv': | Kommagetrennte Werte (*.csv)
-                      when 'ods': | OpenDocument-Tabellendokument (*.ods)
-                      when 'JSON': | JSON - JavaScript Object Notation (*.json)
-                      default: | #{outputFormat}
-                        
-          else
-            .alert.alert--info
-               .alert_title Bitte wähle zuerst einen Bericht aus.
+            fieldset
+              legend Bericht
 
-        
-        button(type="submit", formaction="./generate" formmethod="POST", disabled=(!selectedReport)) Report generieren
+              if availableReports && availableReports.length
+                div.question
+                  label(for="reportId") Welcher Bericht soll erstellt werden?
+                  select(name="reportId", id="reportId")
+                    each report in availableReports
+                      option(value=report.id)= report.title
+                  if !selectedReport && requestParams.reportId
+                    small.form-error Der vorausgewählte Bericht existiert nicht oder du hast keine ausreichenden Rechte für diese Gruppe. Bitte wähle eine andere Gruppe oder einen anderen Bericht.
+                  small Die verfügbaren Berichte sind abhängig von der Gruppe und deiner Tätigkeit in dieser Gruppe.
 
-    else
-      div.alert.alert--error
-        div Fehlermeldung
-        if availableGroups.length
-          p Für keine deiner Gruppen ist aktuell ein Bericht verfügbar.
+                button Bericht auswählen
+              else if requestParams.reportId
+                //- Since no reports can be selected, keep previous reportId around until the user selected a suitable group
+                input(type="hidden", name="reportId", value=requestParams.reportId)
+
+              if availableReports && availableReports.length === 0
+                //-- group was selected, but no reports are available / permission missing
+                .alert.alert--error
+                  .alert_title Du hast keine Berechtigung, für die ausgewählte Gruppe Berichte zu erstellen.
+              else if availableReports === undefined
+                .alert.alert--info
+                  .alert_title Bitte wähle zuerst eine Gruppe aus.
+
+
+
+            fieldset
+              legend Berichtseinstellungen
+              if selectedReport
+
+                each parameter in parameterToFill
+
+                  div.question
+                    label(for="p_" + parameter.name)= parameter.label
+                    input(type=parameter.type,name="p_" + parameter.name, id="p_" + parameter.name)
+                    if parameter.description
+                      small= parameter.description
+
+                div.question
+                  label(for="outputFormat") In welchem Format soll der Bericht ausgegeben werden?
+                  select(name="outputFormat", id="outputFormat")
+                    each outputFormat in selectedReport.outputFormats
+                      option(value=outputFormat, selected=(outputFormat === requestParams.outputFormat))
+                        case outputFormat
+                          when 'pdf': | Portable-Document-Format (*.pdf)
+                          when 'xlsx': | Microsoft Excel (*.xlsx)
+                          when 'xls': | Microsoft Excel (*.xls)
+                          when 'csv': | Kommagetrennte Werte (*.csv)
+                          when 'ods': | OpenDocument-Tabellendokument (*.ods)
+                          when 'JSON': | JSON - JavaScript Object Notation (*.json)
+                          default: | #{outputFormat}
+
+              else
+                .alert.alert--info
+                   .alert_title Bitte wähle zuerst einen Bericht aus.
+
+
+            button(type="submit", formaction="./generate" formmethod="POST", disabled=(!selectedReport)) Bericht generieren
+
         else
-          p Keine Gruppen
+          .alert.alert--error
+            .alert_title Fehlermeldung
+            if availableGroups.length
+              p Für keine deiner Gruppen ist aktuell ein Bericht verfügbar.
+            else
+              p Keine Gruppen
 
-    aside
-    
-      +tippSection('Tipp: Du brauchst diesen Bericht häufiger oder möchtest diese Einstellungen mit anderen teilen?', 'Lesezeichen hinzufügen oder URL mit anderen teilen:', request.url)
-        button.btn--secondary(form="requestReport", formmethod="get", formnovalidate=true) Link aktualisieren
+        aside
 
-      +problemeSection(debugLines)
+          +tippSection('Tipp: Du brauchst diesen Bericht häufiger oder möchtest diese Einstellungen mit anderen teilen?', 'Lesezeichen hinzufügen oder URL mit anderen teilen:', request.url)
+            button.btn--secondary(form="requestReport", formmethod="get", formnovalidate=true) Link aktualisieren
+
+          +problemeSection(debugLines)
 
 block scripts
   script(src="/group-filter.js", defer)

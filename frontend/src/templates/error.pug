@@ -1,6 +1,37 @@
 extends layout
 
 block content
-  h1= title
-  h2= status
-  p= message
+  -
+    var errorTitles = {
+      400: 'Fehlerhafte Anfrage',
+      404: 'Pfad nicht gefunden',
+      401: 'Pfad blockiert',
+      403: 'Pfad blockiert',
+      500: 'Serverfehler',
+    };
+    var title = errorTitles[status] || 'Fehler';
+
+  .page-hero
+    .container
+      h1.page-hero_title= title
+      span.page-hero_squiggle(aria-hidden='true')
+  main
+    .container
+      .page-content
+
+        .alert.alert--error
+          .alert_title Fehler #{status}
+          //- The global 404 handler's message matches the title above,
+          //- so only repeat it here when it actually adds something.
+          if message !== title
+            p= message
+
+        .actions
+          a.btn(href='/') Zur Startseite
+          a.btn.btn--secondary(href=memberManagementUrl target='_blank' rel='noopener') Zurück zur MV
+
+        aside
+          .w-text
+            h3 Das Problem tritt weiterhin auf?
+            p Bei anhaltenden Problemen kannst du dich per E-Mail bei #{supportEmail} melden.
+            a.btn.btn--secondary(href="mailto:" + supportEmail + "?subject=" + encodeURIComponent('Fehler ' + status + ' auf der Berichtsseite')) Support Ticket öffnen

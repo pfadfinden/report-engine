@@ -3,41 +3,52 @@ extends layout
 include _shared
 
 block content
+  .page-hero
+    .container
+      h1.page-hero_title= title
+      span.page-hero_squiggle(aria-hidden='true')
   main
-    header
-      h1 Bericht wird erstellt
+    .container
+      .page-content
 
-    if downloadUrl
-      .alert.alert--success
-        .alert_title Dein Bericht ist fertig.
-    else if statusLabel === "FAILED"
-      .alert.alert--error
-        .alert_title Die Berichtserstellung ist fehlgeschlagen.
-        p Bitte versuche es erneut oder wende dich an mitglied@pfadfinden.de.
-    else
-      meta(http-equiv="refresh", content="3")
-      .alert.alert--info
-        .alert_title Status: #{statusLabel}
-        p Diese Seite aktualisiert sich automatisch alle paar Sekunden.
+        if downloadUrl
+          .alert.alert--success
+            .alert_title Dein Bericht ist fertig.
+        else if statusLabel === "FAILED"
+          .alert.alert--error
+            .alert_title Die Berichtserstellung ist fehlgeschlagen.
+            p Bitte versuche es erneut oder wende dich an mitglied@pfadfinden.de.
+        else
+          meta(http-equiv="refresh", content="3")
+          .alert.alert--info
+            .alert_title Status: #{statusText}
+            p Diese Seite aktualisiert sich automatisch alle paar Sekunden.
 
-    p.actions
-      if downloadUrl
-        a.btn(href=downloadUrl) Bericht herunterladen
-      if regenerateUrl
-        a.btn.btn--secondary(href=regenerateUrl) Zurück
-      a.btn.btn--secondary(href="/") Neuer Bericht
+        .actions
+          //- Kept visible while the report is still running so the action the user is waiting
+          //- for doesn't pop into existence on a refresh - a real <button disabled> rather than
+          //- a dead link, so it is announced as unavailable instead of merely looking greyed.
+          if downloadUrl
+            a.btn(href=downloadUrl) Bericht herunterladen
+          else
+            button.btn(type="button", disabled) Bericht herunterladen
+          if regenerateUrl
+            a.btn.btn--secondary(href=regenerateUrl) Zurück
+          a.btn.btn--secondary(href="/") Neuer Bericht
 
-      if selectionItems && selectionItems.length
-        div.w-text
-          h3 Deine Auswahl
-          dl.selection-list
-            each item in selectionItems
-              dt= item.label
-              dd= item.value
+        //- Sits next to `.actions` rather than inside it: a definition list is
+        //- block content and cannot legally live in the actions paragraph.
+        if selectionItems && selectionItems.length
+          .selection.w-text
+            h3 Deine Auswahl
+            dl.selection-list
+              each item in selectionItems
+                dt= item.label
+                dd= item.value
 
-    aside
+        aside
 
-      if regenerateUrl
-        +tippSection('Tipp: Bericht mit gleichen Einstellungen erneut erstellen?', 'Lesezeichen hinzufügen oder URL mit anderen teilen:', regenerateUrl)
+          if regenerateUrl
+            +tippSection('Tipp: Bericht mit gleichen Einstellungen erneut erstellen?', 'Lesezeichen hinzufügen oder URL mit anderen teilen:', regenerateUrl)
 
-      +problemeSection(debugLines)
+          +problemeSection(debugLines)

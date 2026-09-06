@@ -1,6 +1,15 @@
 import { Group } from '../domain/model/group';
 import { sortGroupsHierarchically } from './group-hierarchy';
 
+// A nested label carries two non-breaking spaces per level of depth, then an en dash
+// (INDENT / DEPTH_MARKER in group-hierarchy.ts). Spelled out per depth, as escapes,
+// for two reasons: a literal NBSP is invisible here and trivially "corrected" into a
+// regular space - a real difference, since regular spaces collapse in rendered
+// <option> text - and naming the depth keeps each expectation a plain literal instead
+// of re-deriving the indent the way the code under test does.
+const DEPTH_1 = '\u00a0\u00a0\u2013 ';
+const DEPTH_2 = '\u00a0\u00a0\u00a0\u00a0\u2013 ';
+
 function group(id: string, name: string, parentId: string | null, type = 'Group::Foo'): Group {
   return { id, name, type, parentId };
 }
@@ -56,7 +65,7 @@ test('indents the label to match depth and marks nested entries', () => {
   const options = sortGroupsHierarchically(groups);
 
   expect(options[0].label).toBe('Bund');
-  expect(options[1].label).toBe('  – Region A');
+  expect(options[1].label).toBe(`${DEPTH_1}Region A`);
 });
 
 test('places same-named groups from different branches directly under their own parent, not adjacent to each other', () => {
@@ -84,8 +93,8 @@ test('disambiguates same-named groups with their parent name, so a filtered/sear
 
   const options = sortGroupsHierarchically(groups);
 
-  expect(options[2].label).toBe('  – Vorstand (Bayern)');
-  expect(options[4].label).toBe('  – Vorstand (Hessen)');
+  expect(options[2].label).toBe(`${DEPTH_2}Vorstand (Bayern)`);
+  expect(options[4].label).toBe(`${DEPTH_2}Vorstand (Hessen)`);
 });
 
 test('does not disambiguate group names that are already unique', () => {
@@ -93,7 +102,7 @@ test('does not disambiguate group names that are already unique', () => {
 
   const options = sortGroupsHierarchically(groups);
 
-  expect(options[1].label).toBe('  – Region A');
+  expect(options[1].label).toBe(`${DEPTH_1}Region A`);
 });
 
 test('skips a hidden intermediate ancestor (e.g. a group type filtered out of the list) instead of orphaning its descendants at depth 0', () => {
@@ -141,6 +150,6 @@ test('disambiguates using the real immediate-parent name even when that parent i
 
   const options = sortGroupsHierarchically(groups, allGroups);
 
-  expect(options.find((o) => o.group.id === '4')?.label).toBe('  – Vorstand (Bezirk Nord)');
-  expect(options.find((o) => o.group.id === '5')?.label).toBe('  – Vorstand (Bezirk Süd)');
+  expect(options.find((o) => o.group.id === '4')?.label).toBe(`${DEPTH_1}Vorstand (Bezirk Nord)`);
+  expect(options.find((o) => o.group.id === '5')?.label).toBe(`${DEPTH_1}Vorstand (Bezirk Süd)`);
 });

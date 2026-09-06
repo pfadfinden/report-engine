@@ -19,7 +19,7 @@ async function selectGroupAndReport(page: Page) {
   await page.selectOption('select[name="groupId"]', E2E_GROUP.id);
   await page.getByRole('button', { name: 'Gruppe auswählen' }).click();
   await page.selectOption('select[name="reportId"]', 'members');
-  await page.getByRole('button', { name: 'Report auswählen' }).click();
+  await page.getByRole('button', { name: 'Bericht auswählen' }).click();
 }
 
 test('report selection start page has no detectable accessibility violations', async ({ page }) => {
@@ -41,7 +41,7 @@ test('execution status page has no detectable accessibility violations', async (
   await selectGroupAndReport(page);
   await page.fill('input[name="p_p_joined_after"]', '2021-01-01');
   await page.selectOption('select[name="outputFormat"]', 'pdf');
-  await page.getByRole('button', { name: 'Report generieren' }).click();
+  await page.getByRole('button', { name: 'Bericht generieren' }).click();
   await expect(page).toHaveURL(/\/executions\/.+/);
 
   const results = await new AxeBuilder({ page })

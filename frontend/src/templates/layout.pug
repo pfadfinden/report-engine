@@ -7,46 +7,51 @@ html(lang='de')
     link(rel='stylesheet', href='/style.css')
   body
     header.site-header
-      .topbar
-        a.topbar_tab.topbar_tab--yellow(href=memberManagementUrl target='_blank' rel='noopener') Zurück zur MV
-      .masthead
+      .metabar
+        //- Left-hand slot. Kept (empty) so `justify-content: space-between` pushes
+        //- the tab to the right edge exactly as it does on beitritt.pfadfinden.de.
+        .metabar_start
+        a.metabar_tab(href=memberManagementUrl target='_blank' rel='noopener') Zurück zur MV
+      .masthead.container.container--masthead
         a.masthead_brand(href='/')
-          img.masthead_logo(src='/klilie-logo.svg', alt='', width='40', height='40')
+          img.masthead_logo(src='/klilie-logo.svg', alt='', width='56', height='56')
           span.masthead_wordmark
             strong BdP
             |  Berichte
         if principal
-          nav.masthead_nav
+          nav.masthead_nav(aria-label='Benutzerkonto')
             span.masthead_user Angemeldet als #{principal.name}
-            a(href='/auth/logout') Abmelden
-    block content
+            a.masthead_link(href='/auth/logout') Abmelden
+    #content
+      block content
     footer.site-footer
       section.site-footer_top
-        .site-footer_grid
-          .site-footer_brand
-            img(src='/bdp-logo-full.svg', alt='Bund der Pfadfinder*innen e.V. (BdP)', width='208', height='56')
-          address.site-footer_address
-            div.site-footer_address_title Bund der Pfadfinder&#42;innen e.V. (BdP)
-            div.site-footer_address_title BdP Bundesamt
-            div Kesselhaken 23
-            div 34376 Immenhausen, DE
-            div: span Telefon: #[a(href='tel:+49 5673 99584-0') +49 5673 99584-0]
-            div: a(href='mailto:info@pfadfinden.de') info@pfadfinden.de
-            div: a(href='https://www.pfadfinden.de' target='_blank' rel='noopener') www.pfadfinden.de
-      section.site-footer_bottom
-        .site-footer_bottom_inner
+        .container
+          .site-footer_grid
+            .site-footer_brand
+              img(src='/bdp-logo-full.svg', alt='Bund der Pfadfinder*innen e.V. (BdP)', width='238', height='64')
+            address.site-footer_address
+              div.site-footer_address_title Bund der Pfadfinder&#42;innen e.V. (BdP)
+              div.site-footer_address_title BdP Bundesamt
+              div Kesselhaken 23
+              div 34376 Immenhausen, DE
+              div
+                span Telefon:&nbsp;
+                a(href='tel:+49 5673 99584-0') +49 5673 99584-0
+              div: a(href='mailto:info@pfadfinden.de') info@pfadfinden.de
+              div: a(href='https://www.pfadfinden.de' target='_blank' rel='noopener') www.pfadfinden.de
+      section.site-footer_wave
+        .container.site-footer_wave_inner
           nav.site-footer_legal(aria-label='Footer')
             ul
               li
                 a(href='https://www.pfadfinden.de/impressum/' target='_blank' rel='noopener')
                   | Impressum
                   span.site-footer_underline(aria-hidden='true')
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 525 11" height="6"><path fill="currentColor" d="M41.841 2.682 7.26 2.574 2.396 2.56c-3.193-.01-3.196 4.95 0 4.96l34.582.107 4.863.015c3.193.01 3.197-4.95 0-4.96m58.463 0L66.98 5.187l-4.79.36c-1.337.101-2.482 1.068-2.482 2.481 0 1.264 1.138 2.581 2.481 2.48l33.324-2.506 4.791-.36c1.336-.1 2.481-1.068 2.481-2.48 0-1.264-1.137-2.58-2.48-2.48m60.273-.266-33.442 2.741-4.765.39c-1.335.11-2.48 1.062-2.48 2.481 0 1.257 1.138 2.59 2.48 2.48l33.442-2.74 4.765-.39c1.335-.11 2.48-1.063 2.48-2.48 0-1.258-1.138-2.592-2.48-2.482m62.078-.712-34.582-.107-4.864-.015c-3.192-.01-3.197 4.95 0 4.96l34.582.108 4.864.015c3.192.01 3.197-4.95 0-4.96m58.463 0L247.794 4.21l-4.79.36c-1.337.101-2.48 1.068-2.48 2.48 0 1.265 1.135 2.582 2.48 2.481l33.323-2.506 4.792-.36c1.336-.1 2.48-1.068 2.48-2.48 0-1.265-1.137-2.582-2.48-2.48m59.53.132-34.583-.108-4.863-.015c-3.192-.01-3.197 4.951 0 4.961l39.445.122c3.193.01 3.197-4.95 0-4.96m58.463 0-33.324 2.505-4.79.361c-1.337.1-2.48 1.068-2.48 2.48 0 1.264 1.136 2.581 2.48 2.48l33.323-2.505 4.791-.36c1.336-.1 2.481-1.069 2.481-2.48 0-1.265-1.138-2.582-2.48-2.48m60.273-.266-33.442 2.74-4.765.391c-1.335.11-2.48 1.061-2.48 2.48 0 1.257 1.137 2.59 2.48 2.48l33.442-2.74 4.765-.39c1.335-.11 2.48-1.062 2.48-2.48 0-1.258-1.138-2.59-2.48-2.48M522.128.005l-33.44 2.741-4.766.39c-1.335.11-2.48 1.062-2.48 2.48 0 1.258 1.137 2.591 2.48 2.481l33.442-2.74 4.764-.39c1.336-.11 2.481-1.063 2.481-2.482 0-1.257-1.138-2.59-2.48-2.48"></path></svg>
               li
                 a(href='https://www.pfadfinden.de/datenschutzerklaerung/' target='_blank' rel='noopener')
                   | Datenschutzerklärung
                   span.site-footer_underline.site-footer_underline--wide(aria-hidden='true')
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 525 11" height="6"><path fill="currentColor" d="M41.841 2.682 7.26 2.574 2.396 2.56c-3.193-.01-3.196 4.95 0 4.96l34.582.107 4.863.015c3.193.01 3.197-4.95 0-4.96m58.463 0L66.98 5.187l-4.79.36c-1.337.101-2.482 1.068-2.482 2.481 0 1.264 1.138 2.581 2.481 2.48l33.324-2.506 4.791-.36c1.336-.1 2.481-1.068 2.481-2.48 0-1.264-1.137-2.58-2.48-2.48m60.273-.266-33.442 2.741-4.765.39c-1.335.11-2.48 1.062-2.48 2.481 0 1.257 1.138 2.59 2.48 2.48l33.442-2.74 4.765-.39c1.335-.11 2.48-1.063 2.48-2.48 0-1.258-1.138-2.592-2.48-2.482m62.078-.712-34.582-.107-4.864-.015c-3.192-.01-3.197 4.95 0 4.96l34.582.108 4.864.015c3.192.01 3.197-4.95 0-4.96m58.463 0L247.794 4.21l-4.79.36c-1.337.101-2.48 1.068-2.48 2.48 0 1.265 1.135 2.582 2.48 2.481l33.323-2.506 4.792-.36c1.336-.1 2.48-1.068 2.48-2.48 0-1.265-1.137-2.582-2.48-2.48m59.53.132-34.583-.108-4.863-.015c-3.192-.01-3.197 4.951 0 4.961l39.445.122c3.193.01 3.197-4.95 0-4.96m58.463 0-33.324 2.505-4.79.361c-1.337.1-2.48 1.068-2.48 2.48 0 1.264 1.136 2.581 2.48 2.48l33.323-2.505 4.791-.36c1.336-.1 2.481-1.069 2.481-2.48 0-1.265-1.138-2.582-2.48-2.48m60.273-.266-33.442 2.74-4.765.391c-1.335.11-2.48 1.061-2.48 2.48 0 1.257 1.137 2.59 2.48 2.48l33.442-2.74 4.765-.39c1.335-.11 2.48-1.062 2.48-2.48 0-1.258-1.138-2.59-2.48-2.48M522.128.005l-33.44 2.741-4.766.39c-1.335.11-2.48 1.062-2.48 2.48 0 1.258 1.137 2.591 2.48 2.481l33.442-2.74 4.764-.39c1.336-.11 2.481-1.063 2.481-2.482 0-1.257-1.138-2.59-2.48-2.48"></path></svg>
           p.site-footer_credit
             | Ein Service des
             = ' '

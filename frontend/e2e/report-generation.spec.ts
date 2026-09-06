@@ -32,14 +32,14 @@ test('selecting a group and report, filling its parameter, and generating a repo
   await page.getByRole('button', { name: 'Gruppe auswählen' }).click();
 
   await page.selectOption('select[name="reportId"]', 'members');
-  await page.getByRole('button', { name: 'Report auswählen' }).click();
+  await page.getByRole('button', { name: 'Bericht auswählen' }).click();
 
   // The report's one parameter, p_joined_after (see test-fixtures/reports/members/metadata.yaml)
   // - the HTML field name is prefixed a second time by index.pug, matching how real reports'
   // parameters (e.g. p_gruppe_id) are already named with a "p_" prefix in metadata.yaml.
   await page.fill('input[name="p_p_joined_after"]', '2021-01-01');
   await page.selectOption('select[name="outputFormat"]', 'pdf');
-  await page.getByRole('button', { name: 'Report generieren' }).click();
+  await page.getByRole('button', { name: 'Bericht generieren' }).click();
 
   await expect(page).toHaveURL(/\/executions\/.+/);
 

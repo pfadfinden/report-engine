@@ -21,6 +21,15 @@ const FILE_PROXY_TIMEOUT_MS = 120_000;
 
 const PARAMETER_DATE_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
 
+// PENDING/DONE/FAILED are the executor API's own enum names; the status page is German, so
+// they only reach the user through this map. The raw name still goes into the debug block,
+// where matching it against an executor log is the whole point.
+const STATUS_TEXT: Record<ReportExecutionStatus, string> = {
+  [ReportExecutionStatus.PENDING]: 'Wird erstellt',
+  [ReportExecutionStatus.DONE]: 'Fertig',
+  [ReportExecutionStatus.FAILED]: 'Fehlgeschlagen',
+};
+
 // Matches the declared parameter's HTML input type (see index.pug, which renders
 // `input(type=parameter.type, ...)` directly from this same value) against the submitted value.
 // This only rejects clearly malformed input (an object/array where a scalar is expected, or a
@@ -59,7 +68,7 @@ export function createReportExecutionRouter(services: AppServices, config: AppCo
 
   // Triggers a report execution and redirects to a status page the user can
   // watch (auto-refreshing) until the download is ready. Reached from the
-  // "Report generieren" form's formaction="./generate" in index.pug.
+  // "Bericht generieren" form's formaction="./generate" in index.pug.
   router.post('/generate', async function (req: Request, res: Response, next: NextFunction) {
     try {
       const reportId = req.body.reportId as string;
@@ -143,6 +152,7 @@ export function createReportExecutionRouter(services: AppServices, config: AppCo
       (req.session.ownedExecutionIds ??= []).push(executionId);
       (req.session.executionTraceContext ??= {})[executionId] = captureCurrentTraceContext();
       (req.session.executionSelections ??= {})[executionId] = {
+        reportTitle: selectedReport.title,
         items: selectionItems,
         regenerateUrl: `/?${regenerateParams.toString()}`,
       };
@@ -201,10 +211,14 @@ export function createReportExecutionRouter(services: AppServices, config: AppCo
       ];
 
       res.render('execution-status', {
-        title: 'Bericht wird erstellt',
+        // The page heading names the report itself rather than describing an activity, so it
+        // still reads correctly once the execution is finished (or has failed). Falls back only
+        // if the session lost the selection it was stored with at trigger time.
+        title: selection?.reportTitle ?? 'Bericht',
         executionId,
         status,
         statusLabel: ReportExecutionStatus[status],
+        statusText: STATUS_TEXT[status],
         downloadUrl,
         selectionItems: selection?.items,
         regenerateUrl: selection?.regenerateUrl,
