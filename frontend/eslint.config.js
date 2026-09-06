@@ -26,6 +26,15 @@ module.exports = tseslint.config(
       '@typescript-eslint/no-explicit-any': 'warn',
     },
   },
+  {
+    // src/public is served as-is to the browser (progressive enhancement scripts), not bundled Node code
+    files: ['src/public/**/*.js'],
+    languageOptions: {
+      globals: {
+        ...globals.browser,
+      },
+    },
+  },
   // must stay last: turns off stylistic rules that would conflict with prettier
   eslintConfigPrettier,
 );
