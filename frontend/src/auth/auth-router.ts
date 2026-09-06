@@ -108,7 +108,7 @@ export function createAuthRouter(
             next(saveErr);
             return;
           }
-          logger.event('auth.login', { 'principal.id': principal.id, 'principal.name': principal.name });
+          logger.event('auth.login', { 'principal.id': principal.id });
           res.redirect(returnTo);
         });
       });
@@ -127,7 +127,7 @@ export function createAuthRouter(
         return;
       }
 
-      logger.event('auth.logout', principal ? { 'principal.id': principal.id, 'principal.name': principal.name } : {});
+      logger.event('auth.logout', principal ? { 'principal.id': principal.id } : {});
 
       const endSessionEndpoint = configuration.serverMetadata().end_session_endpoint;
 
