@@ -42,6 +42,13 @@ function emit(
   if (error !== undefined) {
     allAttributes['error.type'] = error instanceof Error ? error.constructor.name : typeof error;
     allAttributes['error.message'] = error instanceof Error ? error.message : String(error);
+    const code = (error as { code?: unknown } | null)?.code;
+    if (typeof code === 'string') {
+      allAttributes['error.code'] = code;
+    }
+    if (error instanceof Error && error.stack) {
+      allAttributes['error.stack'] = error.stack;
+    }
   }
   logs.getLogger(SCOPE).emit({ severityNumber, severityText, body: eventName, attributes: allAttributes });
 }

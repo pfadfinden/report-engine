@@ -1,6 +1,7 @@
 import { Parameter, Report, ReportId } from '../model/report';
 import { MetadataService } from '../port/metadata.service';
 import Database, { type Database as DatabaseType } from 'better-sqlite3';
+import * as logger from '../../telemetry/logger';
 
 interface ReportDto {
   id: string;
@@ -75,7 +76,12 @@ export class SqliteMetadataService implements MetadataService {
 
   private get db() {
     if (!this._db) {
-      this._db = new Database(this.sqliteDbPath, { readonly: true });
+      try {
+        this._db = new Database(this.sqliteDbPath, { readonly: true });
+      } catch (err) {
+        logger.error('metadata.db.open_failed', { 'db.path': this.sqliteDbPath }, err);
+        throw err;
+      }
     }
     return this._db;
   }
