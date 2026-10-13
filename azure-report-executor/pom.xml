@@ -70,13 +70,13 @@
         <dependency>
             <groupId>com.azure</groupId>
             <artifactId>azure-data-tables</artifactId>
-            <version>12.5.12</version>
+            <version>12.5.13</version>
         </dependency>
 
         <dependency>
             <groupId>com.azure</groupId>
             <artifactId>azure-storage-blob</artifactId>
-            <version>12.35.1</version>
+            <version>12.36.0</version>
         </dependency>
 
         <dependency>
@@ -107,7 +107,7 @@
         <dependency>
             <groupId>com.azure</groupId>
             <artifactId>azure-monitor-opentelemetry-autoconfigure</artifactId>
-            <version>1.6.0</version>
+            <version>1.8.0</version>
         </dependency>
         <!-- Test -->
         <dependency>
