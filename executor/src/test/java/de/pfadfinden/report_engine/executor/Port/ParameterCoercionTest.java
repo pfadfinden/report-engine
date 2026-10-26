@@ -1,6 +1,7 @@
 package de.pfadfinden.report_engine.executor.Port;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 
 import java.sql.Date;
 import java.util.HashMap;
@@ -70,5 +71,39 @@ class ParameterCoercionTest {
     Map<String, Object> coerced = ParameterCoercion.coerce(report, raw);
 
     assertEquals(null, coerced.get("p_joined_after"));
+  }
+
+  @Test
+  void dropsBlankValuesForNonStringParameters() throws JRException {
+    JasperReport report =
+        reportWithParameters(
+            Map.of("p_plz", Integer.class, "p_stichtag", Date.class, "p_flag", Boolean.class));
+
+    Map<String, Object> coerced =
+        ParameterCoercion.coerce(report, Map.of("p_plz", "", "p_stichtag", " ", "p_flag", ""));
+
+    // Left out entirely, so JasperReports falls back to the defaultValueExpression (or null)
+    assertFalse(coerced.containsKey("p_plz"));
+    assertFalse(coerced.containsKey("p_stichtag"));
+    assertFalse(coerced.containsKey("p_flag"));
+  }
+
+  @Test
+  void keepsBlankValuesForStringParameters() throws JRException {
+    JasperReport report = reportWithParameters(Map.of("p_suche", String.class));
+
+    Map<String, Object> coerced = ParameterCoercion.coerce(report, Map.of("p_suche", ""));
+
+    assertEquals("", coerced.get("p_suche"));
+  }
+
+  @Test
+  void coercesCheckedCheckboxToTrue() throws JRException {
+    JasperReport report = reportWithParameters(Map.of("p_flag", Boolean.class));
+
+    assertEquals(true, ParameterCoercion.coerce(report, Map.of("p_flag", "on")).get("p_flag"));
+    assertEquals(true, ParameterCoercion.coerce(report, Map.of("p_flag", "true")).get("p_flag"));
+    assertEquals(true, ParameterCoercion.coerce(report, Map.of("p_flag", "1")).get("p_flag"));
+    assertEquals(false, ParameterCoercion.coerce(report, Map.of("p_flag", "false")).get("p_flag"));
   }
 }

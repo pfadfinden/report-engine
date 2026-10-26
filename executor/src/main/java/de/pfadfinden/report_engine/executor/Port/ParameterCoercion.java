@@ -3,7 +3,9 @@ package de.pfadfinden.report_engine.executor.Port;
 import java.math.BigDecimal;
 import java.sql.Date;
 import java.util.HashMap;
+import java.util.Locale;
 import java.util.Map;
+import java.util.Set;
 import net.sf.jasperreports.engine.JRParameter;
 import net.sf.jasperreports.engine.JasperReport;
 
@@ -19,8 +21,16 @@ import net.sf.jasperreports.engine.JasperReport;
  * <p>Only the common scalar cases (numbers, strings, booleans, java.sql.Date) are handled; anything
  * else is passed through unchanged and left to fail fill-time with a clear JasperReports error if
  * it's genuinely incompatible.
+ *
+ * <p>A blank value for a non-String parameter (an optional form field left empty) is dropped
+ * entirely rather than parsed, so the report's defaultValueExpression applies - or null, if the
+ * report declares none - just as if the field had not been submitted at all.
  */
 public final class ParameterCoercion {
+
+  // What an HTML <input type="checkbox"> without an explicit value attribute submits when checked
+  // ("on"), plus the usual spellings of "true". An unchecked checkbox submits nothing at all.
+  private static final Set<String> TRUE_VALUES = Set.of("on", "true", "1", "yes", "ja");
 
   private ParameterCoercion() {}
 
@@ -33,9 +43,19 @@ public final class ParameterCoercion {
     Map<String, Object> coerced = new HashMap<>();
     for (Map.Entry<String, Object> entry : rawParameters.entrySet()) {
       Class<?> targetType = declaredTypes.get(entry.getKey());
+      if (isBlankNonString(entry.getValue(), targetType)) {
+        continue;
+      }
       coerced.put(entry.getKey(), coerceValue(entry.getValue(), targetType));
     }
     return coerced;
+  }
+
+  private static boolean isBlankNonString(Object value, Class<?> targetType) {
+    return value instanceof String s
+        && s.isBlank()
+        && targetType != null
+        && targetType != String.class;
   }
 
   private static Object coerceValue(Object value, Class<?> targetType) {
@@ -69,7 +89,7 @@ public final class ParameterCoercion {
     }
 
     if (targetType == Boolean.class && value instanceof String s) {
-      return Boolean.parseBoolean(s);
+      return TRUE_VALUES.contains(s.trim().toLowerCase(Locale.ROOT));
     }
 
     // HTML <input type="date"> (and JSON date strings generally) submit "yyyy-MM-dd" - exactly
