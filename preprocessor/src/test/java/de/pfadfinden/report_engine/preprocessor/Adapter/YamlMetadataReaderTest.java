@@ -5,6 +5,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import de.pfadfinden.report_engine.preprocessor.Exception.FailedToReadReport;
+import de.pfadfinden.report_engine.preprocessor.Metadata.ParameterMetadata;
 import de.pfadfinden.report_engine.preprocessor.Metadata.ReportMetadata;
 import de.pfadfinden.report_engine.preprocessor.Metadata.VersionMetadata;
 import java.io.File;
@@ -68,6 +69,38 @@ class YamlMetadataReaderTest {
     assertEquals("1.1", latest.version());
     assertEquals(LocalDate.of(2021, 10, 15), latest.createdOn);
     assertEquals("Sample version", latest.description);
+  }
+
+  @Test
+  void readsSelectParameterOptionsInOrder(@TempDir File dir) throws IOException {
+    File file =
+        yamlFile(
+            dir,
+            """
+                id: list_of_members
+                title: List of Members
+                parameter:
+                    - name: A_Taetigkeit1
+                      label: Tätigkeit 1
+                      type: select
+                      options:
+                        - {value: "138", label: "Landesbeauftragte*r"}
+                        - {value: 176, label: "AK Leiter*in"}
+                    - name: group_id
+                      type: string
+                """);
+
+    ReportMetadata metadata = reader.read(file);
+
+    ParameterMetadata select = metadata.parameter.get(0);
+    assertEquals("select", select.type);
+    assertEquals(2, select.options.size());
+    assertEquals("138", select.options.get(0).value);
+    assertEquals("Landesbeauftragte*r", select.options.get(0).label);
+    // an unquoted YAML number still ends up as the option's string value
+    assertEquals("176", select.options.get(1).value);
+    assertEquals("AK Leiter*in", select.options.get(1).label);
+    assertTrue(metadata.parameter.get(1).options.isEmpty());
   }
 
   @Test
