@@ -8,6 +8,7 @@ import { Parameter } from '../domain/model/report';
 import { ReportExecutionStatus } from '../domain/model/report-execution-task.model';
 import { captureCurrentTraceContext, withStoredTraceContext } from '../telemetry/trace-context';
 import * as logger from '../telemetry/logger';
+import { isValidParameterValue } from './parameter-validation';
 
 var express = require('express');
 var createError = require('http-errors');
@@ -19,8 +20,6 @@ const PARAMETER_FIELD_PREFIX = 'p_';
 // enough to not fire on a slow-but-healthy report, short enough to not hang forever on a dead one.
 const FILE_PROXY_TIMEOUT_MS = 120_000;
 
-const PARAMETER_DATE_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
-
 // PENDING/DONE/FAILED are the executor API's own enum names; the status page is German, so
 // they only reach the user through this map. The raw name still goes into the debug block,
 // where matching it against an executor log is the whole point.
@@ -29,27 +28,6 @@ const STATUS_TEXT: Record<ReportExecutionStatus, string> = {
   [ReportExecutionStatus.DONE]: 'Fertig',
   [ReportExecutionStatus.FAILED]: 'Fehlgeschlagen',
 };
-
-// Matches the declared parameter's HTML input type (see index.pug, which renders
-// `input(type=parameter.type, ...)` directly from this same value) against the submitted value.
-// This only rejects clearly malformed input (an object/array where a scalar is expected, or a
-// value that isn't even shaped like the declared type) - report parameters otherwise still go
-// through ParameterCoercion.coerce on the executor side against the report's own compiled
-// parameter types, which this frontend has no visibility into.
-function isValidParameterValue(type: string, value: unknown): boolean {
-  if (value === null || typeof value === 'object') {
-    return false;
-  }
-  const stringValue = String(value);
-  switch (type) {
-    case 'number':
-      return stringValue === '' || Number.isFinite(Number(stringValue));
-    case 'date':
-      return stringValue === '' || PARAMETER_DATE_PATTERN.test(stringValue);
-    default:
-      return true;
-  }
-}
 
 // An executionId is otherwise just an unguessable UUID with no owner tracked
 // anywhere in the executor - this is what actually stops a different logged-in
@@ -118,7 +96,7 @@ export function createReportExecutionRouter(services: AppServices, config: AppCo
           res.status(400).send(`Unbekannter Parameter: ${name}`);
           return;
         }
-        if (!isValidParameterValue(declared.type, value)) {
+        if (!isValidParameterValue(declared, value)) {
           res.status(400).send(`Ungültiger Wert für Parameter "${name}".`);
           return;
         }
@@ -137,7 +115,9 @@ export function createReportExecutionRouter(services: AppServices, config: AppCo
         }
         const value = parameter[declared.name];
         if (value !== undefined && value !== '') {
-          selectionItems.push({ label: declared.label ?? declared.name, value: String(value) });
+          // For a select, show the option's label the user picked rather than its raw (ID) value.
+          const option = declared.options?.find((o) => o.value === String(value));
+          selectionItems.push({ label: declared.label ?? declared.name, value: option?.label ?? String(value) });
         }
       }
 

@@ -13,21 +13,59 @@ interface ReportDto {
   onlyForType: string | null;
 }
 
+const OPTIONS_TABLE_EXISTS_SQL = `SELECT 1 FROM sqlite_master WHERE type = 'table' AND name = 'ParameterOption'`;
+
+interface ParameterOptionDto {
+  parameter_name: string;
+  value: string;
+  label: string;
+}
+
 export class SqliteMetadataService implements MetadataService {
   private _db: DatabaseType | undefined;
 
   constructor(private readonly sqliteDbPath: string) {}
 
-  getParameterFor(reportId: ReportId): Promise<readonly Parameter[]> {
-    return this._all<Parameter>(
-      `
-                SELECT 
+  async getParameterFor(reportId: ReportId): Promise<readonly Parameter[]> {
+    const [parameters, options] = await Promise.all([
+      this._all<Parameter>(
+        `
+                SELECT
                     p.name,
                     p.label,
                     p.description,
                     p.type
                 FROM ParameterMetadata p
                 WHERE p.report_id = $reportId;
+            `,
+        { reportId },
+      ),
+      this._optionsFor(reportId),
+    ]);
+
+    return parameters.map((parameter) => {
+      const parameterOptions = options
+        .filter((option) => option.parameter_name === parameter.name)
+        .map(({ value, label }) => ({ value, label }));
+      return parameterOptions.length > 0 ? { ...parameter, options: parameterOptions } : parameter;
+    });
+  }
+
+  private _optionsFor(reportId: ReportId): Promise<ReadonlyArray<ParameterOptionDto>> {
+    // A reports.db built by a preprocessor from before select parameters existed has no
+    // ParameterOption table at all - that just means no parameter has options, not an error.
+    if (this.db.prepare(OPTIONS_TABLE_EXISTS_SQL).get() === undefined) {
+      return Promise.resolve([]);
+    }
+    return this._all<ParameterOptionDto>(
+      `
+                SELECT
+                    o.parameter_name,
+                    o.value,
+                    o.label
+                FROM ParameterOption o
+                WHERE o.report_id = $reportId
+                ORDER BY o.parameter_name, o.position;
             `,
       { reportId },
     );

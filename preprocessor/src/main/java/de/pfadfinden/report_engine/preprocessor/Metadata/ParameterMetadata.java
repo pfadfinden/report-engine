@@ -3,14 +3,19 @@ package de.pfadfinden.report_engine.preprocessor.Metadata;
 import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import jakarta.persistence.CollectionTable;
 import jakarta.persistence.Column;
+import jakarta.persistence.ElementCollection;
 import jakarta.persistence.Embeddable;
 import jakarta.persistence.EmbeddedId;
 import jakarta.persistence.Entity;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.MapsId;
+import jakarta.persistence.OrderColumn;
 import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
 
 @Entity
@@ -27,6 +32,20 @@ public class ParameterMetadata {
   public String description = "";
   public String comment = "";
   public String type;
+
+  /**
+   * Fixed choices for a {@code type: select} parameter, in the order they're listed in
+   * metadata.yaml (kept via the position column). Empty for every other type.
+   */
+  @ElementCollection
+  @CollectionTable(
+      name = "ParameterOption",
+      joinColumns = {
+        @JoinColumn(name = "report_id", referencedColumnName = "report_id"),
+        @JoinColumn(name = "parameter_name", referencedColumnName = "name")
+      })
+  @OrderColumn(name = "position")
+  public List<ParameterOption> options = new ArrayList<>();
 
   @Embeddable
   public static class ParameterId implements Serializable {

@@ -20,4 +20,14 @@ export interface Parameter {
   type: string;
   label?: string;
   description?: string;
+  /**
+   * Fixed choices for a "select" parameter, in metadata.yaml order. Absent
+   * for every other type: those are free input fields.
+   */
+  options?: ParameterOption[];
+}
+
+export interface ParameterOption {
+  value: string;
+  label: string;
 }
