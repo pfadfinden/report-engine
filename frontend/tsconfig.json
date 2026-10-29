@@ -7,7 +7,7 @@
     "files": true
   },
   "compilerOptions": {
-    "target": "es6",
+    "target": "es2022",
     "module": "commonjs",
     "rootDir": "./src",
     "outDir": "./dist",

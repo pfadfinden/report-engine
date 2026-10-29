@@ -48,11 +48,12 @@ async function main() {
       issuerUrl: 'http://oidc.invalid',
       backendHost: undefined,
       clientId: 'unused',
-      clientSecret: undefined,
       redirectUri: 'http://localhost/auth/callback',
       postLogoutRedirectUri: '/',
       sessionSecret: process.env.E2E_SESSION_SECRET ?? 'e2e-test-session-secret',
       brokerIdpAlias: 'unused',
+      dpop: 'off',
+      clientKeyFile: undefined,
     },
     support: {
       helpEmail: 'e2e-support@invalid',
@@ -66,6 +67,13 @@ async function main() {
     // Never dereferenced: createAuthRouter only touches this inside /login, /callback, /logout
     // handlers, none of which this test flow reaches (see /__e2e-login below instead).
     authClient: {} as AppServices['authClient'],
+    // Same as authClient above - never dereferenced outside /auth/* handlers.
+    clientAuthentication: {} as AppServices['clientAuthentication'],
+    // No issuer in this stack, so no DPoP and nothing that could ever send a valid logout token;
+    // the endpoint stays mounted (createApp always mounts it) but rejects everything.
+    dpopHandle: undefined,
+    clientJwks: { keys: [] },
+    verifyLogoutToken: () => Promise.reject(new Error('no OIDC issuer in the e2e stack')),
   };
 
   const app = createApp(services, config, [

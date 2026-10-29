@@ -31,3 +31,6 @@ buildNumber.properties
 ## Miscellaneous
 ##############################
 *.log
+
+# OIDC client signing key (private_key_jwt) - never commit
+/secrets/

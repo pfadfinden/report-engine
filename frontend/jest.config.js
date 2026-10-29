@@ -2,6 +2,10 @@
 module.exports = {
   preset: 'ts-jest',
   testEnvironment: 'node',
+  // openid-client and jose (and their own ESM-only deps) ship ESM only, which Jest's CommonJS
+  // runtime can't load as-is: let ts-jest compile them too (hence the js-with-ts transform).
+  transform: { '^.+\\.[tj]sx?$': ['ts-jest', { tsconfig: { allowJs: true } }] },
+  transformIgnorePatterns: ['/node_modules/(?!(openid-client|jose|oauth4webapi)/)'],
   // Playwright's own tests (e2e/*.spec.ts, run via "npm run test:e2e") must not be picked up
   // here - Playwright explicitly refuses to run a test defined while executing inside Jest.
   testPathIgnorePatterns: ['/node_modules/', '<rootDir>/e2e/'],

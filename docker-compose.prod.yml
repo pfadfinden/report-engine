@@ -9,6 +9,8 @@
 #
 # Usage:
 #   cp frontend/.env.example frontend/.env   # fill in real secrets, never commit this file
+#   mkdir -p secrets && openssl genpkey -algorithm EC -pkeyopt ec_paramgen_curve:P-256 -out secrets/oidc_client_key.pem
+#                                            # signing key for private_key_jwt, never commit it (see frontend/README.md)
 #   cp local-report-executor/.env.example local-report-executor/.env
 #   docker compose -f docker-compose.prod.yml up -d --build
 services:
@@ -30,8 +32,11 @@ services:
             - "3000:3000"
         env_file:
             - ./frontend/.env
+        secrets:
+            - oidc_client_key
         environment:
             NODE_ENV: production
+            OIDC_CLIENT_KEY_FILE: /run/secrets/oidc_client_key
             REPORTS_DB_SOURCE: remote
             REPORTS_DB_CACHE_DIR: /usr/src/app/.cache/reports-db
             REPORT_EXECUTION_API_URL: http://local-report-executor:8080
@@ -101,6 +106,10 @@ services:
             options:
                 max-size: "10m"
                 max-file: "3"
+
+secrets:
+    oidc_client_key:
+        file: ./secrets/oidc_client_key.pem
 
 volumes:
     local-report-executor-output:

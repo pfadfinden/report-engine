@@ -4,9 +4,12 @@ import { AppConfig } from './config';
 import { createIndexRouter } from './routes/index';
 import { createReportExecutionRouter } from './routes/report-execution';
 import { createAuthRouter } from './auth/auth-router';
+import { createBackchannelLogoutHandler } from './auth/backchannel-logout';
+import { SessionIndex } from './auth/session-index';
 import { requireAuth } from './auth/require-auth';
 import { withBackendHost } from './auth/backend-host';
 import { verifyRequestOrigin } from './auth/csrf';
+import { redactSensitiveQuery } from './auth/url-redaction';
 import * as logger from './telemetry/logger';
 
 const GENERIC_ERROR_MESSAGE = 'Es ist ein Fehler aufgetreten. Bitte versuche es später erneut.';
@@ -30,6 +33,14 @@ var helmet = require('helmet');
 export function createApp(services: AppServices, config: AppConfig, extraMiddleware: RequestHandler[] = []) {
   var app = express();
 
+  // The store is created explicitly rather than left to express-session's default because two
+  // things need it: the session middleware below, and the back-channel logout endpoint, which
+  // destroys sessions belonging to entirely different requests. MemoryStore is fine for a single
+  // instance; swap it - together with SessionIndex, which is in-process for the same reason - for
+  // a shared store (e.g. redis) before scaling out.
+  const sessionStore = new session.MemoryStore();
+  const sessionIndex = new SessionIndex();
+
   // view engine setup
   app.set('views', path.join(__dirname, 'templates'));
   app.set('view engine', 'pug');
@@ -49,6 +60,10 @@ export function createApp(services: AppServices, config: AppConfig, extraMiddlew
       },
     }),
   );
+
+  // morgan's built-in :url would write /auth/callback?code=...&state=... verbatim into the access
+  // log (and from there the OTLP export), so it is replaced by a redacting one.
+  requestLogger.token('url', (req: Request) => redactSensitiveQuery(req.originalUrl || req.url));
 
   // Routed through the OTel logger (not straight to stdout) so access lines share the same
   // pipeline - and, in production, the same OTLP export - as every other log event instead of
@@ -96,9 +111,26 @@ export function createApp(services: AppServices, config: AppConfig, extraMiddlew
     res.status(200).json({ status: 'ok' });
   });
 
-  // MemoryStore is fine for a single instance; swap for a shared store (e.g. redis) before scaling out
+  // Deliberately ahead of both the session middleware and the CSRF origin check: this is a
+  // server-to-server POST from the OP - no cookie, no session of its own, no browser behind it -
+  // and the signed logout token it carries is its own credential, so an origin check would add
+  // nothing here while silently 403-ing the logout if an OP ever did send an Origin header.
+  app.post(
+    '/auth/backchannel-logout',
+    createBackchannelLogoutHandler(services.verifyLogoutToken, sessionStore, sessionIndex),
+  );
+
+  // A JWKS endpoint is meant to be fetched anonymously by the AS (it is how Keycloak learns the
+  // key that signs this app's client assertions - see auth/client-jwt.ts), so this is public by
+  // design, same as /healthz above. Deliberately ahead of the session middleware: the AS sends no
+  // cookie and the response must never create a session.
+  app.get('/.well-known/jwks.json', function (req: Request, res: Response) {
+    res.json(services.clientJwks);
+  });
+
   app.use(
     session({
+      store: sessionStore,
       secret: config.auth.sessionSecret,
       resave: false,
       saveUninitialized: false,
@@ -114,7 +146,15 @@ export function createApp(services: AppServices, config: AppConfig, extraMiddlew
 
   extraMiddleware.forEach((middleware) => app.use(middleware));
 
-  app.use('/auth', createAuthRouter(services.authClient, config.auth, config.groups.hitobitoApiUrl));
+  const authRouter = createAuthRouter(
+    services.authClient,
+    config.auth,
+    config.groups.hitobitoApiUrl,
+    sessionIndex,
+    services.dpopHandle,
+    services.clientAuthentication,
+  );
+  app.use('/auth', authRouter);
 
   app.use('/', requireAuth, createReportExecutionRouter(services, config));
   app.use('/', requireAuth, createIndexRouter(services));
@@ -135,7 +175,7 @@ export function createApp(services: AppServices, config: AppConfig, extraMiddlew
 
     logger.error(
       'http.request.failed',
-      { 'http.status_code': status, 'http.method': req.method, 'http.path': req.originalUrl },
+      { 'http.status_code': status, 'http.method': req.method, 'http.path': redactSensitiveQuery(req.originalUrl) },
       err,
     );
 
