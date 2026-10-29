@@ -1,10 +1,13 @@
 package de.pfadfinden.report_engine.local_report_executor;
 
+import de.pfadfinden.report_engine.executor.Adapter.Storage.Filesystem.LocalFilesystemReportLoader;
+import de.pfadfinden.report_engine.executor.Adapter.Storage.RemoteZip.RemoteZipReportLoader;
 import de.pfadfinden.report_engine.executor.FillReportService;
 import de.pfadfinden.report_engine.executor.Observability.CredentialRedaction;
 import de.pfadfinden.report_engine.executor.Observability.TracingReportFiller;
 import de.pfadfinden.report_engine.executor.Port.ExecutionStatus;
 import de.pfadfinden.report_engine.executor.Port.OutputFormat;
+import de.pfadfinden.report_engine.executor.Port.ReportLoader;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.OutputStream;
@@ -30,11 +33,18 @@ public class ReportExecutionRunner {
     this.outputDir = config.outputDir();
     this.executionStore = executionStore;
     this.backgroundExecutor = backgroundExecutor;
+    ReportLoader reportLoader =
+        config.reportsReleaseUrl() != null
+            ? new RemoteZipReportLoader(
+                config.reportsReleaseUrl().replaceAll("/+$", "") + "/reports.zip",
+                config.reportsToken(),
+                config.reportsCacheDir(),
+                config.reportsCacheTtl())
+            : new LocalFilesystemReportLoader(config.reportsDir(), config.sharedAssetsDir());
     this.worker =
         new TracingReportExecutionWorker(
             new DefaultReportExecutionWorker(
-                config.reportsDir(),
-                config.sharedAssetsDir(),
+                reportLoader,
                 config.datasourceUrl(),
                 new TracingReportFiller(new FillReportService())));
   }

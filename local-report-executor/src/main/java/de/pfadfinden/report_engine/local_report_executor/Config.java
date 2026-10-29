@@ -1,6 +1,7 @@
 package de.pfadfinden.report_engine.local_report_executor;
 
 import java.io.File;
+import java.time.Duration;
 
 public record Config(
     int port,
@@ -10,7 +11,11 @@ public record Config(
     File outputDir,
     String datasourceUrl,
     String downloadUrlSigningSecret,
-    String apiKey) {
+    String apiKey,
+    String reportsReleaseUrl,
+    String reportsToken,
+    File reportsCacheDir,
+    Duration reportsCacheTtl) {
 
   public static Config fromEnv() {
     int port = intEnv("PORT", 8080);
@@ -24,7 +29,16 @@ public record Config(
         new File(stringEnv("OUTPUT_DIR", "/output")),
         requiredEnv("REPORT_SOURCEDATA_DATABASE_URL"),
         requiredEnv("DOWNLOAD_URL_SIGNING_SECRET"),
-        requiredEnv("EXECUTOR_API_KEY"));
+        requiredEnv("EXECUTOR_API_KEY"),
+        // Optional: when set, reports are fetched from <REPORTS_RELEASE_URL>/reports.zip (cached
+        // under REPORTS_CACHE_DIR, refreshed after REPORTS_CACHE_TTL_MINUTES) instead of read
+        // from REPORTS_DIR/SHARED_ASSETS_DIR. The frontend reads reports.db from the same release
+        // with the same token and TTL - keep these three identical in both services.
+        stringEnv("REPORTS_RELEASE_URL", null),
+        // Secret: bearer token for the release assets, if they need one.
+        stringEnv("REPORTS_TOKEN", null),
+        new File(stringEnv("REPORTS_CACHE_DIR", "/tmp/reports-cache")),
+        Duration.ofMinutes(intEnv("REPORTS_CACHE_TTL_MINUTES", 60)));
   }
 
   private static String stringEnv(String name, String fallback) {

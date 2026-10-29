@@ -18,6 +18,7 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
+import java.time.Duration;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.Map;
@@ -42,7 +43,11 @@ class MainTest {
         new File("."),
         "jdbc:postgresql://unused",
         SIGNING_SECRET,
-        API_KEY);
+        API_KEY,
+        null,
+        null,
+        new File("."),
+        Duration.ofHours(1));
   }
 
   @Test

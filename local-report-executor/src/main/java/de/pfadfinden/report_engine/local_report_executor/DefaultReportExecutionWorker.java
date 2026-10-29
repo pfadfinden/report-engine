@@ -1,12 +1,11 @@
 package de.pfadfinden.report_engine.local_report_executor;
 
-import de.pfadfinden.report_engine.executor.Adapter.Storage.Filesystem.LocalFilesystemReportLoader;
 import de.pfadfinden.report_engine.executor.Observability.CountingOutputStream;
 import de.pfadfinden.report_engine.executor.Port.OutputFormat;
 import de.pfadfinden.report_engine.executor.Port.ParameterCoercion;
 import de.pfadfinden.report_engine.executor.Port.ReportDefinition;
+import de.pfadfinden.report_engine.executor.Port.ReportLoader;
 import de.pfadfinden.report_engine.executor.ReportFiller;
-import java.io.File;
 import java.io.OutputStream;
 import java.sql.Connection;
 import java.sql.DriverManager;
@@ -22,15 +21,13 @@ public class DefaultReportExecutionWorker implements ReportExecutionWorker {
     DriverManager.setLoginTimeout(CONNECTION_TIMEOUT_SECONDS);
   }
 
-  private final File reportsDir;
-  private final File sharedAssetsDir;
+  private final ReportLoader reportLoader;
   private final String datasourceUrl;
   private final ReportFiller reportFiller;
 
   public DefaultReportExecutionWorker(
-      File reportsDir, File sharedAssetsDir, String datasourceUrl, ReportFiller reportFiller) {
-    this.reportsDir = reportsDir;
-    this.sharedAssetsDir = sharedAssetsDir;
+      ReportLoader reportLoader, String datasourceUrl, ReportFiller reportFiller) {
+    this.reportLoader = reportLoader;
     this.datasourceUrl = datasourceUrl;
     this.reportFiller = reportFiller;
   }
@@ -43,9 +40,7 @@ public class DefaultReportExecutionWorker implements ReportExecutionWorker {
       OutputFormat format,
       OutputStream output)
       throws Exception {
-    LocalFilesystemReportLoader loader =
-        new LocalFilesystemReportLoader(reportsDir, sharedAssetsDir);
-    ReportDefinition reportDefinition = loader.load(reportId);
+    ReportDefinition reportDefinition = reportLoader.load(reportId);
     Map<String, Object> parameters =
         ParameterCoercion.coerce(reportDefinition.report, rawParameters);
 

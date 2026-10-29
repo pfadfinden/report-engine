@@ -21,6 +21,7 @@ import java.nio.file.Path;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.Comparator;
+import java.util.Optional;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
@@ -32,13 +33,26 @@ import java.util.zip.ZipInputStream;
  */
 public class RemoteZipReportLoader implements ReportLoader {
 
+  private static final int MAX_REDIRECTS = 5;
+
   private final String reportsZipUrl;
+  private final String bearerToken;
   private final File cacheDir;
   private final Duration ttl;
   private final HttpClient httpClient = HttpClient.newHttpClient();
 
   public RemoteZipReportLoader(String reportsZipUrl, File cacheDir, Duration ttl) {
+    this(reportsZipUrl, null, cacheDir, ttl);
+  }
+
+  /**
+   * @param bearerToken sent as "Authorization: Bearer" to the reports URL's own host only (never to
+   *     a different host a redirect leads to, e.g. a signed storage URL); null/blank for none.
+   */
+  public RemoteZipReportLoader(
+      String reportsZipUrl, String bearerToken, File cacheDir, Duration ttl) {
     this.reportsZipUrl = reportsZipUrl;
+    this.bearerToken = (bearerToken == null || bearerToken.isBlank()) ? null : bearerToken;
     this.cacheDir = cacheDir;
     this.ttl = ttl;
   }
@@ -100,9 +114,26 @@ public class RemoteZipReportLoader implements ReportLoader {
   }
 
   private long downloadTo(File destination) throws IOException, InterruptedException {
-    HttpRequest request = HttpRequest.newBuilder(URI.create(reportsZipUrl)).GET().build();
-    HttpResponse<InputStream> response =
-        httpClient.send(request, HttpResponse.BodyHandlers.ofInputStream());
+    // Redirects are followed by hand (the client's default is to not follow them) so the token
+    // can be withheld from any host other than the one it was configured for.
+    URI origin = URI.create(reportsZipUrl);
+    URI target = origin;
+    HttpResponse<InputStream> response;
+    int redirects = 0;
+    while (true) {
+      HttpRequest.Builder request = HttpRequest.newBuilder(target).GET();
+      if (bearerToken != null && sameOrigin(origin, target)) {
+        request.header("Authorization", "Bearer " + bearerToken);
+      }
+      response = httpClient.send(request.build(), HttpResponse.BodyHandlers.ofInputStream());
+      int status = response.statusCode();
+      Optional<String> location = response.headers().firstValue("Location");
+      if (status / 100 != 3 || location.isEmpty() || redirects++ >= MAX_REDIRECTS) {
+        break;
+      }
+      response.body().close();
+      target = target.resolve(location.get());
+    }
     if (response.statusCode() != 200) {
       Logger.warn(
           "reports.download.failed",
@@ -121,6 +152,12 @@ public class RemoteZipReportLoader implements ReportLoader {
         OutputStream out = new FileOutputStream(destination)) {
       return in.transferTo(out);
     }
+  }
+
+  private static boolean sameOrigin(URI a, URI b) {
+    return a.getScheme().equalsIgnoreCase(b.getScheme())
+        && a.getHost().equalsIgnoreCase(b.getHost())
+        && a.getPort() == b.getPort();
   }
 
   private void deleteRecursively(Path root) throws IOException {
