@@ -136,7 +136,8 @@ async function main() {
   process.on('SIGINT', handleShutdown);
 }
 
-main().catch(function (err) {
+main().catch(async function (err) {
   logger.error('server.startup.failed', {}, err);
+  await shutdownTelemetry();
   process.exit(1);
 });

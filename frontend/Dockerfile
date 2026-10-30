@@ -43,7 +43,7 @@ RUN npm ci --omit=dev --no-audit --no-fund --ignore-scripts && npm cache clean -
 
 COPY --from=builder /usr/src/app/dist ./dist
 
-RUN chown -R node:node /usr/src/app
+RUN mkdir -p .cache && chown -R node:node /usr/src/app
 USER node
 
 EXPOSE 3000
