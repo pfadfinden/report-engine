@@ -3,8 +3,11 @@ package de.pfadfinden.report_engine.preprocessor.Adapter;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import de.pfadfinden.report_engine.preprocessor.Metadata.ParameterMetadata;
+import de.pfadfinden.report_engine.preprocessor.Metadata.ParameterOption;
 import de.pfadfinden.report_engine.preprocessor.Metadata.ReportMetadata;
 import java.io.File;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import org.junit.jupiter.api.Test;
@@ -47,6 +50,31 @@ class SqliteMetadataRepositoryTest {
 
     List<String> ids = repository.all().map(r -> r.id).sorted().toList();
     assertEquals(List.of("report-a", "report-b"), ids);
+  }
+
+  @Test
+  void selectParameterOptionsAreStoredInOrder(@TempDir File dir) {
+    ReportMetadata report = report("list_of_members", "List of Members", List.of("pdf"));
+    ParameterMetadata parameter = new ParameterMetadata();
+    parameter.setName("A_Taetigkeit1");
+    parameter.setReport(report);
+    parameter.type = "select";
+    parameter.options.add(new ParameterOption("176", "AK Leiter*in"));
+    parameter.options.add(new ParameterOption("138", "Landesbeauftragte*r"));
+    report.parameter = new ArrayList<>(List.of(parameter));
+
+    SqliteMetadataRepository.initNew(dir.getAbsolutePath()).add(report);
+    // Read back through a fresh connection, so this checks what actually landed in the database
+    // rather than the entity instances still cached in the writer's EntityManager.
+    SqliteMetadataRepository reader = new SqliteMetadataRepository(dir.getAbsolutePath());
+
+    ParameterMetadata stored = reader.all().findFirst().orElseThrow().parameter.get(0);
+    assertEquals("A_Taetigkeit1", stored.name());
+    assertEquals(
+        List.of("176", "138"), stored.options.stream().map(option -> option.value).toList());
+    assertEquals(
+        List.of("AK Leiter*in", "Landesbeauftragte*r"),
+        stored.options.stream().map(option -> option.label).toList());
   }
 
   @Test

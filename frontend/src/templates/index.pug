@@ -78,7 +78,14 @@ block content
 
                   div.question
                     label(for="p_" + parameter.name)= parameter.label
-                    input(type=parameter.type,name="p_" + parameter.name, id="p_" + parameter.name)
+                    if parameter.options && parameter.options.length
+                      select(name="p_" + parameter.name, id="p_" + parameter.name)
+                        //- Empty value = "no selection": the executor's ParameterCoercion drops empty values, so the report gets no value for this parameter
+                        option(value="") – keine Auswahl –
+                        each option in parameter.options
+                          option(value=option.value, selected=(option.value === requestParams["p_" + parameter.name]))= option.label
+                    else
+                      input(type=parameter.type,name="p_" + parameter.name, id="p_" + parameter.name)
                     if parameter.description
                       small= parameter.description
 

@@ -95,6 +95,17 @@ parameter:
       type: string
     - name: sample_minimal_parameter
       type: string
+    - name: activity
+      label: Activity
+      type: select # rendered as a dropdown with a leading empty "– keine Auswahl –" entry
+      options: # value is passed to the report, label is shown to the user
+        - {value: "138", label: "State Commissioner"}
+        - {value: "176", label: "Working Group Lead"}
+
+# Parameter types: a parameter with options is rendered as a dropdown, every
+# other one as an HTML <input type="..."> (e.g. string, number, date). For a
+# dropdown, only one of the listed option values or an empty value (no
+# selection) is accepted; options are shown in the order listed here.
 
 # optional:
 additionalParameterDescription: |-
