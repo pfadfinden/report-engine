@@ -11,8 +11,7 @@
  * reaches the signed storage URL GitHub redirects to.
  */
 const GITHUB_API = 'https://api.github.com';
-const RELEASE_URL =
-  /^https:\/\/github\.com\/([^/]+)\/([^/]+)\/releases\/download\/([^/]+)\/([^/]+)$/;
+const RELEASE_URL = /^https:\/\/github\.com\/([^/]+)\/([^/]+)\/releases\/download\/([^/]+)\/([^/]+)$/;
 
 export class GithubReleaseDownloader {
   constructor(
@@ -28,10 +27,10 @@ export class GithubReleaseDownloader {
     }
     const [, owner, repo, tag, file] = m;
 
-    const releaseRes = await fetch(
-      `${this.apiBase}/repos/${owner}/${repo}/releases/tags/${tag}`,
-      { headers: this.headers('application/vnd.github+json'), signal },
-    );
+    const releaseRes = await fetch(`${this.apiBase}/repos/${owner}/${repo}/releases/tags/${tag}`, {
+      headers: this.headers('application/vnd.github+json'),
+      signal,
+    });
     if (!releaseRes.ok) return releaseRes;
 
     const release = (await releaseRes.json()) as { assets?: { name: string; url: string }[] };
