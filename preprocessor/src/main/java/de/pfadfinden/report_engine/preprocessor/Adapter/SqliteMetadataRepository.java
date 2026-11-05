@@ -52,9 +52,17 @@ public class SqliteMetadataRepository implements MetadataRepository {
 
   @Override
   public void add(ReportMetadata report) {
-    this.em.getTransaction().begin();
-    this.em.persist(report);
-    this.em.getTransaction().commit();
+    var tx = this.em.getTransaction();
+    tx.begin();
+    try {
+      this.em.persist(report);
+      tx.commit();
+    } catch (RuntimeException e) {
+      if (tx.isActive()) {
+        tx.rollback();
+      }
+      throw e;
+    }
   }
 
   @Override
