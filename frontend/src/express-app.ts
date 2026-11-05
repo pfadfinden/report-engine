@@ -41,6 +41,11 @@ export function createApp(services: AppServices, config: AppConfig, extraMiddlew
   const sessionStore = new session.MemoryStore();
   const sessionIndex = new SessionIndex();
 
+  // Runs behind exactly one reverse proxy (nginx) that terminates TLS. Without this, express sees
+  // plain HTTP and express-session refuses to set the `secure` session cookie, so the login
+  // state is lost and /auth/callback bounces back to /auth/login forever.
+  app.set('trust proxy', 1);
+
   // view engine setup
   app.set('views', path.join(__dirname, 'templates'));
   app.set('view engine', 'pug');
