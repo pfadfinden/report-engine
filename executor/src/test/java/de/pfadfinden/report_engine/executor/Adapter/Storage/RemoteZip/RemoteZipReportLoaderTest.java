@@ -61,13 +61,13 @@ class RemoteZipReportLoaderTest {
   }
 
   @Test
-  void sendsBearerTokenAndUnpacksBundle() {
+  void sendsTokenAndUnpacksBundle() {
     var loader = new RemoteZipReportLoader(url(), "s3cret", cacheDir, Duration.ofHours(1));
 
     // The bundle holds no such report, so loading fails after a successful download.
     assertThrows(FailedToLoadReport.class, () -> loader.load("missing"));
 
-    assertEquals("Bearer s3cret", seenAuthorization.get());
+    assertEquals("token s3cret", seenAuthorization.get());
     assertTrue(new File(cacheDir, "dist/preprocessed/reports").isDirectory());
   }
 

@@ -123,7 +123,7 @@ public class RemoteZipReportLoader implements ReportLoader {
     while (true) {
       HttpRequest.Builder request = HttpRequest.newBuilder(target).GET();
       if (bearerToken != null && sameOrigin(origin, target)) {
-        request.header("Authorization", "Bearer " + bearerToken);
+        request.header("Authorization", "token " + bearerToken);
       }
       response = httpClient.send(request.build(), HttpResponse.BodyHandlers.ofInputStream());
       int status = response.statusCode();

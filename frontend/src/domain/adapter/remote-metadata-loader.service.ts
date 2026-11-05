@@ -29,7 +29,7 @@ export class RemoteMetadataLoaderService implements MetadataLoaderService {
       const startedAt = Date.now();
 
       const res = await fetch(url, {
-        headers: { Authorization: `Bearer ${this.authToken}` },
+        headers: { Authorization: `token ${this.authToken}` },
         signal: AbortSignal.timeout(DOWNLOAD_TIMEOUT_MS),
       });
       if (!res.ok) {
