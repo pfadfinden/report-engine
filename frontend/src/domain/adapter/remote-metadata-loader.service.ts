@@ -5,6 +5,7 @@ import crypto from 'crypto';
 import { MetadataLoaderService } from '../port/metadata-loader.service';
 import { MetadataService } from '../port/metadata.service';
 import { SqliteMetadataService } from './sqlite-metadata.service';
+import { GithubReleaseDownloader } from './github-release-downloader';
 import * as logger from '../../telemetry/logger';
 
 const DOWNLOAD_TIMEOUT_MS = 30_000;
@@ -13,8 +14,12 @@ export class RemoteMetadataLoaderService implements MetadataLoaderService {
   constructor(
     private cacheDir: string | null = null, // filename for cached DB
     private ttlMs: number = 12 * 60 * 60 * 1000, // default TTL: 12h,
-    private authToken?: string,
-  ) {}
+    authToken?: string,
+  ) {
+    this.downloader = new GithubReleaseDownloader(authToken);
+  }
+
+  private readonly downloader: GithubReleaseDownloader;
 
   private async openRemoteDatabase(url: string): Promise<string> {
     const filehash = crypto.createHash('md5').update(url).digest('hex');
@@ -28,10 +33,7 @@ export class RemoteMetadataLoaderService implements MetadataLoaderService {
       logger.debug('metadata.cache.refresh', { 'metadata.source_url': url });
       const startedAt = Date.now();
 
-      const res = await fetch(url, {
-        headers: { Authorization: `token ${this.authToken}` },
-        signal: AbortSignal.timeout(DOWNLOAD_TIMEOUT_MS),
-      });
+      const res = await this.downloader.download(url, AbortSignal.timeout(DOWNLOAD_TIMEOUT_MS));
       if (!res.ok) {
         logger.warn('metadata.download.failed', {
           'metadata.source_url': url,

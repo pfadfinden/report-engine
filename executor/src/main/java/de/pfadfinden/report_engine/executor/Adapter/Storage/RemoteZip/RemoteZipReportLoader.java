@@ -10,18 +10,12 @@ import io.opentelemetry.api.common.Attributes;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.OutputStream;
-import java.net.URI;
-import java.net.http.HttpClient;
-import java.net.http.HttpRequest;
-import java.net.http.HttpResponse;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.Comparator;
-import java.util.Optional;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
@@ -33,26 +27,23 @@ import java.util.zip.ZipInputStream;
  */
 public class RemoteZipReportLoader implements ReportLoader {
 
-  private static final int MAX_REDIRECTS = 5;
-
   private final String reportsZipUrl;
-  private final String bearerToken;
+  private final GithubReleaseDownloader downloader;
   private final File cacheDir;
   private final Duration ttl;
-  private final HttpClient httpClient = HttpClient.newHttpClient();
 
   public RemoteZipReportLoader(String reportsZipUrl, File cacheDir, Duration ttl) {
     this(reportsZipUrl, null, cacheDir, ttl);
   }
 
   /**
-   * @param bearerToken sent as "Authorization: Bearer" to the reports URL's own host only (never to
+   * @param bearerToken sent as "Authorization: token" to the reports URL's own host only (never to
    *     a different host a redirect leads to, e.g. a signed storage URL); null/blank for none.
    */
   public RemoteZipReportLoader(
       String reportsZipUrl, String bearerToken, File cacheDir, Duration ttl) {
     this.reportsZipUrl = reportsZipUrl;
-    this.bearerToken = (bearerToken == null || bearerToken.isBlank()) ? null : bearerToken;
+    this.downloader = new GithubReleaseDownloader(bearerToken);
     this.cacheDir = cacheDir;
     this.ttl = ttl;
   }
@@ -92,7 +83,7 @@ public class RemoteZipReportLoader implements ReportLoader {
 
     File zipFile = File.createTempFile("reports", ".zip");
     try {
-      long bytes = downloadTo(zipFile);
+      long bytes = downloader.downloadTo(reportsZipUrl, zipFile);
 
       if (cacheDir.exists()) {
         deleteRecursively(cacheDir.toPath());
@@ -111,53 +102,6 @@ public class RemoteZipReportLoader implements ReportLoader {
     } finally {
       zipFile.delete();
     }
-  }
-
-  private long downloadTo(File destination) throws IOException, InterruptedException {
-    // Redirects are followed by hand (the client's default is to not follow them) so the token
-    // can be withheld from any host other than the one it was configured for.
-    URI origin = URI.create(reportsZipUrl);
-    URI target = origin;
-    HttpResponse<InputStream> response;
-    int redirects = 0;
-    while (true) {
-      HttpRequest.Builder request = HttpRequest.newBuilder(target).GET();
-      if (bearerToken != null && sameOrigin(origin, target)) {
-        request.header("Authorization", "token " + bearerToken);
-      }
-      response = httpClient.send(request.build(), HttpResponse.BodyHandlers.ofInputStream());
-      int status = response.statusCode();
-      Optional<String> location = response.headers().firstValue("Location");
-      if (status / 100 != 3 || location.isEmpty() || redirects++ >= MAX_REDIRECTS) {
-        break;
-      }
-      response.body().close();
-      target = target.resolve(location.get());
-    }
-    if (response.statusCode() != 200) {
-      Logger.warn(
-          "reports.download.failed",
-          Attributes.of(
-              AttributeKey.stringKey("reports.source_url"),
-              reportsZipUrl,
-              AttributeKey.longKey("http.status_code"),
-              (long) response.statusCode()));
-      throw new IOException(
-          "Failed to download reports bundle from "
-              + reportsZipUrl
-              + ": HTTP "
-              + response.statusCode());
-    }
-    try (InputStream in = response.body();
-        OutputStream out = new FileOutputStream(destination)) {
-      return in.transferTo(out);
-    }
-  }
-
-  private static boolean sameOrigin(URI a, URI b) {
-    return a.getScheme().equalsIgnoreCase(b.getScheme())
-        && a.getHost().equalsIgnoreCase(b.getHost())
-        && a.getPort() == b.getPort();
   }
 
   private void deleteRecursively(Path root) throws IOException {
