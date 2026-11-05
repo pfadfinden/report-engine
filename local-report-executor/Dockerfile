@@ -10,7 +10,7 @@ FROM eclipse-temurin:25 AS jre-build
 # metrics a generic "JVM Overview" dashboard expects - CPU utilization (jvm.cpu.recent_utilization)
 # in particular, verified empirically absent without these two modules.
 RUN $JAVA_HOME/bin/jlink \
-         --add-modules java.base,java.desktop,java.sql,java.naming,java.xml,java.logging,java.management,java.instrument,jdk.jfr,jdk.management.jfr \
+         --add-modules java.base,java.desktop,java.sql,java.naming,java.xml,java.logging,java.management,java.instrument,java.net.http,jdk.jfr,jdk.management.jfr \
          --strip-debug \
          --no-man-pages \
          --no-header-files \
