@@ -79,6 +79,9 @@ outputFormats: [xls, xlsx, csv]
 
 complex: false # optional, default: false, Add warning to users that report requires extra attention due to its complexity.
 
+# optional, default: false. Offer the report on the simplified "Bescheinigungen" page, where users export it for themselves (or people they manage).
+individualPersonReport: false
+
 # restrict report usage: (leave away for unrestricted access)
 onlyWithRole: ["Administrator"]
 onlyForType: ["Group::Region","Group::Local"]
