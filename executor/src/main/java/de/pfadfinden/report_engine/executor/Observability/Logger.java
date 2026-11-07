@@ -51,10 +51,23 @@ public final class Logger {
       builder
           .setAttribute(ERROR_TYPE, error.getClass().getName())
           .setAttribute(
-              ERROR_MESSAGE,
-              CredentialRedaction.redactJdbcCredentials(String.valueOf(error.getMessage())));
+              ERROR_MESSAGE, CredentialRedaction.redactJdbcCredentials(describeWithCauses(error)));
     }
     builder.emit();
+  }
+
+  static String describeWithCauses(Throwable error) {
+    StringBuilder sb = new StringBuilder(String.valueOf(error.getMessage()));
+    Throwable cause = error.getCause();
+    for (int depth = 0; cause != null && cause != error && depth < 10; depth++) {
+      sb.append("; caused by: ")
+          .append(cause.getClass().getName())
+          .append(": ")
+          .append(cause.getMessage());
+      error = cause;
+      cause = cause.getCause();
+    }
+    return sb.toString();
   }
 
   private static Severity minSeverity() {
