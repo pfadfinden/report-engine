@@ -59,6 +59,7 @@ async function main() {
       helpEmail: 'e2e-support@invalid',
     },
     personalReports: { groupId: '1' },
+    rateLimit: { windowMs: 60_000, maxRequests: 100_000, executionWindowMs: 60_000, executionMaxRequests: 100_000 },
   };
 
   const services: AppServices = {

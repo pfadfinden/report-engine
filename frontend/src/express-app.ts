@@ -9,6 +9,7 @@ import { createBackchannelLogoutHandler } from './auth/backchannel-logout';
 import { SessionIndex } from './auth/session-index';
 import { requireAuth } from './auth/require-auth';
 import { withBackendHost } from './auth/backend-host';
+import { createExecutionRateLimiter, createGlobalRateLimiter, RetryInfo } from './rate-limit';
 import { verifyRequestOrigin } from './auth/csrf';
 import { redactSensitiveQuery } from './auth/url-redaction';
 import * as logger from './telemetry/logger';
@@ -134,6 +135,10 @@ export function createApp(services: AppServices, config: AppConfig, extraMiddlew
     res.json(services.clientJwks);
   });
 
+  // After static assets, /healthz, the JWKS and back-channel logout (the Docker healthcheck and the
+  // OP must never be throttled), before everything that does real work - including the login flow.
+  app.use(createGlobalRateLimiter(config.rateLimit));
+
   app.use(
     session({
       store: sessionStore,
@@ -162,6 +167,9 @@ export function createApp(services: AppServices, config: AppConfig, extraMiddlew
   );
   app.use('/auth', authRouter);
 
+  // Stricter per-user limit on the endpoints that start an execution (shared budget across both).
+  app.post(['/generate', '/personal'], requireAuth, createExecutionRateLimiter(config.rateLimit));
+
   app.use('/', requireAuth, createReportExecutionRouter(services, config));
   app.use('/', requireAuth, createPersonalRouter(services, config));
   app.use('/', requireAuth, createIndexRouter(services));
@@ -173,7 +181,7 @@ export function createApp(services: AppServices, config: AppConfig, extraMiddlew
 
   // error handler
   app.use(function (
-    err: { message: string; status?: number; expose?: boolean; stack?: string },
+    err: { message: string; status?: number; expose?: boolean; stack?: string; retry?: RetryInfo },
     req: Request,
     res: Response,
     next: NextFunction,
@@ -188,6 +196,7 @@ export function createApp(services: AppServices, config: AppConfig, extraMiddlew
 
     res.locals.message = err.expose ? err.message : GENERIC_ERROR_MESSAGE;
     res.locals.status = status;
+    res.locals.retry = err.retry;
 
     res.status(status);
     res.render('error');

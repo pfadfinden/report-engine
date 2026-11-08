@@ -127,3 +127,26 @@ describe('DPoP', () => {
     expect(() => loadConfig({ ...BASE_ENV, OIDC_DPOP: 'maybe' })).toThrow(/OIDC_DPOP must be/);
   });
 });
+
+describe('rate limit config', () => {
+  test('has defaults', () => {
+    expect(loadConfig(BASE_ENV).rateLimit).toEqual({
+      windowMs: 60_000,
+      maxRequests: 300,
+      executionWindowMs: 600_000,
+      executionMaxRequests: 10,
+    });
+  });
+
+  test('is overridable via env', () => {
+    const { rateLimit } = loadConfig({
+      ...BASE_ENV,
+      RATE_LIMIT_MAX_REQUESTS: '50',
+      RATE_LIMIT_EXECUTION_WINDOW_SECONDS: '60',
+      RATE_LIMIT_EXECUTION_MAX_REQUESTS: '3',
+    });
+    expect(rateLimit.maxRequests).toBe(50);
+    expect(rateLimit.executionWindowMs).toBe(60_000);
+    expect(rateLimit.executionMaxRequests).toBe(3);
+  });
+});

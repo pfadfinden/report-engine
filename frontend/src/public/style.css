@@ -819,6 +819,14 @@ button:disabled {
   --alert-accent: var(--color-green-700);
 }
 
+.retry {
+  margin-top: 1.5rem;
+}
+
+.retry_text {
+  margin-block: 1rem;
+}
+
 .actions {
   display: flex;
   flex-wrap: wrap;

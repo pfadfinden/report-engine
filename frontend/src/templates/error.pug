@@ -7,6 +7,7 @@ block content
       404: 'Pfad nicht gefunden',
       401: 'Pfad blockiert',
       403: 'Pfad blockiert',
+      429: 'Zu viele Anfragen',
       500: 'Serverfehler',
     };
     var title = errorTitles[status] || 'Fehler';
@@ -25,6 +26,15 @@ block content
           //- so only repeat it here when it actually adds something.
           if message !== title
             p= message
+
+        //- Only set for a rate-limited report start: replays the submitted form, so nothing
+        //- has to be filled in again. Until the window resets it will be refused again.
+        if retry
+          form.retry(method='POST', action=retry.action)
+            each field in retry.fields
+              input(type='hidden', name=field.name, value=field.value)
+            p.retry_text Du kannst es in etwa #{retry.retryAfterSeconds > 90 ? Math.ceil(retry.retryAfterSeconds / 60) + ' Minuten' : retry.retryAfterSeconds + ' Sekunden'} erneut versuchen.
+            button(type='submit') Erneut versuchen
 
         .actions
           a.btn(href='/') Zur Startseite

@@ -59,6 +59,14 @@ export interface AppConfig {
     // in this group's subtree, so normally the Bundesebene). Defaults to 1.
     readonly groupId: string;
   };
+  readonly rateLimit: {
+    // Whole service, per client IP.
+    readonly windowMs: number;
+    readonly maxRequests: number;
+    // POST endpoints that start a report execution, per signed-in user.
+    readonly executionWindowMs: number;
+    readonly executionMaxRequests: number;
+  };
 }
 
 function optionalEnvFrom(env: NodeJS.ProcessEnv, name: string): string | undefined {
@@ -227,6 +235,13 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): AppConfig {
     },
     personalReports: {
       groupId: optionalEnv('INDIVIDUAL_REPORT_GROUP_ID') ?? '1',
+    },
+    rateLimit: {
+      windowMs: intEnv('RATE_LIMIT_WINDOW_SECONDS', 60) * 1000,
+      // The status page auto-refreshes every 3s (~20 requests/min per open tab), so keep headroom.
+      maxRequests: intEnv('RATE_LIMIT_MAX_REQUESTS', 300),
+      executionWindowMs: intEnv('RATE_LIMIT_EXECUTION_WINDOW_SECONDS', 600) * 1000,
+      executionMaxRequests: intEnv('RATE_LIMIT_EXECUTION_MAX_REQUESTS', 10),
     },
   };
 
