@@ -11,6 +11,7 @@ interface ReportDto {
   complex: number;
   outputFormats: string;
   onlyForType: string | null;
+  onlyWithRole: string | null;
 }
 
 const OPTIONS_TABLE_EXISTS_SQL = `SELECT 1 FROM sqlite_master WHERE type = 'table' AND name = 'ParameterOption'`;
@@ -81,6 +82,7 @@ export class SqliteMetadataService implements MetadataService {
                     r.complex,
                     r.outputFormats,
                     r.onlyForType,
+                    r.onlyWithRole,
                     (
                       SELECT v.version
                       FROM VersionMetadata v
@@ -109,6 +111,7 @@ export class SqliteMetadataService implements MetadataService {
       complex: dbReport.complex === 1,
       outputFormats: JSON.parse(dbReport.outputFormats),
       onlyForType: (dbReport.onlyForType && JSON.parse(dbReport.onlyForType)) || [],
+      onlyWithRole: (dbReport.onlyWithRole && JSON.parse(dbReport.onlyWithRole)) || [],
     };
   }
 

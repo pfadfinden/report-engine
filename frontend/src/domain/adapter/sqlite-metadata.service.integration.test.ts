@@ -39,6 +39,7 @@ describeIfFixtureAvailable('SqliteMetadataService against the shared reports.db 
         complex: false,
         outputFormats: ['pdf', 'xlsx'],
         onlyForType: [],
+        onlyWithRole: [],
         version: '1.0',
       },
     ]);

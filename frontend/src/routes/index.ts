@@ -3,6 +3,7 @@ import { Report } from '../domain/model/report';
 import { Principal } from '../domain/model/principal';
 import { Group } from '../domain/model/group';
 import { AppServices } from '../composition-root';
+import { isAllowedForPrincipal } from '../domain/model/report-access';
 import { sortGroupsHierarchically } from './group-hierarchy';
 
 var express = require('express');
@@ -71,8 +72,14 @@ export function createIndexRouter(services: AppServices): Router {
           ),
         ),
       );
+      // onlyWithRole depends on the role the user holds for this very group (or an ancestor),
+      // so unlike onlyForType it can't be resolved per type.
+      const reportsFor = (group: Group): readonly Report[] =>
+        (reportsByType.get(group.type) ?? []).filter((report) =>
+          isAllowedForPrincipal(report, principal, group, availableGroups),
+        );
       const selectableGroups = availableGroups.filter(
-        (group) => group.id === selectedGroup?.id || (reportsByType.get(group.type)?.length ?? 0) > 0,
+        (group) => group.id === selectedGroup?.id || reportsFor(group).length > 0,
       );
       const groupOptions = sortGroupsHierarchically(selectableGroups, availableGroups);
 
@@ -93,7 +100,7 @@ export function createIndexRouter(services: AppServices): Router {
           return;
         }
 
-        availableReports = reportsByType.get(selectedGroup.type) ?? [];
+        availableReports = reportsFor(selectedGroup);
 
         if (requestParams.reportId) {
           selectedReport = availableReports.find((report) => report.id === requestParams.reportId);

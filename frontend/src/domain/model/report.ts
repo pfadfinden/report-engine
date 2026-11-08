@@ -13,6 +13,12 @@ export interface Report {
    * group types.
    */
   onlyForType: string[];
+  /**
+   * Hitobito role classes (e.g. "Group::Bundesgeschaeftsstelle::Bundesgeschaeftsfuehrung")
+   * of which the user must hold at least one (compared against the principal's
+   * role_class). Empty means the report is available regardless of role.
+   */
+  onlyWithRole: string[];
 }
 
 export interface Parameter {

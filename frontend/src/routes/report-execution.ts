@@ -4,6 +4,7 @@ import { Request, Response, NextFunction, Router } from 'express';
 import { AppServices } from '../composition-root';
 import { AppConfig } from '../config';
 import { Principal } from '../domain/model/principal';
+import { isAllowedForPrincipal } from '../domain/model/report-access';
 import { Parameter } from '../domain/model/report';
 import { ReportExecutionStatus } from '../domain/model/report-execution-task.model';
 import { captureCurrentTraceContext, withStoredTraceContext } from '../telemetry/trace-context';
@@ -64,7 +65,9 @@ export function createReportExecutionRouter(services: AppServices, config: AppCo
       }
 
       const availableReports = await metadataService.findFor(selectedGroup.type);
-      const selectedReport = availableReports.find((report) => report.id === reportId);
+      const selectedReport = availableReports.find(
+        (report) => report.id === reportId && isAllowedForPrincipal(report, principal, selectedGroup, availableGroups),
+      );
       if (!selectedReport) {
         logger.warn('authz.denied', {
           'principal.id': principal.id,

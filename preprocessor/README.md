@@ -87,7 +87,8 @@ complex: false # optional, default: false, Add warning to users that report requ
 individualPersonReport: false
 
 # restrict report usage: (leave away for unrestricted access)
-onlyWithRole: ["Administrator"]
+# onlyWithRole: the user must hold one of these Hitobito role classes (role_class) on the selected group itself, or on an ancestor.
+onlyWithRole: ["Group::Bundesgeschaeftsstelle::Bundesgeschaeftsfuehrung"]
 onlyForType: ["Group::Region","Group::Local"]
 
 # optional:

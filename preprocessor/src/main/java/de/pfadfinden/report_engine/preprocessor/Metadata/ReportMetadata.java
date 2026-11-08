@@ -38,8 +38,8 @@ public class ReportMetadata {
   public List<String> outputFormats;
 
   /**
-   * Report is only allowed to be executed if the user has at least one of these roles for the
-   * target unit.
+   * Report is only allowed to be executed if the user has at least one of these roles (role_class)
+   * on the target unit itself or, with a layer_and_below_* permission, on one of its ancestors.
    */
   @Convert(converter = JpaConverterJson.class)
   public List<String> onlyWithRole;
