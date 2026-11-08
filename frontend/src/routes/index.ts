@@ -52,7 +52,13 @@ export function createIndexRouter(services: AppServices): Router {
       const reportsByType = new Map<string, readonly Report[]>(
         await Promise.all(
           [...new Set(availableGroups.map((group) => group.type))].map(
-            async (type) => [type, await metadataService.findFor(type)] as const,
+            async (type) =>
+              [
+                type,
+                [...(await metadataService.findFor(type))].sort((a, b) =>
+                  a.title.localeCompare(b.title, 'de', { sensitivity: 'base', numeric: true }),
+                ),
+              ] as const,
           ),
         ),
       );

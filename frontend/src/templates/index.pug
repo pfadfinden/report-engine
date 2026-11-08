@@ -50,7 +50,7 @@ block content
                   label(for="reportId") Welcher Bericht soll erstellt werden?
                   select(name="reportId", id="reportId")
                     each report in availableReports
-                      option(value=report.id)= report.title
+                      option(value=report.id, selected=(selectedReport && selectedReport.id === report.id))= report.title
                   if !selectedReport && requestParams.reportId
                     small.form-error Der vorausgewählte Bericht existiert nicht oder du hast keine ausreichenden Rechte für diese Gruppe. Bitte wähle eine andere Gruppe oder einen anderen Bericht.
                   small Die verfügbaren Berichte sind abhängig von der Gruppe und deiner Tätigkeit in dieser Gruppe.

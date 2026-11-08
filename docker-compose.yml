@@ -39,7 +39,7 @@ services:
         volumes:
             - ./frontend:/usr/src/app
             - /usr/src/app/node_modules
-            - ./dist-reports/preprocessed:/usr/src/dist/preprocessed:ro
+            - ./dist/preprocessed:/usr/src/dist/preprocessed:ro
         restart: unless-stopped
 
     # Same API contract as azure-report-executor (see README), running as a plain Docker
@@ -66,8 +66,8 @@ services:
         extra_hosts:
             - "host.docker.internal:host-gateway"
         volumes:
-            - ./dist-reports/preprocessed/reports:/reports:ro
-            - ./dist-reports/preprocessed/_shared:/shared:ro
+            - ./dist/preprocessed/reports:/reports:ro
+            - ./dist/preprocessed/_shared:/shared:ro
             # Named volume rather than a host bind mount: the container writes this as its
             # non-root "app" user (see local-report-executor/Dockerfile), whose UID won't
             # necessarily match yours on the host, so a bind mount here can end up unwritable
