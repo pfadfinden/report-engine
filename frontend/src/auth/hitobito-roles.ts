@@ -11,9 +11,18 @@ interface BrokerTokenResponse {
 
 interface HitobitoUserinfoResponse {
   roles?: unknown;
+  // Hitobito's userinfo subject is the person's id (see doorkeeper_openid_connect initializer).
+  sub?: unknown;
+  id?: unknown;
 }
 
-/** Present when the Keycloak access token is DPoP-bound, see fetchHitobitoRoles. */
+export interface HitobitoUserinfo {
+  readonly roles: ReadonlyArray<PrincipalRole>;
+  /** The Hitobito person id (= Mitgliedsnummer) of the logged-in user. */
+  readonly personId: string | undefined;
+}
+
+/** Present when the Keycloak access token is DPoP-bound, see fetchHitobitoUserinfo. */
 export interface BrokerDpop {
   readonly configuration: Configuration;
   readonly handle: DPoPHandle;
@@ -51,7 +60,7 @@ const REQUEST_TIMEOUT_MS = 15_000;
  * Authorization Header is not DPoP". A bearer token must NOT be sent with an Authorization
  * header here, so that path is unchanged.
  */
-export async function fetchHitobitoRoles(
+export async function fetchHitobitoUserinfo(
   issuer: string,
   brokerIdpAlias: string,
   hitobitoApiUrl: string,
@@ -60,7 +69,7 @@ export async function fetchHitobitoRoles(
   keycloakAccessToken: string,
   backendHost: string | undefined,
   dpop?: BrokerDpop,
-): Promise<ReadonlyArray<PrincipalRole>> {
+): Promise<HitobitoUserinfo> {
   const brokerTokenUrl = withBackendHost(new URL(`${issuer}/broker/${brokerIdpAlias}/token`), backendHost);
 
   const body = new URLSearchParams({ client_id: clientId, token: keycloakAccessToken });
@@ -99,5 +108,14 @@ export async function fetchHitobitoRoles(
   }
 
   const userinfo = (await userinfoRes.json()) as HitobitoUserinfoResponse;
-  return toPrincipalRoles(userinfo.roles);
+  const rawId = userinfo.sub ?? userinfo.id;
+  const personId = typeof rawId === 'string' || typeof rawId === 'number' ? String(rawId) : undefined;
+  return { roles: toPrincipalRoles(userinfo.roles), personId };
+}
+
+/** Roles only - see fetchHitobitoUserinfo for everything else the userinfo call returns. */
+export async function fetchHitobitoRoles(
+  ...args: Parameters<typeof fetchHitobitoUserinfo>
+): Promise<ReadonlyArray<PrincipalRole>> {
+  return (await fetchHitobitoUserinfo(...args)).roles;
 }

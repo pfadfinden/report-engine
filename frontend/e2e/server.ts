@@ -58,6 +58,7 @@ async function main() {
     support: {
       helpEmail: 'e2e-support@invalid',
     },
+    personalReports: { groupId: '1' },
   };
 
   const services: AppServices = {

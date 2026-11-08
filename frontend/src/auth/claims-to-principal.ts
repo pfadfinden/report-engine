@@ -41,8 +41,9 @@ export function toPrincipalRoles(value: unknown): ReadonlyArray<PrincipalRole> {
 // Roles come from a separate Hitobito userinfo call (see auth/hitobito-roles.ts),
 // not from the ID token's own claims — Keycloak's built-in IdP mappers can't
 // carry Hitobito's nested role/permission objects through a claim.
-export function claimsToPrincipal(claims: IDToken, roles: ReadonlyArray<PrincipalRole>): Principal {
+export function claimsToPrincipal(claims: IDToken, roles: ReadonlyArray<PrincipalRole>, personId?: string): Principal {
   return {
+    ...(personId !== undefined && { personId }),
     id: claims.sub,
     name: (claims.name as string | undefined) ?? (claims.preferred_username as string | undefined) ?? claims.sub,
     roles,

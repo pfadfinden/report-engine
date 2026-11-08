@@ -3,7 +3,7 @@ import type { Server } from 'http';
 import { authorizationCodeGrant, Configuration, PrivateKeyJwt } from 'openid-client';
 import { generateKeyPair } from 'jose';
 import { createAuthRouter } from './auth-router';
-import { fetchHitobitoRoles } from './hitobito-roles';
+import { fetchHitobitoUserinfo } from './hitobito-roles';
 import { SessionIndex } from './session-index';
 import { AppConfig } from '../config';
 
@@ -11,7 +11,7 @@ jest.mock('openid-client', () => ({
   ...jest.requireActual('openid-client'),
   authorizationCodeGrant: jest.fn(),
 }));
-jest.mock('./hitobito-roles', () => ({ fetchHitobitoRoles: jest.fn() }));
+jest.mock('./hitobito-roles', () => ({ fetchHitobitoUserinfo: jest.fn() }));
 jest.mock('../telemetry/logger');
 
 const express = require('express');
@@ -138,7 +138,7 @@ test('/callback verifies state, nonce, PKCE verifier and the exact registered re
     token_type: 'bearer',
     claims: () => ({ sub: 'u1', sid: 'kc-sid', preferred_username: 'u' }),
   });
-  (fetchHitobitoRoles as jest.Mock).mockResolvedValue([]);
+  (fetchHitobitoUserinfo as jest.Mock).mockResolvedValue({ roles: [], personId: undefined });
 
   const res = await get('/auth/callback?code=the-code&state=st&iss=' + encodeURIComponent(ISSUER));
 
@@ -148,7 +148,7 @@ test('/callback verifies state, nonce, PKCE verifier and the exact registered re
   expect(String(currentUrl)).toBe(`${REDIRECT_URI}?code=the-code&state=st&iss=${encodeURIComponent(ISSUER)}`);
   expect(checks).toEqual({ pkceCodeVerifier: 'cv', expectedState: 'st', expectedNonce: 'no' });
   // not DPoP-bound (token_type bearer), so no proof material is handed to the broker call
-  expect((fetchHitobitoRoles as jest.Mock).mock.calls[0][7]).toBeUndefined();
+  expect((fetchHitobitoUserinfo as jest.Mock).mock.calls[0][7]).toBeUndefined();
   // only the ID token and principal are kept; the access token is used once and dropped
   expect(session.idToken).toBe('idt');
   expect(JSON.stringify(session)).not.toContain('"at"');

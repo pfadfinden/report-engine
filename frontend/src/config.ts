@@ -54,6 +54,11 @@ export interface AppConfig {
   readonly support: {
     readonly helpEmail: string;
   };
+  readonly personalReports: {
+    // Hitobito group id passed as p_gruppe_id to Bescheinigungen (the reports check membership
+    // in this group's subtree, so normally the Bundesebene). Defaults to 1.
+    readonly groupId: string;
+  };
 }
 
 function optionalEnvFrom(env: NodeJS.ProcessEnv, name: string): string | undefined {
@@ -219,6 +224,9 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): AppConfig {
     },
     support: {
       helpEmail: env.SUPPORT_HELP_EMAIL ?? 'mitglied@pfadfinden.de',
+    },
+    personalReports: {
+      groupId: optionalEnv('INDIVIDUAL_REPORT_GROUP_ID') ?? '1',
     },
   };
 

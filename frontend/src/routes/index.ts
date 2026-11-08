@@ -17,8 +17,14 @@ export function createIndexRouter(services: AppServices): Router {
   const router = express.Router();
   const { groupsService, metadataService } = services;
 
-  /* GET home page. */
-  router.get('/', async function (req: Request, res: Response, next: NextFunction) {
+  // The root is just an entry point; deep links from before the move (/?groupId=…) keep working.
+  router.get('/', function (req: Request, res: Response) {
+    const query = req.originalUrl.includes('?') ? req.originalUrl.substring(req.originalUrl.indexOf('?')) : '';
+    res.redirect(`/select${query}`);
+  });
+
+  /* Report selection page. */
+  router.get('/select', async function (req: Request, res: Response, next: NextFunction) {
     try {
       const requestParams = req.query;
       const request = {

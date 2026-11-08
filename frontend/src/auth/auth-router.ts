@@ -13,7 +13,7 @@ import {
 } from 'openid-client';
 import { AppConfig } from '../config';
 import { claimsToPrincipal } from './claims-to-principal';
-import { fetchHitobitoRoles } from './hitobito-roles';
+import { fetchHitobitoUserinfo } from './hitobito-roles';
 import { SessionIndex } from './session-index';
 import * as logger from '../telemetry/logger';
 
@@ -92,7 +92,7 @@ export function createAuthRouter(
       if (!claims) {
         throw new Error('OIDC token response did not include an ID token');
       }
-      const roles = await fetchHitobitoRoles(
+      const { roles, personId } = await fetchHitobitoUserinfo(
         configuration.serverMetadata().issuer,
         config.brokerIdpAlias,
         hitobitoApiUrl,
@@ -104,7 +104,7 @@ export function createAuthRouter(
         dpopHandle && tokens.token_type === 'dpop' ? { configuration, handle: dpopHandle } : undefined,
       );
 
-      const principal = claimsToPrincipal(claims, roles);
+      const principal = claimsToPrincipal(claims, roles, personId);
       const returnTo = pendingAuth.returnTo;
 
       // regenerate the session on login to prevent session fixation

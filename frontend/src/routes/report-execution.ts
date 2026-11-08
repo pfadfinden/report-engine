@@ -137,7 +137,7 @@ export function createReportExecutionRouter(services: AppServices, config: AppCo
       (req.session.executionSelections ??= {})[executionId] = {
         reportTitle: selectedReport.title,
         items: selectionItems,
-        regenerateUrl: `/?${regenerateParams.toString()}`,
+        regenerateUrl: `/select?${regenerateParams.toString()}`,
       };
 
       logger.event('report.trigger', {
@@ -205,6 +205,8 @@ export function createReportExecutionRouter(services: AppServices, config: AppCo
         downloadUrl,
         selectionItems: selection?.items,
         regenerateUrl: selection?.regenerateUrl,
+        newUrl: selection?.newUrl ?? '/select',
+        newLabel: selection?.newLabel ?? 'Neuer Bericht',
         debugLines,
       });
     } catch (err) {

@@ -33,6 +33,9 @@ declare module 'express-session' {
         reportTitle: string;
         items: { label: string; value: string }[];
         regenerateUrl: string;
+        // Where "start over" leads and what it is called; defaults to the report wizard.
+        newUrl?: string;
+        newLabel?: string;
       }
     >;
   }

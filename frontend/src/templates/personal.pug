@@ -1,0 +1,44 @@
+extends layout
+
+block content
+  .page-hero
+    .container
+      h1.page-hero_title Bescheinigungen
+      span.page-hero_squiggle(aria-hidden='true')
+      p.page-hero_lead Hier kannst du persönliche Bescheinigungen, zum Beispiel als Nachweis deiner Mitgliedschaft im BdP, und Auskünfte als PDF-Datei herunterladen. <br/> Benötigst du stattdessen eine Mitgliedsbescheinigung mit individuellen Angaben? Dein/e Landesmitgliederverwalter/in und das Team des BdP-Bundesamtes helfen dir gerne weiter!
+  main
+    .container
+      .page-content
+
+        if forbiddenPersonId
+          .alert.alert--error
+            .alert_title Du hast keine Berechtigung, Dokumente für die Person #{forbiddenPersonId} zu erstellen.
+            p Du kannst nur Dokumente für dich selbst erstellen.
+          .actions
+            a.btn.btn--secondary(href="/personal") Zurück
+        else if !people.length
+          .alert.alert--error
+            .alert_title Wir konnten deine Mitgliedsnummer nicht ermitteln.
+            p Bitte melde dich ab und wieder an oder wende dich an #{supportEmail}.
+        else if !reports.length
+          .alert.alert--error
+            .alert_title Aktuell sind keine Dokumente verfügbar.
+        else
+          form(method="POST", action="/personal")
+            if people.length > 1
+              div.question
+                label(for="personId") Für wen?
+                select(name="personId", id="personId")
+                  each person in people
+                    option(value=person.id, selected=(person.id === selectedPersonId))= person.name + ' (' + person.id + ')'
+            else
+              input(type="hidden", name="personId", value=people[0].id)
+              p.form-note Für: #[strong= people[0].name] (Mitgliedsnummer #{people[0].id})
+
+            div.question
+              label(for="reportId") Welches Dokument?
+              select(name="reportId", id="reportId")
+                each report in reports
+                  option(value=report.id, selected=(report.id === selectedReportId))= report.title
+
+            button(type="submit") Dokument erstellen

@@ -72,7 +72,29 @@ export class SqliteMetadataService implements MetadataService {
     );
   }
 
+  findIndividualPersonReports(): Promise<ReadonlyArray<Report>> {
+    // Reports.individualPersonReport only exists in databases built by a preprocessor that knows the flag.
+    const hasColumn = this.db
+      .prepare<[], { name: string }>(`PRAGMA table_info(Reports)`)
+      .all()
+      .some((column) => column.name === 'individualPersonReport');
+    if (!hasColumn) {
+      return Promise.resolve([]);
+    }
+    return this._findReports('WHERE r.individualPersonReport = 1').then((rows) => rows.map(this._mapReport));
+  }
+
   findFor(groupType: string): Promise<ReadonlyArray<Report>> {
+    return this._findReports('')
+      .then((rows) => rows.map(this._mapReport))
+      .then((reports) =>
+        groupType === '*'
+          ? reports
+          : reports.filter((report) => report.onlyForType.length === 0 || report.onlyForType.includes(groupType)),
+      );
+  }
+
+  private _findReports(whereClause: string): Promise<ReadonlyArray<ReportDto>> {
     return this._all<ReportDto>(
       `
                 SELECT
@@ -91,14 +113,9 @@ export class SqliteMetadataService implements MetadataService {
                       LIMIT 1
                     ) as version
                 FROM Reports r
+                ${whereClause}
             `,
-    )
-      .then((rows) => rows.map(this._mapReport))
-      .then((reports) =>
-        groupType === '*'
-          ? reports
-          : reports.filter((report) => report.onlyForType.length === 0 || report.onlyForType.includes(groupType)),
-      );
+    );
   }
 
   private _all<T, P extends object = object>(sql: string, params?: P): Promise<ReadonlyArray<T>> {

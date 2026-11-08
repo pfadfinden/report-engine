@@ -412,6 +412,26 @@ body {
   }
 }
 
+/* Main menu: sits right after the brand, left-aligned; the account nav keeps the right edge. */
+.masthead_menu {
+  display: flex;
+  flex: 1;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 0.25rem 1.5rem;
+  font-size: var(--text-sm);
+  line-height: var(--text-sm--line-height);
+  font-weight: 500;
+}
+
+@media (min-width: 64rem) {
+  .masthead_menu {
+    font-size: var(--text-base);
+    line-height: var(--text-base--line-height);
+  }
+}
+
 .masthead_user {
   display: none;
   color: var(--color-surface-500);
@@ -693,6 +713,11 @@ select:focus {
   margin-top: 0.25rem;
   font-size: var(--text-sm);
   line-height: var(--text-sm--line-height);
+}
+
+/* Plain text line inside a form (e.g. who a document is for), spaced like a .question. */
+.form-note {
+  margin-bottom: 1.5rem;
 }
 
 .question ~ .question,

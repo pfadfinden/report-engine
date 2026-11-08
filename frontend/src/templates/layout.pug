@@ -20,6 +20,9 @@ html(lang='de')
             strong BdP
             |  Berichte
         if principal
+          nav.masthead_menu(aria-label='Hauptmenü')
+            a.masthead_link(href='/select') Berichte
+            a.masthead_link(href='/personal') Bescheinigungen
           nav.masthead_nav(aria-label='Benutzerkonto')
             span.masthead_user Angemeldet als #{principal.name}
             a.masthead_link(href='/auth/logout') Abmelden

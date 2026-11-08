@@ -2,6 +2,7 @@ import { Request, Response, NextFunction, RequestHandler } from 'express';
 import { AppServices } from './composition-root';
 import { AppConfig } from './config';
 import { createIndexRouter } from './routes/index';
+import { createPersonalRouter } from './routes/personal';
 import { createReportExecutionRouter } from './routes/report-execution';
 import { createAuthRouter } from './auth/auth-router';
 import { createBackchannelLogoutHandler } from './auth/backchannel-logout';
@@ -162,6 +163,7 @@ export function createApp(services: AppServices, config: AppConfig, extraMiddlew
   app.use('/auth', authRouter);
 
   app.use('/', requireAuth, createReportExecutionRouter(services, config));
+  app.use('/', requireAuth, createPersonalRouter(services, config));
   app.use('/', requireAuth, createIndexRouter(services));
 
   // catch 404 and forward to error handler
