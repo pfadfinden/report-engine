@@ -57,8 +57,8 @@ public class LocalFilesystemReportLoader implements ReportLoader {
           new FileRepositoryService(jasperReportsContext, reportDir.getAbsolutePath(), false));
       if (sharedAssetsDir != null && sharedAssetsDir.isDirectory()) {
         repositoryServices.add(
-            new SharedAssetsRepositoryService(
-                jasperReportsContext, sharedAssetsDir.getAbsolutePath()));
+            new FileRepositoryService(
+                jasperReportsContext, sharedAssetsDir.getAbsolutePath(), false));
       }
       jasperReportsContext.setExtensions(RepositoryService.class, repositoryServices);
       // The context's inherited defaults only wire up a PersistenceServiceFactory for

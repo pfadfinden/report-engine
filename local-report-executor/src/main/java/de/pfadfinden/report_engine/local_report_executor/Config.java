@@ -25,7 +25,7 @@ public record Config(
         new File(stringEnv("REPORTS_DIR", "/reports")),
         // Assets common to every report (style template, fonts, logos) - a report
         // only needs its own copy of something here if it wants to override it.
-        new File(stringEnv("SHARED_ASSETS_DIR", "/shared")),
+        new File(stringEnv("SHARED_ASSETS_DIR", "/_shared")),
         new File(stringEnv("OUTPUT_DIR", "/output")),
         requiredEnv("REPORT_SOURCEDATA_DATABASE_URL"),
         requiredEnv("DOWNLOAD_URL_SIGNING_SECRET"),

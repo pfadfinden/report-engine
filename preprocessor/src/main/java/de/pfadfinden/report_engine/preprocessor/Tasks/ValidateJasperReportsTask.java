@@ -142,9 +142,7 @@ public class ValidateJasperReportsTask extends AbstractFollowUpTaskCommand {
       }
 
       String subreportPath = matcher.group(1);
-      String sharedRelativePath = subreportPath.replaceFirst("^(?:\\.\\./)+_?shared/", "");
-      if (!existsUnder(reportDir, subreportPath)
-          && !existsUnder(sharedAssetsDir, sharedRelativePath)) {
+      if (!existsUnder(reportDir, subreportPath) && !existsUnder(sharedAssetsDir, subreportPath)) {
         violations.add(
             report.id
                 + ": subreport '"

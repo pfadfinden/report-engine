@@ -72,6 +72,38 @@ class PipelineIntegrationTest {
     assertDatabaseHasExpectedContent(outputDir);
   }
 
+  @Test
+  void subreportsAreCompiledNextToReportJasper(@TempDir File workDir) throws Exception {
+    File sourceDir = new File(workDir, "src");
+    File outputDir = new File(workDir, "out");
+    outputDir.mkdirs();
+    File fixtureReports = new File("../test-fixtures/reports").getAbsoluteFile();
+    try (var paths = Files.walk(fixtureReports.toPath())) {
+      for (var source : (Iterable<java.nio.file.Path>) paths::iterator) {
+        java.nio.file.Path target =
+            sourceDir.toPath().resolve(fixtureReports.toPath().relativize(source));
+        if (Files.isDirectory(source)) {
+          Files.createDirectories(target);
+        } else {
+          Files.copy(source, target);
+        }
+      }
+    }
+    // a subreport with a committed but stale (here: invalid) .jasper next to its up-to-date .jrxml
+    Files.copy(
+        new File(sourceDir, "members/report.jrxml").toPath(),
+        new File(sourceDir, "members/sub.jrxml").toPath());
+    Files.writeString(new File(sourceDir, "members/sub.jasper").toPath(), "stale");
+    Files.writeString(new File(sourceDir, "members/note.txt").toPath(), "asset");
+
+    assertEquals(0, runPipeline(sourceDir, outputDir));
+
+    File outReport = new File(outputDir, "reports/members");
+    assertCompiledReportIsValid(new File(outReport, "sub.jasper")); // freshly compiled, not "stale"
+    assertTrue(new File(outReport, "note.txt").isFile(), "other runtime files are shipped");
+    assertTrue(!new File(outReport, "sub.jrxml").exists(), "sources are not shipped");
+  }
+
   private int runPipeline(File sourceDir, File outputDir) {
     String[] args = {
       "--source-dir=" + sourceDir,

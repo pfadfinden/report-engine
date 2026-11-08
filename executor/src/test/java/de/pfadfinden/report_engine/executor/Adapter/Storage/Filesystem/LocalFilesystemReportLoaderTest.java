@@ -1,6 +1,5 @@
 package de.pfadfinden.report_engine.executor.Adapter.Storage.Filesystem;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.mock;
 
@@ -66,46 +65,7 @@ class LocalFilesystemReportLoaderTest {
     assertTrue(output.size() > 0, "expected a non-empty filled/exported report");
   }
 
-  @Test
-  void resolvesStudioStyleParentSharedReference(@TempDir Path base) throws Exception {
-    File reportDir = new File(base.toFile(), "reports/test_report");
-    File sharedDir = new File(base.toFile(), "shared");
-    reportDir.mkdirs();
-    sharedDir.mkdirs();
-
-    JasperReport report =
-        JasperCompileManager.compileReport(
-            buildDesignReferencingJrtxTemplate("../_shared/TestStyles.jrtx"));
-    JRSaver.saveObject(report, new File(reportDir, "report.jasper"));
-    try (InputStream jrtx =
-        getClass().getClassLoader().getResourceAsStream("test_report/TestStyles.jrtx")) {
-      Files.copy(jrtx, new File(sharedDir, "TestStyles.jrtx").toPath());
-    }
-
-    ReportDefinition definition =
-        new LocalFilesystemReportLoader(new File(base.toFile(), "reports"), sharedDir)
-            .load("test_report");
-
-    ByteArrayOutputStream output = new ByteArrayOutputStream();
-    new FillReportService()
-        .fill(definition, new HashMap<>(), mock(Connection.class), output, OutputFormat.XLSX);
-    assertTrue(output.size() > 0);
-  }
-
-  @Test
-  void stripsSharedPrefixOnlyAtStart() {
-    assertEquals("a.png", SharedAssetsRepositoryService.stripSharedPrefix("../_shared/a.png"));
-    assertEquals("a.png", SharedAssetsRepositoryService.stripSharedPrefix("../../shared/a.png"));
-    assertEquals("a.png", SharedAssetsRepositoryService.stripSharedPrefix("a.png"));
-    assertEquals(
-        "x/_shared/a.png", SharedAssetsRepositoryService.stripSharedPrefix("x/_shared/a.png"));
-  }
-
   private JasperDesign buildDesignReferencingJrtxTemplate() throws Exception {
-    return buildDesignReferencingJrtxTemplate("TestStyles.jrtx");
-  }
-
-  private JasperDesign buildDesignReferencingJrtxTemplate(String templatePath) throws Exception {
     JasperDesign design = new JasperDesign();
     design.setName("test_report");
     design.setPageWidth(595);
@@ -116,8 +76,7 @@ class LocalFilesystemReportLoaderTest {
     design.setTopMargin(20);
     design.setBottomMargin(20);
 
-    design.addTemplate(
-        new JRDesignReportTemplate(new JRDesignExpression("\"" + templatePath + "\"")));
+    design.addTemplate(new JRDesignReportTemplate(new JRDesignExpression("\"TestStyles.jrtx\"")));
 
     JRDesignStaticText staticText = new JRDesignStaticText();
     staticText.setX(0);

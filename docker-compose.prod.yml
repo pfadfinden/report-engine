@@ -79,12 +79,12 @@ services:
             - ./local-report-executor/.env
         environment:
             REPORTS_DIR: /reports
-            SHARED_ASSETS_DIR: /shared
+            SHARED_ASSETS_DIR: /_shared
             OUTPUT_DIR: /output
             OTEL_SERVICE_NAME: local-report-executor
         volumes:
             - ./dist-reports/preprocessed/reports:/reports:ro
-            - ./dist-reports/preprocessed/_shared:/shared:ro
+            - ./dist-reports/preprocessed/_shared:/_shared:ro
             - local-report-executor-output:/output
         # Not published to the host - only the frontend (over the compose network) needs to
         # reach this, matching the trust model documented in README.md.

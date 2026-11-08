@@ -54,7 +54,7 @@ services:
             # resolve to the container itself, not the host.
             REPORT_SOURCEDATA_DATABASE_URL: jdbc:postgresql://host.docker.internal:5432/hitobito_development?user=hitobito&password=hitobito
             REPORTS_DIR: /reports
-            SHARED_ASSETS_DIR: /shared
+            SHARED_ASSETS_DIR: /_shared
             OUTPUT_DIR: /output
             DOWNLOAD_URL_SIGNING_SECRET: local-dev-signing-secret
             EXECUTOR_API_KEY: local-dev-executor-api-key
@@ -67,7 +67,7 @@ services:
             - "host.docker.internal:host-gateway"
         volumes:
             - ./dist/preprocessed/reports:/reports:ro
-            - ./dist/preprocessed/_shared:/shared:ro
+            - ./dist/preprocessed/_shared:/_shared:ro
             # Named volume rather than a host bind mount: the container writes this as its
             # non-root "app" user (see local-report-executor/Dockerfile), whose UID won't
             # necessarily match yours on the host, so a bind mount here can end up unwritable
