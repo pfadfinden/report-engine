@@ -44,7 +44,13 @@ test('role on an ancestor without subtree permission is denied', () => {
 });
 
 test('role on an unrelated group, a descendant or in a different branch is denied', () => {
-  expect(isAllowedForPrincipal(report, principal(role('Group::Vorstand', '9', ['layer_and_below_full'])), stamm, groups)).toBe(false);
-  expect(isAllowedForPrincipal(report, principal(role('Group::Vorstand', '3', ['layer_and_below_full'])), land, groups)).toBe(false);
-  expect(isAllowedForPrincipal(report, principal(role('Group::Vorstand', '1', ['layer_and_below_full'])), other, groups)).toBe(false);
+  expect(
+    isAllowedForPrincipal(report, principal(role('Group::Vorstand', '9', ['layer_and_below_full'])), stamm, groups),
+  ).toBe(false);
+  expect(
+    isAllowedForPrincipal(report, principal(role('Group::Vorstand', '3', ['layer_and_below_full'])), land, groups),
+  ).toBe(false);
+  expect(
+    isAllowedForPrincipal(report, principal(role('Group::Vorstand', '1', ['layer_and_below_full'])), other, groups),
+  ).toBe(false);
 });

@@ -30,7 +30,7 @@ export function isAllowedForPrincipal(
   const byId = new Map(groups.map((g) => [g.id, g]));
   const self = group.id;
   const ancestors = new Set<GroupId>();
-  for (let current = byId.get(group.parentId ?? ''); current && !ancestors.has(current.id); ) {
+  for (let current = byId.get(group.parentId ?? ''); current && !ancestors.has(current.id);) {
     ancestors.add(current.id);
     current = current.parentId === null ? undefined : byId.get(current.parentId);
   }
