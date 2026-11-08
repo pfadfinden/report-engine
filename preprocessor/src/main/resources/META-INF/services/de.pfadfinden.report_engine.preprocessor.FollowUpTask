@@ -3,3 +3,4 @@ de.pfadfinden.report_engine.preprocessor.Tasks.CopySourceTask
 de.pfadfinden.report_engine.preprocessor.Tasks.GenerateMarkdownDetailsPublicTask
 de.pfadfinden.report_engine.preprocessor.Tasks.GenerateMarkdownOverviewTask
 de.pfadfinden.report_engine.preprocessor.Tasks.ValidateJasperReportsTask
+de.pfadfinden.report_engine.preprocessor.Tasks.GenerateMarkdownCatalogueTask

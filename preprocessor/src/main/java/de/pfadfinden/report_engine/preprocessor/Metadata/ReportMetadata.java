@@ -20,6 +20,12 @@ public class ReportMetadata {
   public Boolean complex = false;
 
   /**
+   * Optional heading under which the report is listed in the generated reports catalogue
+   * (generate-md-catalogue). Reports without a category are listed in a trailing section.
+   */
+  public String category = "";
+
+  /**
    * Report is offered on the simplified "Bescheinigungen" page, where a user exports it for
    * themselves or for people they manage (the person is passed as A_Mitgliedsnummer). Such a report
    * must declare the parameters p_gruppe_id, A_Mitgliedsnummer and X_RequestId.
