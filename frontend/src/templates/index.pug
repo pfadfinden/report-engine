@@ -11,7 +11,7 @@ block content
     .container
       h1.page-hero_title Bericht erstellen
       span.page-hero_squiggle(aria-hidden='true')
-      p.page-hero_lead Auf dieser Seite kannst du erweiterte Berichte über Gruppen im BdP erstellen. Die Berichtsdaten werden täglich gegen 2 Uhr mit der Mitgliederverwaltung synchronisiert.<br/>Einfache Auswertungen und Exporte der aktuellen Daten lassen sich auch in der Mitgliederverwaltung selbst machen.
+      p.page-hero_lead Auf dieser Seite kannst du erweiterte Berichte über Gruppen im BdP erstellen. Die Berichtsdaten werden täglich zwischen 4 und 6 Uhr mit der Mitgliederverwaltung synchronisiert.<br/>Einfache Auswertungen und Exporte der aktuellen Daten lassen sich auch in der Mitgliederverwaltung selbst machen.
   main
     .container
       .page-content
@@ -40,7 +40,7 @@ block content
                 if !selectedGroup && requestParams.groupId
                   small.form-error Die vorausgewählte Gruppe existiert nicht oder du hast keine ausreichenden Rechte für diese Gruppe. Bitte wähle eine andere Gruppe.
                 
-              button Gruppe auswählen
+              button(data-no-js-fallback) Gruppe auswählen
 
             fieldset
               legend Bericht
@@ -55,7 +55,7 @@ block content
                     small.form-error Der vorausgewählte Bericht existiert nicht oder du hast keine ausreichenden Rechte für diese Gruppe. Bitte wähle eine andere Gruppe oder einen anderen Bericht.
                   small Die verfügbaren Berichte sind abhängig von der Gruppe und deiner Tätigkeit in dieser Gruppe.
 
-                button Bericht auswählen
+                button(data-no-js-fallback) Bericht auswählen
               else if requestParams.reportId
                 //- Since no reports can be selected, keep previous reportId around until the user selected a suitable group
                 input(type="hidden", name="reportId", value=requestParams.reportId)
@@ -121,9 +121,10 @@ block content
         aside
 
           +tippSection('Tipp: Du brauchst diesen Bericht häufiger oder möchtest diese Einstellungen mit anderen teilen?', 'Lesezeichen hinzufügen oder URL mit anderen teilen:', request.url)
-            button.btn--secondary(form="requestReport", formmethod="get", formnovalidate=true) Link aktualisieren
+            button.btn--secondary(data-no-js-fallback, form="requestReport", formmethod="get", formnovalidate=true) Link aktualisieren
 
           +problemeSection(debugLines)
 
 block scripts
   script(src="/group-filter.js", defer)
+  script(src="/auto-submit.js", defer)

@@ -5,7 +5,7 @@ mixin tippSection(title, description, url)
   div.w-text
     h3= title
     p= description
-    a.debug-info(href=url)= url
+    a.debug-info(href=url, data-share-url)= url
     block
 
 mixin problemeSection(debugLines)
@@ -16,6 +16,6 @@ mixin problemeSection(debugLines)
       input(id="debugInfoCollapsible",type="checkbox")
       label(for="debugInfoCollapsible") Debug-Informationen anzeigen
       .collapsible_content
-        pre= debugLines.join('\n')
-    a.btn.btn--secondary(href="mailto:" + supportEmail + "?subject=" + encodeURIComponent('Probleme mit MV Bericht') + "&body=" + encodeURIComponent(debugLines.join('\n'))) Support Ticket öffnen
+        pre(data-debug-lines)= debugLines.join('\n')
+    a.btn.btn--secondary(data-debug-mailto, href="mailto:" + supportEmail + "?subject=" + encodeURIComponent('Probleme mit MV Bericht') + "&body=" + encodeURIComponent(debugLines.join('\n'))) Support Ticket öffnen
     //- button.btn--secondary Debug Informationen Kopieren

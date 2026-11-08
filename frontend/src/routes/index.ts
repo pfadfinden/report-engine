@@ -7,6 +7,11 @@ import { sortGroupsHierarchically } from './group-hierarchy';
 
 var express = require('express');
 
+function stringifyParam(value: unknown): string | undefined {
+  if (value === undefined) return undefined;
+  return Array.isArray(value) ? value.join(', ') : String(value);
+}
+
 export function createIndexRouter(services: AppServices): Router {
   const router = express.Router();
   const { groupsService, metadataService } = services;
@@ -39,6 +44,10 @@ export function createIndexRouter(services: AppServices): Router {
         `# Ausgewählte Gruppe: ${selectedGroup ? selectedGroup.id : '~Keine~'}`,
         `# Ausgewählter Bericht: ${selectedReport ? selectedReport.id : '~Keiner~'}`,
         `# Ausgewählte Berichtsversion: ${selectedReport ? selectedReport.version : '~Keine~'}`,
+        `# Ausgewähltes Ausgabeformat: ${stringifyParam(requestParams.outputFormat) ?? '~Keines~'}`,
+        ...Object.keys(requestParams)
+          .filter((key) => key.startsWith('p_'))
+          .map((key) => `# Parameter ${key.substring(2)}: ${stringifyParam(requestParams[key]) || '~Leer~'}`),
       ];
 
       if (requestParams.groupId) {

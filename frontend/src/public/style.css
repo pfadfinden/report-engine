@@ -1187,3 +1187,7 @@ input:focus-visible,
 select:focus-visible {
   outline-offset: 0;
 }
+
+[hidden] {
+  display: none !important;
+}
