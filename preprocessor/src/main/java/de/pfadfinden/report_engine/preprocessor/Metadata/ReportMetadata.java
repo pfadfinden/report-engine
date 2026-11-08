@@ -21,10 +21,11 @@ public class ReportMetadata {
 
   /**
    * Report is offered on the simplified "Bescheinigungen" page, where a user exports it for
-   * themselves or for people they manage (the person is passed as A_Mitgliedsnummer). Such a
-   * report must declare the parameters p_gruppe_id, A_Mitgliedsnummer and X_RequestId.
+   * themselves or for people they manage (the person is passed as A_Mitgliedsnummer). Such a report
+   * must declare the parameters p_gruppe_id, A_Mitgliedsnummer and X_RequestId.
    */
   public Boolean individualPersonReport = false;
+
   public String additionalParameterDescription;
 
   @Convert(converter = JpaConverterJson.class)
