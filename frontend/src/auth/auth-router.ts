@@ -14,6 +14,7 @@ import {
 import { AppConfig } from '../config';
 import { claimsToPrincipal } from './claims-to-principal';
 import { fetchHitobitoUserinfo } from './hitobito-roles';
+import { Principal } from '../domain/model/principal';
 import { SessionIndex } from './session-index';
 import * as logger from '../telemetry/logger';
 
@@ -31,6 +32,8 @@ export function createAuthRouter(
   sessionIndex: SessionIndex,
   dpopHandle: DPoPHandle | undefined,
   clientAuthentication: ClientAuth,
+  // Called (fire-and-forget) once a login has succeeded, e.g. to warm caches before the first page load.
+  onLogin?: (principal: Principal) => void,
 ): Router {
   const router = express.Router();
 
@@ -136,6 +139,7 @@ export function createAuthRouter(
             // "bearer" means it issued a plain one despite being asked.
             'auth.token_type': tokens.token_type,
           });
+          onLogin?.(principal);
           res.redirect(returnTo);
         });
       });

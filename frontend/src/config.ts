@@ -18,6 +18,7 @@ export interface AppConfig {
     readonly hitobitoApiUrl: string;
     readonly hitobitoApiToken: string;
     readonly cacheTtlMs: number;
+    readonly maxStaleMs: number;
   };
   readonly execution: {
     readonly apiUrl: string;
@@ -213,6 +214,8 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): AppConfig {
       hitobitoApiUrl: requiredEnv('HITOBITO_API_URL'),
       hitobitoApiToken: requiredEnv('HITOBITO_API_TOKEN'),
       cacheTtlMs: intEnv('HITOBITO_GROUPS_CACHE_TTL_MS', 5 * 60 * 1000),
+      // After the TTL, the previous result is still served instantly (with a background refresh) for this long.
+      maxStaleMs: intEnv('HITOBITO_GROUPS_MAX_STALE_MS', 60 * 60 * 1000),
     },
     execution: {
       apiUrl: requiredEnv('REPORT_EXECUTION_API_URL'),

@@ -17,9 +17,10 @@ const WCAG_AA_TAGS = ['wcag2a', 'wcag2aa', 'wcag21aa'];
 async function selectGroupAndReport(page: Page) {
   await page.goto('/__e2e-login');
   await page.selectOption('select[name="groupId"]', E2E_GROUP.id);
-  await page.getByRole('button', { name: 'Gruppe auswählen' }).click();
+  // Changing a select auto-submits the form (progressive enhancement hides the confirm buttons).
+  await page.waitForURL(/groupId=/);
   await page.selectOption('select[name="reportId"]', 'members');
-  await page.getByRole('button', { name: 'Bericht auswählen' }).click();
+  await page.waitForURL(/reportId=members/);
 }
 
 test('report selection start page has no detectable accessibility violations', async ({ page }) => {

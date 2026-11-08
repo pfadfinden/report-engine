@@ -39,6 +39,7 @@ export async function createServices(config: AppConfig): Promise<AppServices> {
     config.groups.hitobitoApiUrl,
     config.groups.hitobitoApiToken,
     config.groups.cacheTtlMs,
+    config.groups.maxStaleMs,
   );
 
   const metadataService = await (config.metadata.source === 'remote'

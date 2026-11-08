@@ -187,6 +187,25 @@ test('follows pagination links and deduplicates groups shared by multiple roles'
   ]);
 });
 
+test('fetches the remaining pages concurrently when the API reports a total', async () => {
+  fetchMock.mockResolvedValueOnce(
+    jsonResponse({
+      data: [groupResource('1', 'One', 'Group::Foo')],
+      links: { next: `${API_URL}/api/groups?page[number]=2` },
+      meta: { stats: { total: { count: 3 } } },
+    }),
+  );
+  fetchMock.mockImplementation(async (url: URL) =>
+    jsonResponse({ data: [groupResource(url.searchParams.get('page[number]') ?? '?', 'P', 'Group::Foo')] }),
+  );
+
+  const sut = new HitobitoGroupsService(API_URL, API_TOKEN);
+  const groups = await sut.findFor(principal([role({ groupId: '1', permissions: ['contact_data'] })]));
+
+  expect(fetchMock).toHaveBeenCalledTimes(3);
+  expect(groups.map((g) => g.id).sort()).toEqual(['1', '2', '3']);
+});
+
 test('caches resolved groups per principal instead of refetching on every call', async () => {
   fetchMock.mockResolvedValueOnce(
     jsonResponse({
@@ -218,6 +237,37 @@ test('refetches once the cache TTL has elapsed', async () => {
   await sut.findFor(p);
 
   expect(fetchMock).toHaveBeenCalledTimes(2);
+});
+
+test('serves a stale entry immediately and refreshes it once in the background', async () => {
+  let release: (r: unknown) => void = () => {};
+  fetchMock.mockResolvedValueOnce(jsonResponse({ data: [groupResource('1', 'Alt', 'Group::Bundesamt')] }));
+
+  const sut = new HitobitoGroupsService(API_URL, API_TOKEN, -1, 60_000);
+  const p = principal([role({ groupId: '1', permissions: ['contact_data'] })]);
+  await sut.findFor(p);
+
+  fetchMock.mockReturnValueOnce(new Promise((resolve) => (release = resolve)));
+  const [first, second] = await Promise.all([sut.findFor(p), sut.findFor(p)]);
+
+  expect(first.map((g) => g.name)).toEqual(['Alt']);
+  expect(second.map((g) => g.name)).toEqual(['Alt']);
+  expect(fetchMock).toHaveBeenCalledTimes(2); // one initial + a single shared refresh
+
+  release(jsonResponse({ data: [groupResource('1', 'Neu', 'Group::Bundesamt')] }));
+  await new Promise((r) => setImmediate(r));
+  fetchMock.mockResolvedValue(jsonResponse({ data: [groupResource('1', 'Neu', 'Group::Bundesamt')] }));
+  expect((await sut.findFor(p)).map((g) => g.name)).toEqual(['Neu']);
+});
+
+test('keeps serving the stale entry when the background refresh fails', async () => {
+  fetchMock.mockResolvedValueOnce(jsonResponse({ data: [groupResource('1', 'Alt', 'Group::Bundesamt')] }));
+  const sut = new HitobitoGroupsService(API_URL, API_TOKEN, -1, 60_000);
+  const p = principal([role({ groupId: '1', permissions: ['contact_data'] })]);
+  await sut.findFor(p);
+
+  fetchMock.mockResolvedValueOnce(jsonResponse({}, false));
+  expect((await sut.findFor(p)).map((g) => g.name)).toEqual(['Alt']);
 });
 
 test('throws when the Hitobito API responds with an error status', async () => {

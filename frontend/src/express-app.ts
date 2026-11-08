@@ -82,7 +82,7 @@ export function createApp(services: AppServices, config: AppConfig, extraMiddlew
   );
   app.use(express.json());
   app.use(express.urlencoded({ extended: false }));
-  app.use(express.static(path.join(__dirname, 'public')));
+  app.use(express.static(path.join(__dirname, 'public'), { maxAge: '1d' }));
 
   app.use(function (req: Request, res: Response, next: NextFunction) {
     res.locals.memberManagementUrl = config.groups.hitobitoApiUrl;
@@ -164,6 +164,11 @@ export function createApp(services: AppServices, config: AppConfig, extraMiddlew
     sessionIndex,
     services.dpopHandle,
     services.clientAuthentication,
+    // Warm the (slow) group resolution while the browser follows the redirect; errors are only logged here.
+    (principal) =>
+      services.groupsService
+        .findFor(principal)
+        .catch((err) => logger.error('groups.prefetch_failed', { 'principal.id': principal.id }, err)),
   );
   app.use('/auth', authRouter);
 

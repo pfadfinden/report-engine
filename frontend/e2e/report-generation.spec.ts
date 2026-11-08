@@ -29,10 +29,11 @@ test('selecting a group and report, filling its parameter, and generating a repo
   await expect(page).toHaveURL('/select');
 
   await page.selectOption('select[name="groupId"]', E2E_GROUP.id);
-  await page.getByRole('button', { name: 'Gruppe auswählen' }).click();
+  // Changing a select auto-submits the form (progressive enhancement hides the confirm buttons).
+  await page.waitForURL(/groupId=/);
 
   await page.selectOption('select[name="reportId"]', 'members');
-  await page.getByRole('button', { name: 'Bericht auswählen' }).click();
+  await page.waitForURL(/reportId=members/);
 
   // The report's one parameter, p_joined_after (see test-fixtures/reports/members/metadata.yaml)
   // - the HTML field name is prefixed a second time by index.pug, matching how real reports'

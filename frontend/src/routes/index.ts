@@ -5,6 +5,7 @@ import { Group } from '../domain/model/group';
 import { AppServices } from '../composition-root';
 import { isAllowedForPrincipal } from '../domain/model/report-access';
 import { sortGroupsHierarchically } from './group-hierarchy';
+import * as logger from '../telemetry/logger';
 
 var express = require('express');
 
@@ -37,7 +38,9 @@ export function createIndexRouter(services: AppServices): Router {
       res.locals.principal = principal;
       res.locals.title = 'Bericht erstellen';
 
+      const groupsStartedAt = performance.now();
       const availableGroups = await groupsService.findFor(principal);
+      const groupsMs = Math.round(performance.now() - groupsStartedAt);
 
       let selectedGroup: Group | undefined = undefined;
       let availableReports: readonly Report[] | undefined = undefined;
@@ -88,6 +91,12 @@ export function createIndexRouter(services: AppServices): Router {
         (group) => group.id === selectedGroup?.id || reportsFor(group).length > 0,
       );
       const groupOptions = sortGroupsHierarchically(selectableGroups, availableGroups);
+      logger.event('select.prepared', {
+        'groups.ms': groupsMs,
+        'prepare.ms': Math.round(performance.now() - groupsStartedAt) - groupsMs,
+        groups: availableGroups.length,
+        options: groupOptions.length,
+      });
 
       if (requestParams.groupId) {
         if (!selectedGroup) {
