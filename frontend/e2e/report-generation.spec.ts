@@ -26,7 +26,7 @@ test('selecting a group and report, filling its parameter, and generating a repo
   page,
 }) => {
   await page.goto('/__e2e-login');
-  await expect(page).toHaveURL('/');
+  await expect(page).toHaveURL('/select');
 
   await page.selectOption('select[name="groupId"]', E2E_GROUP.id);
   await page.getByRole('button', { name: 'Gruppe auswählen' }).click();

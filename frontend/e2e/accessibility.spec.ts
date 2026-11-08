@@ -24,7 +24,7 @@ async function selectGroupAndReport(page: Page) {
 
 test('report selection start page has no detectable accessibility violations', async ({ page }) => {
   await page.goto('/__e2e-login');
-  await expect(page).toHaveURL('/');
+  await expect(page).toHaveURL('/select');
 
   const results = await new AxeBuilder({ page }).withTags(WCAG_AA_TAGS).analyze();
   expect(results.violations).toEqual([]);
