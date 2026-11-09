@@ -13,7 +13,7 @@
 
     <properties>
         <!-- 7.x can no longer load *.jrxml/*.jrtx authored under 6.x - do not release/deploy until mv_reports' content is re-saved via Jaspersoft Studio 7+. -->
-        <jasperreports.version>7.1.0</jasperreports.version>
+        <jasperreports.version>7.1.1</jasperreports.version>
     </properties>
 
     <modules>
