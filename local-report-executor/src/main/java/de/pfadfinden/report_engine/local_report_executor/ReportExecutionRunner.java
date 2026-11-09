@@ -11,6 +11,7 @@ import de.pfadfinden.report_engine.executor.Port.ReportLoader;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.OutputStream;
+import java.time.Instant;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
 
@@ -60,18 +61,20 @@ public class ReportExecutionRunner {
       Map<String, Object> rawParameters,
       String outputFormatValue) {
     ExecutionState state = executionStore.get(executionId);
+    File outputFile = null;
     try {
       OutputFormat format = OutputFormat.fromValue(outputFormatValue);
       state.outputFormat = format;
 
       outputDir.mkdirs();
-      File outputFile = new File(outputDir, executionId + "." + format.value());
+      outputFile = new File(outputDir, executionId + "." + format.value());
 
       try (OutputStream output = new FileOutputStream(outputFile)) {
         worker.execute(reportId, executionId, rawParameters, format, output);
       }
 
       state.outputFile = outputFile;
+      state.finishedAt = Instant.now();
       state.status = ExecutionStatus.DONE;
     } catch (Throwable t) {
       // Runs inside a submitted Runnable whose Future nobody reads, so anything that escapes
@@ -83,6 +86,11 @@ public class ReportExecutionRunner {
       // datasource can echo its embedded credentials (see docker-compose.yml) straight into
       // this message, which the status API then hands back verbatim to any caller.
       state.errorMessage = CredentialRedaction.redactJdbcCredentials(t.getMessage());
+      // A failed fill leaves a partial file that nothing would ever serve or clean up.
+      if (outputFile != null) {
+        outputFile.delete();
+      }
+      state.finishedAt = Instant.now();
       state.status = ExecutionStatus.FAILED;
     }
   }

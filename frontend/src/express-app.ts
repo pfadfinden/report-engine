@@ -43,6 +43,18 @@ export function createApp(services: AppServices, config: AppConfig, extraMiddlew
   const sessionStore = new session.MemoryStore();
   const sessionIndex = new SessionIndex();
 
+  // MemoryStore only drops an expired session when that exact session is read again, so abandoned
+  // sessions (and their SessionIndex entries) would otherwise live until restart. all() purges
+  // every expired session as a side effect; whatever it still returns is the live set.
+  const purgeExpired = () =>
+    sessionStore.all((err: unknown, sessions: Record<string, unknown> | undefined) => {
+      if (!err && sessions) {
+        sessionIndex.retainOnly(new Set(Object.keys(sessions)));
+      }
+    });
+  setInterval(purgeExpired, config.session.sweepIntervalMs).unref();
+  setInterval(() => services.executionRegistry.sweep(), config.executionRetention.sweepIntervalMs).unref();
+
   // Runs behind exactly one reverse proxy (nginx) that terminates TLS. Without this, express sees
   // plain HTTP and express-session refuses to set the `secure` session cookie, so the login
   // state is lost and /auth/callback bounces back to /auth/login forever.
@@ -145,7 +157,10 @@ export function createApp(services: AppServices, config: AppConfig, extraMiddlew
       secret: config.auth.sessionSecret,
       resave: false,
       saveUninitialized: false,
+      // Idle timeout: every response renews the cookie, so only an inactive session expires.
+      rolling: true,
       cookie: {
+        maxAge: config.session.maxAgeMs,
         httpOnly: true,
         sameSite: 'lax',
         secure: config.nodeEnv === 'production',

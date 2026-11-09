@@ -15,7 +15,10 @@ public record Config(
     String reportsReleaseUrl,
     String reportsToken,
     File reportsCacheDir,
-    Duration reportsCacheTtl) {
+    Duration reportsCacheTtl,
+    Duration executionRetention,
+    Duration cleanupInterval,
+    int maxExecutions) {
 
   public static Config fromEnv() {
     int port = intEnv("PORT", 8080);
@@ -38,7 +41,15 @@ public record Config(
         // Secret: bearer token for the release assets, if they need one.
         stringEnv("REPORTS_TOKEN", null),
         new File(stringEnv("REPORTS_CACHE_DIR", "/tmp/reports-cache")),
-        Duration.ofMinutes(intEnv("REPORTS_CACHE_TTL_MINUTES", 60)));
+        Duration.ofMinutes(intEnv("REPORTS_CACHE_TTL_MINUTES", 60)),
+        // How long finished executions (state + output file) are kept before being deleted. Keep
+        // it at least as long as the frontend's EXECUTION_RETENTION_HOURS (default 24): the
+        // frontend stops offering an execution at that point, so deleting later is harmless but
+        // deleting earlier would leave it listed yet gone.
+        Duration.ofHours(positive("EXECUTION_RETENTION_HOURS", 48)),
+        Duration.ofMinutes(positive("CLEANUP_INTERVAL_MINUTES", 15)),
+        // Backstop for the in-memory table between sweeps.
+        positive("MAX_EXECUTIONS", 10000));
   }
 
   private static String stringEnv(String name, String fallback) {
@@ -50,6 +61,14 @@ public record Config(
     String value = System.getenv(name);
     if (value == null || value.isBlank()) {
       throw new IllegalStateException("Missing required environment variable: " + name);
+    }
+    return value;
+  }
+
+  private static int positive(String name, int fallback) {
+    int value = intEnv(name, fallback);
+    if (value <= 0) {
+      throw new IllegalStateException(name + " must be greater than 0");
     }
     return value;
   }

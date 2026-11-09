@@ -60,6 +60,20 @@ export interface AppConfig {
     // in this group's subtree, so normally the Bundesebene). Defaults to 1.
     readonly groupId: string;
   };
+  readonly session: {
+    // Idle lifetime of a login session (rolling: every request renews it). Short on purpose -
+    // the executions a user triggered outlive it, see executionRetention.
+    readonly maxAgeMs: number;
+    // How often abandoned sessions are purged from the in-memory store.
+    readonly sweepIntervalMs: number;
+  };
+  readonly executionRetention: {
+    // How long a user can still open an execution (status page, download) after triggering it.
+    readonly retentionMs: number;
+    readonly maxPerUser: number;
+    readonly maxTotal: number;
+    readonly sweepIntervalMs: number;
+  };
   readonly rateLimit: {
     // Whole service, per client IP.
     readonly windowMs: number;
@@ -239,6 +253,16 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): AppConfig {
     personalReports: {
       groupId: optionalEnv('INDIVIDUAL_REPORT_GROUP_ID') ?? '1',
     },
+    session: {
+      maxAgeMs: intEnv('SESSION_MAX_AGE_MINUTES', 15) * 60 * 1000,
+      sweepIntervalMs: intEnv('SESSION_SWEEP_INTERVAL_MINUTES', 5) * 60 * 1000,
+    },
+    executionRetention: {
+      retentionMs: intEnv('EXECUTION_RETENTION_HOURS', 24) * 60 * 60 * 1000,
+      maxPerUser: intEnv('EXECUTION_MAX_PER_USER', 50),
+      maxTotal: intEnv('EXECUTION_MAX_TOTAL', 10000),
+      sweepIntervalMs: intEnv('EXECUTION_SWEEP_INTERVAL_MINUTES', 10) * 60 * 1000,
+    },
     rateLimit: {
       windowMs: intEnv('RATE_LIMIT_WINDOW_SECONDS', 60) * 1000,
       // The status page auto-refreshes every 3s (~20 requests/min per open tab), so keep headroom.
@@ -247,6 +271,20 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): AppConfig {
       executionMaxRequests: intEnv('RATE_LIMIT_EXECUTION_MAX_REQUESTS', 10),
     },
   };
+
+  const positive: ReadonlyArray<[string, number]> = [
+    ['SESSION_MAX_AGE_MINUTES', config.session.maxAgeMs],
+    ['SESSION_SWEEP_INTERVAL_MINUTES', config.session.sweepIntervalMs],
+    ['EXECUTION_RETENTION_HOURS', config.executionRetention.retentionMs],
+    ['EXECUTION_MAX_PER_USER', config.executionRetention.maxPerUser],
+    ['EXECUTION_MAX_TOTAL', config.executionRetention.maxTotal],
+    ['EXECUTION_SWEEP_INTERVAL_MINUTES', config.executionRetention.sweepIntervalMs],
+  ];
+  positive.forEach(([name, value]) => {
+    if (value <= 0) {
+      throw new Error(`${name} must be greater than 0`);
+    }
+  });
 
   // Also enforced where the proof is built (auth/dpop.ts), but only after discovery has already
   // gone out over the network - this fails the misconfiguration before anything is contacted.

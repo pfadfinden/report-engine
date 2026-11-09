@@ -27,7 +27,7 @@ const REQUEST_ID_PARAMETER_NAME = 'X_RequestId';
  */
 export function createPersonalRouter(services: AppServices, config: AppConfig): Router {
   const router = express.Router();
-  const { reportExecutionService, metadataService } = services;
+  const { reportExecutionService, metadataService, executionRegistry } = services;
 
   router.get('/personal', async function (req: Request, res: Response, next: NextFunction) {
     try {
@@ -111,19 +111,20 @@ export function createPersonalRouter(services: AppServices, config: AppConfig): 
         outputFormat: 'pdf',
       });
 
-      (req.session.ownedExecutionIds ??= []).push(executionId);
-      (req.session.executionTraceContext ??= {})[executionId] = captureCurrentTraceContext();
-      (req.session.executionSelections ??= {})[executionId] = {
-        reportTitle: report.title,
-        items: [
-          { label: 'Person', value: person.name },
-          { label: 'Dokument', value: report.title },
-          ...(declared.has(REQUEST_ID_PARAMETER_NAME) ? [{ label: 'Anfrage-ID', value: requestId }] : []),
-        ],
-        newUrl: '/personal',
-        newLabel: 'Neues Dokument',
-        regenerateUrl: `/personal?${new URLSearchParams({ personId, reportId }).toString()}`,
-      };
+      executionRegistry.register(principal.id, executionId, {
+        traceContext: captureCurrentTraceContext(),
+        selection: {
+          reportTitle: report.title,
+          items: [
+            { label: 'Person', value: person.name },
+            { label: 'Dokument', value: report.title },
+            ...(declared.has(REQUEST_ID_PARAMETER_NAME) ? [{ label: 'Anfrage-ID', value: requestId }] : []),
+          ],
+          newUrl: '/personal',
+          newLabel: 'Neues Dokument',
+          regenerateUrl: `/personal?${new URLSearchParams({ personId, reportId }).toString()}`,
+        },
+      });
 
       logger.event('report.trigger', {
         'principal.id': principal.id,

@@ -4,6 +4,7 @@ import { AppConfig } from '../src/config';
 import { AppServices } from '../src/composition-root';
 import { LocalMetadataLoaderService } from '../src/domain/adapter/local-metadata-loader.service';
 import { HttpReportExecutionService } from '../src/domain/adapter/http-report-execution.service';
+import { UserExecutionRegistry } from '../src/executions/user-execution-registry';
 import { FakeGroupsService } from './fixtures/fake-groups.service';
 import { E2E_PRINCIPAL } from './fixtures/fake-principal';
 
@@ -59,6 +60,13 @@ async function main() {
       helpEmail: 'e2e-support@invalid',
     },
     personalReports: { groupId: '1' },
+    session: { maxAgeMs: 15 * 60_000, sweepIntervalMs: 5 * 60_000 },
+    executionRetention: {
+      retentionMs: 24 * 60 * 60_000,
+      maxPerUser: 50,
+      maxTotal: 10_000,
+      sweepIntervalMs: 10 * 60_000,
+    },
     rateLimit: { windowMs: 60_000, maxRequests: 100_000, executionWindowMs: 60_000, executionMaxRequests: 100_000 },
   };
 
@@ -76,6 +84,7 @@ async function main() {
     dpopHandle: undefined,
     clientJwks: { keys: [] },
     verifyLogoutToken: () => Promise.reject(new Error('no OIDC issuer in the e2e stack')),
+    executionRegistry: new UserExecutionRegistry({ retentionMs: 24 * 60 * 60_000, maxPerUser: 50, maxTotal: 10_000 }),
   };
 
   const app = createApp(services, config, [

@@ -9,6 +9,7 @@ import { Parameter } from '../domain/model/report';
 import { ReportExecutionStatus } from '../domain/model/report-execution-task.model';
 import { captureCurrentTraceContext, withStoredTraceContext } from '../telemetry/trace-context';
 import * as logger from '../telemetry/logger';
+import { UserExecutionRegistry } from '../executions/user-execution-registry';
 import { isValidParameterValue } from './parameter-validation';
 
 var express = require('express');
@@ -32,18 +33,19 @@ const STATUS_TEXT: Record<ReportExecutionStatus, string> = {
 
 // An executionId is otherwise just an unguessable UUID with no owner tracked
 // anywhere in the executor - this is what actually stops a different logged-in
-// user's session from viewing or downloading someone else's report.
-function requireOwnExecution(req: Request, next: NextFunction, executionId: string) {
-  if (!req.session.ownedExecutionIds?.includes(executionId)) {
+// user from viewing or downloading someone else's report. Keyed by principal, not
+// session, so executions survive a session timeout + re-login.
+function findOwnExecution(registry: UserExecutionRegistry, req: Request, next: NextFunction, executionId: string) {
+  const entry = registry.get((req.principal as Principal).id, executionId);
+  if (!entry) {
     next(createError(404, 'Nicht gefunden'));
-    return false;
   }
-  return true;
+  return entry;
 }
 
 export function createReportExecutionRouter(services: AppServices, config: AppConfig): Router {
   const router = express.Router();
-  const { reportExecutionService, groupsService, metadataService } = services;
+  const { reportExecutionService, groupsService, metadataService, executionRegistry } = services;
 
   // Triggers a report execution and redirects to a status page the user can
   // watch (auto-refreshing) until the download is ready. Reached from the
@@ -132,13 +134,14 @@ export function createReportExecutionRouter(services: AppServices, config: AppCo
         outputFormat,
       });
 
-      (req.session.ownedExecutionIds ??= []).push(executionId);
-      (req.session.executionTraceContext ??= {})[executionId] = captureCurrentTraceContext();
-      (req.session.executionSelections ??= {})[executionId] = {
-        reportTitle: selectedReport.title,
-        items: selectionItems,
-        regenerateUrl: `/select?${regenerateParams.toString()}`,
-      };
+      executionRegistry.register(principal.id, executionId, {
+        traceContext: captureCurrentTraceContext(),
+        selection: {
+          reportTitle: selectedReport.title,
+          items: selectionItems,
+          regenerateUrl: `/select?${regenerateParams.toString()}`,
+        },
+      });
 
       logger.event('report.trigger', {
         'principal.id': principal.id,
@@ -156,7 +159,8 @@ export function createReportExecutionRouter(services: AppServices, config: AppCo
   router.get('/executions/:executionId', async function (req: Request, res: Response, next: NextFunction) {
     try {
       const executionId = String(req.params.executionId);
-      if (!requireOwnExecution(req, next, executionId)) {
+      const execution = findOwnExecution(executionRegistry, req, next, executionId);
+      if (!execution) {
         return;
       }
 
@@ -165,9 +169,9 @@ export function createReportExecutionRouter(services: AppServices, config: AppCo
         url: req.originalUrl,
         method: req.method,
       };
-      const selection = req.session.executionSelections?.[executionId];
+      const selection = execution.selection;
 
-      const traceContext = req.session.executionTraceContext?.[executionId];
+      const traceContext = execution.traceContext;
       const { status, downloadUrl } = await withStoredTraceContext(traceContext, async () => {
         const status = await reportExecutionService.status(executionId);
 
@@ -217,18 +221,19 @@ export function createReportExecutionRouter(services: AppServices, config: AppCo
   // Proxies the finished report through the frontend rather than handing the
   // executor's (signed) download URL straight to the browser. Only reachable
   // when REPORT_DOWNLOAD_MODE=proxy is actually in effect (see above) -
-  // requireOwnExecution above is what gates "can this session have this
+  // findOwnExecution above is what gates "can this session have this
   // file", exactly the check a bare signed URL can't express (it only proves
   // "a request to /download for this executionId happened", not who that was
   // for).
   router.get('/executions/:executionId/file', async function (req: Request, res: Response, next: NextFunction) {
     try {
       const executionId = String(req.params.executionId);
-      if (!requireOwnExecution(req, next, executionId)) {
+      const execution = findOwnExecution(executionRegistry, req, next, executionId);
+      if (!execution) {
         return;
       }
 
-      const traceContext = req.session.executionTraceContext?.[executionId];
+      const traceContext = execution.traceContext;
       await withStoredTraceContext(traceContext, async () => {
         const status = await reportExecutionService.status(executionId);
         if (status !== ReportExecutionStatus.DONE) {

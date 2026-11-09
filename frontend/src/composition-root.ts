@@ -11,6 +11,7 @@ import { HttpReportExecutionService } from './domain/adapter/http-report-executi
 import { assertIssuerCapabilities, createOidcClient } from './auth/oidc-client';
 import { createClientJwtAuth } from './auth/client-jwt';
 import { createDpopHandle } from './auth/dpop';
+import { UserExecutionRegistry } from './executions/user-execution-registry';
 import { createIssuerLogoutTokenVerifier, VerifyLogoutToken } from './auth/logout-token';
 
 export interface AppServices {
@@ -32,6 +33,9 @@ export interface AppServices {
   // Verifies back-channel logout tokens against the issuer's JWKS (fetched and cached on first
   // use, so building this costs nothing at startup).
   readonly verifyLogoutToken: VerifyLogoutToken;
+  // Who triggered which execution; independent of login sessions so executions survive a
+  // session timeout + re-login (see executions/user-execution-registry.ts).
+  readonly executionRegistry: UserExecutionRegistry;
 }
 
 export async function createServices(config: AppConfig): Promise<AppServices> {
@@ -74,5 +78,6 @@ export async function createServices(config: AppConfig): Promise<AppServices> {
     dpopHandle,
     clientJwks: clientJwt.jwks,
     verifyLogoutToken,
+    executionRegistry: new UserExecutionRegistry(config.executionRetention),
   };
 }

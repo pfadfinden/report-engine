@@ -61,6 +61,15 @@ export class SessionIndex {
     return [];
   }
 
+  /** Forgets every session id not in `liveSessionIds` - for sessions the store expired on its own. */
+  retainOnly(liveSessionIds: ReadonlySet<string>): void {
+    for (const sessionId of [...this.owners.keys()]) {
+      if (!liveSessionIds.has(sessionId)) {
+        this.unregister(sessionId);
+      }
+    }
+  }
+
   /** Entries currently held — exposed for tests and for logging index size alongside store size. */
   get size(): number {
     return this.owners.size;

@@ -47,7 +47,10 @@ class MainTest {
         null,
         null,
         new File("."),
-        Duration.ofHours(1));
+        Duration.ofHours(1),
+        Duration.ofHours(48),
+        Duration.ofMinutes(15),
+        10000);
   }
 
   @Test

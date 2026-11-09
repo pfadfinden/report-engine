@@ -38,7 +38,7 @@ public class Main {
   public static void main(String[] args) {
     Telemetry.init();
     Config config = Config.fromEnv();
-    ExecutionStore executionStore = new ExecutionStore();
+    ExecutionStore executionStore = new ExecutionStore(config.maxExecutions());
     // Wrapped so a task submitted here captures whatever OTel context is active at submission
     // time (report.trigger's, in particular) and restores it on the worker thread - otherwise
     // report.execution would start as a disconnected new trace instead of a child span, since
@@ -48,6 +48,9 @@ public class Main {
     ReportExecutionRunner runner =
         new ReportExecutionRunner(config, executionStore, backgroundExecutor);
     DownloadUrlSigner signer = new DownloadUrlSigner(config.downloadUrlSigningSecret());
+
+    new RetentionCleaner(executionStore, config.outputDir(), config.executionRetention())
+        .start(config.cleanupInterval());
 
     Javalin app = createApp(config, executionStore, runner, signer);
     app.start(config.port());
@@ -165,7 +168,12 @@ public class Main {
             .setAttribute("output.format", request.outputFormat())
             .startSpan();
     try (Scope scope = span.makeCurrent()) {
-      executionStore.createPending(request.executionId(), reportId);
+      try {
+        executionStore.createPending(request.executionId(), reportId);
+      } catch (ExecutionStore.StoreFullException e) {
+        ctx.status(503).result("Too many running executions, try again later");
+        return;
+      }
       runner.runAsync(reportId, request.executionId(), request.parameter(), request.outputFormat());
 
       AttributesBuilder attributes =
