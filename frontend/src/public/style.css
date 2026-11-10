@@ -455,6 +455,192 @@ body {
   text-decoration: underline;
 }
 
+/* --- Mobile slide-out menu ------------------------------------------ */
+/* Below lg the nav lives in a panel sliding in from the right. Without JS
+   (no .js on <html>) the toggle stays hidden and the nav simply wraps inline. */
+
+.masthead_toggle,
+.masthead_close {
+  display: none;
+}
+
+.masthead_panel_head,
+.masthead_backdrop {
+  display: none;
+}
+
+/* Desktop: the panel is just a transparent wrapper that fills the space after
+   the brand, so the main menu stays left and the account nav right. */
+.masthead_panel {
+  display: flex;
+  flex: 1;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  min-width: 0;
+}
+
+@media (max-width: 63.999rem) {
+  .masthead {
+    flex-wrap: wrap;
+  }
+
+  .js .masthead {
+    flex-wrap: nowrap;
+  }
+
+  .js .masthead_toggle {
+    display: inline-flex;
+    flex: none;
+    align-items: center;
+    justify-content: center;
+    width: 2.75rem;
+    height: 2.75rem;
+    padding: 0;
+    border: 0;
+    background: none;
+    color: inherit;
+    cursor: pointer;
+  }
+
+  .js .masthead_toggle[hidden] {
+    display: inline-flex;
+  }
+
+  .masthead_toggle_bar,
+  .masthead_toggle_bar::before,
+  .masthead_toggle_bar::after {
+    display: block;
+    width: 1.625rem;
+    height: 0.1875rem;
+    border-radius: 2px;
+    background-color: currentColor;
+  }
+
+  .masthead_toggle_bar {
+    position: relative;
+  }
+
+  .masthead_toggle_bar::before,
+  .masthead_toggle_bar::after {
+    content: '';
+    position: absolute;
+    left: 0;
+  }
+
+  .masthead_toggle_bar::before {
+    top: -0.5rem;
+  }
+
+  .masthead_toggle_bar::after {
+    top: 0.5rem;
+  }
+
+  .js .masthead_panel {
+    position: fixed;
+    inset-block: 0;
+    inset-inline-end: 0;
+    z-index: 50;
+    display: flex;
+    flex: none;
+    flex-direction: column;
+    align-items: stretch;
+    justify-content: flex-start;
+    gap: 1.5rem;
+    width: min(20rem, 85vw);
+    padding: 1rem 1.5rem 2rem;
+    overflow-y: auto;
+    background-color: var(--color-yellow-500);
+    color: var(--color-blue-500);
+    box-shadow: -0.5rem 0 1.5rem rgb(0 0 0 / 0.25);
+    visibility: hidden;
+    transform: translateX(100%);
+    transition:
+      transform 0.25s ease-in-out,
+      visibility 0s linear 0.25s;
+  }
+
+  .js .masthead_panel.is-open {
+    visibility: visible;
+    transform: none;
+    transition-delay: 0s;
+  }
+
+  .js .masthead_panel_head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .masthead_panel_title {
+    font-size: var(--text-xl);
+    font-weight: 700;
+  }
+
+  .js .masthead_close {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 2.75rem;
+    height: 2.75rem;
+    margin-inline-end: -0.75rem;
+    padding: 0;
+    border: 0;
+    background: none;
+    color: inherit;
+    font-size: 2rem;
+    line-height: 1;
+    cursor: pointer;
+  }
+
+  .js .masthead_panel .masthead_menu,
+  .js .masthead_panel .masthead_nav {
+    flex: none;
+    flex-direction: column;
+    align-items: stretch;
+    justify-content: flex-start;
+    gap: 0;
+    font-size: var(--text-lg);
+    line-height: var(--text-lg--line-height);
+  }
+
+  .js .masthead_panel .masthead_link {
+    display: block;
+    padding-block: 0.75rem;
+    border-bottom: 1px solid rgb(14 66 120 / 0.25);
+  }
+
+  .js .masthead_panel .masthead_user {
+    display: block;
+    padding-block: 0.5rem;
+    font-size: var(--text-sm);
+    color: inherit;
+  }
+
+  .js .masthead_panel .masthead_link:hover,
+  .js .masthead_panel .masthead_link:focus-visible {
+    color: var(--color-red-500);
+  }
+
+  .js .masthead_backdrop:not([hidden]) {
+    display: block;
+    position: fixed;
+    inset: 0;
+    z-index: 40;
+    background-color: rgb(0 0 0 / 0.5);
+  }
+
+  .menu-open {
+    overflow: hidden;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .js .masthead_panel {
+    transition: none;
+  }
+}
+
 /* ###################################################################### */
 /* Page hero                                                              */
 /* ###################################################################### */
@@ -467,10 +653,27 @@ body {
 
 .page-hero_title {
   position: relative;
-  padding-top: 4rem; /* pt-16 */
-  font-size: var(--text-4xl);
-  line-height: var(--text-4xl--line-height);
+  padding-top: 2.5rem;
+  font-size: var(--text-2xl);
+  line-height: var(--text-2xl--line-height);
   font-weight: 700;
+  hyphens: auto;
+}
+
+@media (min-width: 30rem) {
+  .page-hero_title {
+    padding-top: 3rem;
+    font-size: var(--text-3xl);
+    line-height: var(--text-3xl--line-height);
+  }
+}
+
+@media (min-width: 40rem) {
+  .page-hero_title {
+    padding-top: 4rem; /* pt-16 */
+    font-size: var(--text-4xl);
+    line-height: var(--text-4xl--line-height);
+  }
 }
 
 @media (min-width: 48rem) {
@@ -484,7 +687,7 @@ body {
    token instead of hard-coding the colour into the markup. */
 .page-hero_squiggle {
   display: block;
-  width: 220px;
+  width: min(220px, 60%);
   aspect-ratio: 244 / 24; /* the artwork's own ratio */
   margin-top: 0.5rem; /* mt-2 */
   margin-left: -0.5rem; /* -ml-2 */
@@ -505,9 +708,17 @@ body {
 
 .page-hero_lead {
   max-width: var(--w-text);
-  margin-top: 1.5rem;
-  font-size: var(--text-lg);
-  line-height: var(--text-lg--line-height);
+  margin-top: 1rem;
+  font-size: var(--text-base);
+  line-height: var(--text-base--line-height);
+}
+
+@media (min-width: 40rem) {
+  .page-hero_lead {
+    margin-top: 1.5rem;
+    font-size: var(--text-lg);
+    line-height: var(--text-lg--line-height);
+  }
 }
 
 /* ###################################################################### */

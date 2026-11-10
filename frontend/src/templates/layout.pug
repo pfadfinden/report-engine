@@ -6,6 +6,7 @@ html(lang='de')
     title= title
     link(rel='preload', href='/fonts/jost-latin.woff2', as='font', type='font/woff2', crossorigin)
     link(rel='stylesheet', href='/style.css')
+    script(src='/nav.js')
   body
     header.site-header
       .metabar
@@ -21,12 +22,20 @@ html(lang='de')
             strong BdP
             |  Berichte
         if principal
-          nav.masthead_menu(aria-label='Hauptmenü')
-            a.masthead_link(href='/select') Berichte
-            a.masthead_link(href='/personal') Bescheinigungen
-          nav.masthead_nav(aria-label='Benutzerkonto')
-            span.masthead_user Angemeldet als #{principal.name}
-            a.masthead_link(href='/auth/logout') Abmelden
+          button.masthead_toggle(type='button', aria-expanded='false', aria-controls='masthead-panel', aria-label='Menü öffnen', hidden)
+            span.masthead_toggle_bar(aria-hidden='true')
+          #masthead-panel.masthead_panel
+            .masthead_panel_head
+              span.masthead_panel_title Menü
+              button.masthead_close(type='button', aria-label='Menü schließen')
+                | &times;
+            nav.masthead_menu(aria-label='Hauptmenü')
+              a.masthead_link(href='/select') Berichte
+              a.masthead_link(href='/personal') Bescheinigungen
+            nav.masthead_nav(aria-label='Benutzerkonto')
+              span.masthead_user Angemeldet als #{principal.name}
+              a.masthead_link(href='/auth/logout') Abmelden
+          .masthead_backdrop(hidden)
     #content(tabindex="-1")
       block content
     footer.site-footer
