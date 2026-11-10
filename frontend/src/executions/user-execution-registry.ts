@@ -24,6 +24,8 @@ export interface ExecutionSelection {
   readonly reportTitle: string;
   readonly items: ReadonlyArray<{ label: string; value: string }>;
   readonly regenerateUrl: string;
+  // Descriptive filename for the downloaded file (report, group/person, datetime).
+  readonly fileName?: string;
   // Where "start over" leads and what it is called; defaults to the report wizard.
   readonly newUrl?: string;
   readonly newLabel?: string;

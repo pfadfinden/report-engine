@@ -39,6 +39,7 @@ async function main() {
       hitobitoApiUrl: 'http://hitobito.invalid',
       hitobitoApiToken: 'unused',
       cacheTtlMs: 0,
+      maxStaleMs: 0,
     },
     execution: {
       apiUrl: process.env.E2E_EXECUTOR_URL ?? 'http://localhost:3101',

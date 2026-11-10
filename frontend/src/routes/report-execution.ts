@@ -10,6 +10,7 @@ import { ReportExecutionStatus } from '../domain/model/report-execution-task.mod
 import { captureCurrentTraceContext, withStoredTraceContext } from '../telemetry/trace-context';
 import * as logger from '../telemetry/logger';
 import { UserExecutionRegistry } from '../executions/user-execution-registry';
+import { buildDownloadFileName, contentDisposition } from '../executions/download-filename';
 import { isValidParameterValue } from './parameter-validation';
 
 var express = require('express');
@@ -140,6 +141,7 @@ export function createReportExecutionRouter(services: AppServices, config: AppCo
           reportTitle: selectedReport.title,
           items: selectionItems,
           regenerateUrl: `/select?${regenerateParams.toString()}`,
+          fileName: buildDownloadFileName([selectedReport.title, selectedGroup.name], outputFormat),
         },
       });
 
@@ -248,7 +250,11 @@ export function createReportExecutionRouter(services: AppServices, config: AppCo
         }
 
         res.setHeader('Content-Type', fileRes.headers.get('content-type') ?? 'application/octet-stream');
-        res.setHeader('Content-Disposition', fileRes.headers.get('content-disposition') ?? 'attachment');
+        const fileName = execution.selection.fileName;
+        res.setHeader(
+          'Content-Disposition',
+          fileName ? contentDisposition(fileName) : (fileRes.headers.get('content-disposition') ?? 'attachment'),
+        );
         // Streamed straight through rather than buffered via arrayBuffer(): a full report can be
         // large enough that holding the whole thing in memory per concurrent download risks OOM.
         if (fileRes.body) {

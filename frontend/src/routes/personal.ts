@@ -5,6 +5,7 @@ import { AppConfig } from '../config';
 import { personalReportPeopleFor } from '../domain/personal-report-people';
 import { Principal } from '../domain/model/principal';
 import { captureCurrentTraceContext } from '../telemetry/trace-context';
+import { buildDownloadFileName } from '../executions/download-filename';
 import * as logger from '../telemetry/logger';
 
 var express = require('express');
@@ -122,6 +123,7 @@ export function createPersonalRouter(services: AppServices, config: AppConfig): 
           ],
           newUrl: '/personal',
           newLabel: 'Neues Dokument',
+          fileName: buildDownloadFileName([report.title, person.name], 'pdf'),
           regenerateUrl: `/personal?${new URLSearchParams({ personId, reportId }).toString()}`,
         },
       });
