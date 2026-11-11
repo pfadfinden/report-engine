@@ -23,7 +23,6 @@ public abstract class AbstractFollowUpTaskCommand implements FollowUpTask {
   }
 
   protected void export(ReportMetadata report) {}
-  ;
 
   protected File getReportSourceFile(ReportMetadata report, String withName) {
     return getFileIn(

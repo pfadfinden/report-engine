@@ -56,11 +56,10 @@ class ValidateJasperReportsTaskTest {
     subcommandsLoader.forEach(sub -> commandLine.addSubcommand(sub));
 
     AtomicReference<Throwable> capturedException = new AtomicReference<>();
-    commandLine.setExecutionExceptionHandler(
-        (exception, cl, parseResult) -> {
-          capturedException.set(exception);
-          return cl.getCommandSpec().exitCodeOnExecutionException();
-        });
+    commandLine.setExecutionExceptionHandler((exception, cl, parseResult) -> {
+      capturedException.set(exception);
+      return cl.getCommandSpec().exitCodeOnExecutionException();
+    });
 
     int exitCode = commandLine.execute(args);
     return new Result(exitCode, capturedException.get());

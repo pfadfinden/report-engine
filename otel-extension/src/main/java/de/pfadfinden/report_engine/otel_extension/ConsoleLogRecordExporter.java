@@ -42,12 +42,11 @@ public class ConsoleLogRecordExporter implements LogRecordExporter {
     StringBuilder line = new StringBuilder();
     line.append(timestamp(log)).append(' ').append(log.getSeverity()).append(' ').append(body(log));
     log.getAttributes()
-        .forEach(
-            (key, value) -> {
-              if (!key.equals(EVENT_NAME)) {
-                line.append(' ').append(key.getKey()).append('=').append(value);
-              }
-            });
+        .forEach((key, value) -> {
+          if (!key.equals(EVENT_NAME)) {
+            line.append(' ').append(key.getKey()).append('=').append(value);
+          }
+        });
     return line.toString();
   }
 

@@ -87,11 +87,10 @@ public class GenerateMarkdownDetailsPublicTask extends AbstractFollowUpTaskComma
       return "";
     }
     Map<String, List<String>> byGroup = new LinkedHashMap<>();
-    roles.forEach(
-        role ->
-            byGroup
-                .computeIfAbsent(labels.groupOf(role), g -> new ArrayList<>())
-                .add(labels.role(role)));
+    roles.forEach(role ->
+        byGroup
+            .computeIfAbsent(labels.groupOf(role), g -> new ArrayList<>())
+            .add(labels.role(role)));
     StringBuilder md = new StringBuilder();
     md.append("!!! info \"Rechtebeschränkter Report\"\n")
         .append(
@@ -100,13 +99,12 @@ public class GenerateMarkdownDetailsPublicTask extends AbstractFollowUpTaskComma
         .append("<details markdown=\"1\">\n<summary>Berechtigte Rollen (")
         .append(roles.size())
         .append(")</summary>\n\n");
-    byGroup.forEach(
-        (group, names) ->
-            md.append("- **")
-                .append(group)
-                .append(":** ")
-                .append(String.join(", ", names))
-                .append("\n"));
+    byGroup.forEach((group, names) ->
+        md.append("- **")
+            .append(group)
+            .append(":** ")
+            .append(String.join(", ", names))
+            .append("\n"));
     md.append("\n</details>");
     return md.toString();
   }
@@ -162,16 +160,14 @@ public class GenerateMarkdownDetailsPublicTask extends AbstractFollowUpTaskComma
       Table.Builder parameterTable =
           new Table.Builder().addRow("Name", "Beschreibung", "Bemerkung");
 
-      parameters.forEach(
-          param ->
-              parameterTable.addRow(
-                  param.label, toTableCell(param.description), toTableCell(param.comment)));
+      parameters.forEach(param ->
+          parameterTable.addRow(
+              param.label, toTableCell(param.description), toTableCell(param.comment)));
 
       Table.Builder versionTable = new Table.Builder().addRow("Version", "Änderung", "Datum");
-      versionHistory.forEach(
-          version ->
-              versionTable.addRow(
-                  version.version(), toTableCell(version.description), version.createdOn));
+      versionHistory.forEach(version ->
+          versionTable.addRow(
+              version.version(), toTableCell(version.description), version.createdOn));
 
       // write Markdown file:
       try (Writer writer =

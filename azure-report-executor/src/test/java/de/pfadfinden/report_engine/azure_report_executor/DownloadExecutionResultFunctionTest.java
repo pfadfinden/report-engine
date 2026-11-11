@@ -28,22 +28,20 @@ class DownloadExecutionResultFunctionTest {
   private HttpRequestMessage<Optional<String>> request() {
     HttpRequestMessage<Optional<String>> request = mock(HttpRequestMessage.class);
     when(request.createResponseBuilder(any(HttpStatus.class)))
-        .thenAnswer(
-            invocation -> {
-              HttpStatus status = invocation.getArgument(0);
-              HttpResponseMessage.Builder builder = mock(HttpResponseMessage.Builder.class);
-              HttpResponseMessage response = mock(HttpResponseMessage.class);
-              when(response.getStatus()).thenReturn(status);
-              when(builder.header(any(), any())).thenReturn(builder);
-              when(builder.body(any()))
-                  .thenAnswer(
-                      bodyInvocation -> {
-                        when(response.getBody()).thenReturn(bodyInvocation.getArgument(0));
-                        return builder;
-                      });
-              when(builder.build()).thenReturn(response);
-              return builder;
-            });
+        .thenAnswer(invocation -> {
+          HttpStatus status = invocation.getArgument(0);
+          HttpResponseMessage.Builder builder = mock(HttpResponseMessage.Builder.class);
+          HttpResponseMessage response = mock(HttpResponseMessage.class);
+          when(response.getStatus()).thenReturn(status);
+          when(builder.header(any(), any())).thenReturn(builder);
+          when(builder.body(any()))
+              .thenAnswer(bodyInvocation -> {
+                when(response.getBody()).thenReturn(bodyInvocation.getArgument(0));
+                return builder;
+              });
+          when(builder.build()).thenReturn(response);
+          return builder;
+        });
     return request;
   }
 

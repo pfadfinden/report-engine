@@ -40,12 +40,11 @@ public class RetentionCleaner {
   /** Runs one sweep now, then every {@code interval} on a daemon thread. */
   public ScheduledExecutorService start(Duration interval) {
     ScheduledExecutorService scheduler =
-        Executors.newSingleThreadScheduledExecutor(
-            r -> {
-              Thread t = new Thread(r, "retention-cleaner");
-              t.setDaemon(true);
-              return t;
-            });
+        Executors.newSingleThreadScheduledExecutor(r -> {
+          Thread t = new Thread(r, "retention-cleaner");
+          t.setDaemon(true);
+          return t;
+        });
     scheduler.scheduleWithFixedDelay(
         () -> {
           try {

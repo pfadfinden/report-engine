@@ -17,7 +17,6 @@ public class FindMatchingFilesFileVisitor extends SimpleFileVisitor<Path> {
   public FindMatchingFilesFileVisitor(String globOrRegex) {
     this.matcher = FileSystems.getDefault().getPathMatcher(globOrRegex);
   }
-  ;
 
   @Override
   public FileVisitResult visitFile(Path file, BasicFileAttributes attribs) throws IOException {
@@ -28,4 +27,3 @@ public class FindMatchingFilesFileVisitor extends SimpleFileVisitor<Path> {
     return FileVisitResult.CONTINUE;
   }
 }
-;
