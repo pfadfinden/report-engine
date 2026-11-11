@@ -39,7 +39,7 @@ public class GenerateMarkdownOverviewTask extends AbstractFollowUpTaskCommand {
           .append(new Heading("Reports Overview", 1).toString())
           .append("\n\n")
           .append(new Text("Auto-generated overview of reports:").toString())
-          .append("\n")
+          .append("\n\n")
           .append(reportsTable.build().toString())
           .append("\n");
 

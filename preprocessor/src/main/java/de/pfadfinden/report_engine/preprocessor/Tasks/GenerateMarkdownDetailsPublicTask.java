@@ -85,19 +85,21 @@ public class GenerateMarkdownDetailsPublicTask extends AbstractFollowUpTaskComma
                   new FileOutputStream(outputDir.getPath() + File.separator + report.id + ".md"),
                   StandardCharsets.UTF_8))) {
 
+        // Blank lines between blocks are required: without them Markdown parsers treat the
+        // following heading as part of the preceding table.
         writer
             .append(new Heading(report.title, 1).toString())
-            .append("\n")
+            .append("\n\n")
             .append(new Heading("Overview", 3).toString())
-            .append("\n")
+            .append("\n\n")
             .append(overviewTable.toString())
-            .append("\n")
+            .append("\n\n")
             .append(new Heading("Parameter", 3).toString())
-            .append("\n")
+            .append("\n\n")
             .append(parameterTable.build().toString())
-            .append("\n")
+            .append("\n\n")
             .append(new Heading("Versionsverlauf", 3).toString())
-            .append("\n")
+            .append("\n\n")
             .append(versionTable.build().toString())
             .append("\n");
       }
