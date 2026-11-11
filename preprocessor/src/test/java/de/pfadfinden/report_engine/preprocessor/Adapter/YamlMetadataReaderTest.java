@@ -33,11 +33,11 @@ class YamlMetadataReaderTest {
         yamlFile(
             dir,
             """
-                id: list_of_members
-                title: List of Members
-                description: Lists all active members.
-                outputFormats: [pdf, xlsx]
-                """);
+            id: list_of_members
+            title: List of Members
+            description: Lists all active members.
+            outputFormats: [pdf, xlsx]
+            """);
 
     ReportMetadata metadata = reader.read(file);
 
@@ -53,14 +53,14 @@ class YamlMetadataReaderTest {
         yamlFile(
             dir,
             """
-                id: list_of_members
-                title: List of Members
-                versionHistory:
-                    - version: "1.0"
-                    - version: "1.1"
-                      createdOn: 2021-10-15
-                      description: Sample version
-                """);
+            id: list_of_members
+            title: List of Members
+            versionHistory:
+                - version: "1.0"
+                - version: "1.1"
+                  createdOn: 2021-10-15
+                  description: Sample version
+            """);
 
     ReportMetadata metadata = reader.read(file);
 
@@ -77,18 +77,18 @@ class YamlMetadataReaderTest {
         yamlFile(
             dir,
             """
-                id: list_of_members
-                title: List of Members
-                parameter:
-                    - name: A_Taetigkeit1
-                      label: Tätigkeit 1
-                      type: select
-                      options:
-                        - {value: "138", label: "Landesbeauftragte*r"}
-                        - {value: 176, label: "AK Leiter*in"}
-                    - name: group_id
-                      type: string
-                """);
+            id: list_of_members
+            title: List of Members
+            parameter:
+                - name: A_Taetigkeit1
+                  label: Tätigkeit 1
+                  type: select
+                  options:
+                    - {value: "138", label: "Landesbeauftragte*r"}
+                    - {value: 176, label: "AK Leiter*in"}
+                - name: group_id
+                  type: string
+            """);
 
     ReportMetadata metadata = reader.read(file);
 
@@ -116,9 +116,9 @@ class YamlMetadataReaderTest {
         yamlFile(
             dir,
             """
-                id: minimal_report
-                title: Minimal Report
-                """);
+            id: minimal_report
+            title: Minimal Report
+            """);
 
     ReportMetadata metadata = reader.read(file);
 

@@ -44,22 +44,21 @@ public class CopySourceTask extends AbstractFollowUpTaskCommand {
   public void export(ReportMetadata report) {
     List<Path> files = findMatchingFiles(pattern);
 
-    files.forEach(
-        source -> {
-          File outputFile =
-              new File(
-                  this.options.outputDir().getPath()
-                      + File.separator
-                      + this.parent.inputDir().toPath().relativize(source));
-          outputFile.getParentFile().mkdirs();
-          try {
-            Files.copy(source, outputFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
-          } catch (IOException e) {
-            e.printStackTrace();
-            System.out.println("Failed to copy file " + source);
-            failedFiles.add(source.toString());
-          }
-        });
+    files.forEach(source -> {
+      File outputFile =
+          new File(
+              this.options.outputDir().getPath()
+                  + File.separator
+                  + this.parent.inputDir().toPath().relativize(source));
+      outputFile.getParentFile().mkdirs();
+      try {
+        Files.copy(source, outputFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
+      } catch (IOException e) {
+        e.printStackTrace();
+        System.out.println("Failed to copy file " + source);
+        failedFiles.add(source.toString());
+      }
+    });
   }
 
   private List<Path> findMatchingFiles(String pattern) {

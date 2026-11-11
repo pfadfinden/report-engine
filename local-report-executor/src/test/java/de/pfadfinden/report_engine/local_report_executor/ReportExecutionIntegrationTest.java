@@ -136,20 +136,14 @@ class ReportExecutionIntegrationTest {
     Map<Integer, List<JRPrintText>> rowsByY = new TreeMap<>();
     printed
         .getPages()
-        .forEach(
-            page ->
-                page.getElements().stream()
-                    .filter(element -> element instanceof JRPrintText)
-                    .map(element -> (JRPrintText) element)
-                    .filter(
-                        text ->
-                            text.getStyle() != null
-                                && "DetailText".equals(text.getStyle().getName()))
-                    .forEach(
-                        text ->
-                            rowsByY
-                                .computeIfAbsent(text.getY(), y -> new ArrayList<>())
-                                .add(text)));
+        .forEach(page ->
+            page.getElements().stream()
+                .filter(element -> element instanceof JRPrintText)
+                .map(element -> (JRPrintText) element)
+                .filter(text ->
+                    text.getStyle() != null && "DetailText".equals(text.getStyle().getName()))
+                .forEach(text ->
+                    rowsByY.computeIfAbsent(text.getY(), y -> new ArrayList<>()).add(text)));
 
     List<List<String>> rows = new ArrayList<>();
     for (List<JRPrintText> rowElements : rowsByY.values()) {

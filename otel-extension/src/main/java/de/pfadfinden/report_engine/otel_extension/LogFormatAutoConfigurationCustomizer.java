@@ -37,20 +37,18 @@ public class LogFormatAutoConfigurationCustomizer implements AutoConfigurationCu
     if (backendConfigured()) {
       return;
     }
-    autoConfiguration.addPropertiesSupplier(
-        () ->
-            Map.of(
-                "otel.traces.exporter", "none",
-                "otel.metrics.exporter", "none",
-                // A real exporter still has to be selected here so there's something for the
-                // customizer below to replace - "logging" itself is discarded, only its plumbing
-                // (a SimpleLogRecordProcessor) is reused.
-                "otel.logs.exporter", "logging"));
-    autoConfiguration.addLogRecordExporterCustomizer(
-        (exporter, config) ->
-            "json".equalsIgnoreCase(System.getenv("LOG_CONSOLE_FORMAT"))
-                ? OtlpJsonLoggingLogRecordExporter.create()
-                : new ConsoleLogRecordExporter());
+    autoConfiguration.addPropertiesSupplier(() ->
+        Map.of(
+            "otel.traces.exporter", "none",
+            "otel.metrics.exporter", "none",
+            // A real exporter still has to be selected here so there's something for the
+            // customizer below to replace - "logging" itself is discarded, only its plumbing
+            // (a SimpleLogRecordProcessor) is reused.
+            "otel.logs.exporter", "logging"));
+    autoConfiguration.addLogRecordExporterCustomizer((exporter, config) ->
+        "json".equalsIgnoreCase(System.getenv("LOG_CONSOLE_FORMAT"))
+            ? OtlpJsonLoggingLogRecordExporter.create()
+            : new ConsoleLogRecordExporter());
   }
 
   private static boolean backendConfigured() {

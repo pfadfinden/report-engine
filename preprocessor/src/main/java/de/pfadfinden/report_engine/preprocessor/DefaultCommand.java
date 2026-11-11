@@ -35,7 +35,7 @@ public class DefaultCommand implements Runnable {
 
   @Mixin protected TaskOptions options;
 
-  @Command()
+  @Command
   public void clean() {
     System.out.println("Cleaning output directory...");
     if (this.options.outputDir().exists()) {

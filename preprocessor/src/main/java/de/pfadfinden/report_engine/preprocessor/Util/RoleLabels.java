@@ -77,9 +77,8 @@ public class RoleLabels {
         Thread.currentThread().interrupt();
         throw new RuntimeException("Interrupted while loading role labels from " + pageUrl, e);
       }
-      data.forEach(
-          item ->
-              labels.put(item.path("id").asText(), item.path("attributes").path("label").asText()));
+      data.forEach(item ->
+          labels.put(item.path("id").asText(), item.path("attributes").path("label").asText()));
       if (data.size() < PAGE_SIZE) {
         return labels;
       }

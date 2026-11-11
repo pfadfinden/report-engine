@@ -108,14 +108,13 @@ public class RemoteZipReportLoader implements ReportLoader {
     try (var paths = Files.walk(root)) {
       paths
           .sorted(Comparator.reverseOrder())
-          .forEach(
-              path -> {
-                if (!path.toFile().delete()) {
-                  Logger.warn(
-                      "reports.cache.stale_file_not_removed",
-                      Attributes.of(AttributeKey.stringKey("path"), path.toString()));
-                }
-              });
+          .forEach(path -> {
+            if (!path.toFile().delete()) {
+              Logger.warn(
+                  "reports.cache.stale_file_not_removed",
+                  Attributes.of(AttributeKey.stringKey("path"), path.toString()));
+            }
+          });
     }
   }
 
