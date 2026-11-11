@@ -22,7 +22,7 @@ public class GenerateMarkdownDetailsPublicTask extends AbstractFollowUpTaskComma
   protected static final String MAKRDOWN_FILE_SUFFIX = ".md";
 
   private static String toTableCell(String value) {
-    return value == null ? null : value.replace("\r\n", "\n").replace("\n", "<br>");
+    return value == null ? null : value.replace("\r\n", "\n").replace("\n", "<br/>");
   }
 
   protected static final String GROUP_TYPE_PREFIX = "Group::";

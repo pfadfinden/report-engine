@@ -104,7 +104,7 @@ public class GenerateMarkdownCatalogueTask extends AbstractFollowUpTaskCommand {
     return "| "
         + String.join(
             " | ",
-            "**" + cell(report.title) + "**<br>`" + report.id + "`",
+            "**" + cell(report.title) + "**<br/>`" + report.id + "`",
             cell(report.description),
             cell(latestVersion(report)),
             cell(join(report.outputFormats, ", ")),
@@ -166,6 +166,6 @@ public class GenerateMarkdownCatalogueTask extends AbstractFollowUpTaskCommand {
     if (isBlank(value)) {
       return EMPTY;
     }
-    return value.trim().replace("|", "\\|").replace("\r\n", "\n").replace("\n", "<br>");
+    return value.trim().replace("|", "\\|").replace("\r\n", "\n").replace("\n", "<br/>");
   }
 }
