@@ -36,6 +36,7 @@ block content
                 else
                   label(for="groupId") Für welche Gruppe soll der Bericht erstellt werden?
                   select(name="groupId", id="groupId")
+                    option(value="", disabled, selected=!selectedGroup) Bitte auswählen
                     +groupOptionsList(groupOptions, selectedGroup)
                 if !selectedGroup && requestParams.groupId
                   small.form-error Die vorausgewählte Gruppe existiert nicht oder du hast keine ausreichenden Rechte für diese Gruppe. Bitte wähle eine andere Gruppe.
@@ -49,6 +50,7 @@ block content
                 div.question
                   label(for="reportId") Welcher Bericht soll erstellt werden?
                   select(name="reportId", id="reportId")
+                    option(value="", disabled, selected=!selectedReport) Bitte auswählen
                     each report in availableReports
                       option(value=report.id, selected=(selectedReport && selectedReport.id === report.id))= report.title
                   if !selectedReport && requestParams.reportId
@@ -81,7 +83,8 @@ block content
                     if parameter.options && parameter.options.length
                       select(name="p_" + parameter.name, id="p_" + parameter.name)
                         //- Empty value = "no selection": the executor's ParameterCoercion drops empty values, so the report gets no value for this parameter
-                        option(value="") – keine Auswahl –
+                        option(value="", disabled, selected=(requestParams["p_" + parameter.name] === undefined)) Bitte auswählen
+                        option(value="", selected=(requestParams["p_" + parameter.name] === "")) – keine Auswahl –
                         each option in parameter.options
                           option(value=option.value, selected=(option.value === requestParams["p_" + parameter.name]))= option.label
                     else
@@ -91,7 +94,8 @@ block content
 
                 div.question
                   label(for="outputFormat") In welchem Format soll der Bericht ausgegeben werden?
-                  select(name="outputFormat", id="outputFormat")
+                  select(name="outputFormat", id="outputFormat", required)
+                    option(value="", disabled, selected=!requestParams.outputFormat) Bitte auswählen
                     each outputFormat in selectedReport.outputFormats
                       option(value=outputFormat, selected=(outputFormat === requestParams.outputFormat))
                         case outputFormat

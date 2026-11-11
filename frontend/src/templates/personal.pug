@@ -28,7 +28,8 @@ block content
             if people.length > 1
               div.question
                 label(for="personId") Für wen?
-                select(name="personId", id="personId")
+                select(name="personId", id="personId", required)
+                  option(value="", disabled, selected=!selectedPersonId) Bitte auswählen
                   each person in people
                     option(value=person.id, selected=(person.id === selectedPersonId))= person.name + ' (' + person.id + ')'
             else
@@ -37,7 +38,8 @@ block content
 
             div.question
               label(for="reportId") Welches Dokument?
-              select(name="reportId", id="reportId")
+              select(name="reportId", id="reportId", required)
+                option(value="", disabled, selected=!selectedReportId) Bitte auswählen
                 each report in reports
                   option(value=report.id, selected=(report.id === selectedReportId))= report.title
 
