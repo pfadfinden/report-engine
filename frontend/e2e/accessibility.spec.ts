@@ -21,6 +21,10 @@ async function selectGroupAndReport(page: Page) {
   await page.waitForURL(/groupId=/);
   await page.selectOption('select[name="reportId"]', 'members');
   await page.waitForURL(/reportId=members/);
+  // The page rewrites the URL (share link sync) before the submit's navigation finishes, so the URL
+  // alone doesn't prove the reloaded form is there. The report's parameter field only exists after.
+  await page.locator('input[name="p_p_joined_after"]').waitFor();
+  await page.waitForLoadState('load');
 }
 
 test('report selection start page has no detectable accessibility violations', async ({ page }) => {
