@@ -8,6 +8,7 @@ import * as logger from '../../telemetry/logger';
 // "permissions" in each of the principal's resolved roles.
 const SUBTREE_PERMISSIONS = ['layer_and_below_read', 'layer_and_below_full'];
 
+const FILTER_CHUNK_SIZE = 100;
 const GROUP_FIELDS = 'name,type,parent_id,layer_group_id';
 
 interface HitobitoGroupResource {
@@ -212,6 +213,20 @@ export class HitobitoGroupsService implements GroupsService {
   }
 
   private async fetchGroups(filters: Record<string, ReadonlyArray<string>>): Promise<GroupWithLayer[]> {
+    const [listKey, listValues] = Object.entries(filters).reduce((a, b) => (b[1].length > a[1].length ? b : a));
+    if (listValues.length <= FILTER_CHUNK_SIZE) {
+      return this.fetchGroupsChunk(filters);
+    }
+    const results: GroupWithLayer[] = [];
+    for (let i = 0; i < listValues.length; i += FILTER_CHUNK_SIZE) {
+      results.push(
+        ...(await this.fetchGroupsChunk({ ...filters, [listKey]: listValues.slice(i, i + FILTER_CHUNK_SIZE) })),
+      );
+    }
+    return results;
+  }
+
+  private async fetchGroupsChunk(filters: Record<string, ReadonlyArray<string>>): Promise<GroupWithLayer[]> {
     const firstUrl = this.buildGroupsUrl(filters);
     const firstDocument = await this.fetchGroupsDocument(firstUrl);
     const documents = [firstDocument];
