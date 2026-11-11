@@ -1,4 +1,4 @@
-import { logs, SeverityNumber } from '@opentelemetry/api-logs';
+import { logs, SeverityNumber } from '@opentelemetry/api';
 
 const SCOPE = 'report-engine';
 const EVENT_NAME_ATTRIBUTE = 'event.name';
