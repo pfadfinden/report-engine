@@ -19,7 +19,7 @@ public abstract class AbstractFollowUpTaskCommand implements FollowUpTask {
   }
 
   protected void export(Stream<ReportMetadata> reports) {
-    reports.forEach(report -> export(report));
+    reports.toList().forEach(report -> export(report));
   }
 
   protected void export(ReportMetadata report) {}
