@@ -39,6 +39,13 @@ RUN apt-get update \
     && apt-get install -y --no-install-recommends fontconfig fonts-dejavu-core curl ca-certificates \
     && rm -rf /var/lib/apt/lists/*
 
+# The production container runs with a read-only root filesystem (see docker-compose.prod.yml),
+# where fontconfig otherwise logs "No writable cache directories" on every start: the user's
+# home and /var/cache are not writable. Pre-build the system cache at image build time (readable
+# at runtime), and point the per-user cache at /tmp, which is writable there (tmpfs).
+RUN fc-cache -f
+ENV XDG_CACHE_HOME=/tmp/.cache
+
 # OpenTelemetry Java instrumentation agent - auto-instruments Jetty (Javalin's underlying server)
 # for http.server.* request metrics/spans per the stable HTTP semantic conventions, without this
 # app having to hand-roll that itself. Pinned to the exact release the root pom's
