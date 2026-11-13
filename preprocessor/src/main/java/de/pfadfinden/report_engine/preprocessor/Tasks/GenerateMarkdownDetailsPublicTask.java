@@ -4,6 +4,7 @@ import de.pfadfinden.report_engine.preprocessor.AbstractFollowUpTaskCommand;
 import de.pfadfinden.report_engine.preprocessor.Metadata.ParameterMetadata;
 import de.pfadfinden.report_engine.preprocessor.Metadata.ReportMetadata;
 import de.pfadfinden.report_engine.preprocessor.Metadata.VersionMetadata;
+import de.pfadfinden.report_engine.preprocessor.Util.RoleLabels;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileOutputStream;
@@ -11,15 +12,41 @@ import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.io.Writer;
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Locale;
+import java.util.Map;
 import java.util.stream.Collectors;
 import net.steppschuh.markdowngenerator.table.Table;
 import net.steppschuh.markdowngenerator.text.heading.Heading;
 import picocli.CommandLine.Command;
+import picocli.CommandLine.Option;
 
 @Command(name = "generate-md-details-public")
 public class GenerateMarkdownDetailsPublicTask extends AbstractFollowUpTaskCommand {
   protected static final String MAKRDOWN_FILE_SUFFIX = ".md";
+
+  @Option(
+      names = {"--role-labels-url"},
+      description =
+          "base URL of the JSON:API of a Hitobito instance (e.g. https://next.mv.meinbdp.de/api)"
+              + " to take the display names of roles and groups from. Without it (or for roles it"
+              + " does not know) the class names are shown as they are.")
+  private String roleLabelsUrl;
+
+  private RoleLabels roleLabels = RoleLabels.none();
+
+  @Override
+  public void run() {
+    if (roleLabelsUrl != null) {
+      roleLabels = RoleLabels.fromApi(roleLabelsUrl);
+    }
+    super.run();
+    if (!roleLabels.missing().isEmpty()) {
+      System.out.println("WARNING: no display name for roles/groups: " + roleLabels.missing());
+    }
+  }
 
   private static String toTableCell(String value) {
     return value == null ? null : value.replace("\r\n", "\n").replace("\n", "<br/>");
@@ -31,6 +58,74 @@ public class GenerateMarkdownDetailsPublicTask extends AbstractFollowUpTaskComma
     return groupType.startsWith(GROUP_TYPE_PREFIX)
         ? groupType.substring(GROUP_TYPE_PREFIX.length())
         : groupType;
+  }
+
+  protected static final List<String> BASE_TAGS = List.of("bericht", "report", "auswertung");
+
+  /**
+   * Turns a category into a Confluence-safe label: lower case, umlauts transliterated, any run of
+   * characters other than letters/digits collapsed into a single hyphen ("Ein-/Austritte" becomes
+   * "ein-austritte").
+   */
+  static String toLabel(String value) {
+    return value
+        .toLowerCase(Locale.ROOT)
+        .replace("ä", "ae")
+        .replace("ö", "oe")
+        .replace("ü", "ue")
+        .replace("ß", "ss")
+        .replaceAll("[^a-z0-9]+", "-")
+        .replaceAll("^-+|-+$", "");
+  }
+
+  /**
+   * Info box for reports restricted to roles, with the (potentially long) role list collapsed and
+   * grouped by group type. Empty if the report is not restricted.
+   */
+  static String roleRestriction(List<String> roles, RoleLabels labels) {
+    if (roles == null || roles.isEmpty()) {
+      return "";
+    }
+    Map<String, List<String>> byGroup = new LinkedHashMap<>();
+    roles.forEach(
+        role ->
+            byGroup
+                .computeIfAbsent(labels.groupOf(role), g -> new ArrayList<>())
+                .add(labels.role(role)));
+    StringBuilder md = new StringBuilder();
+    md.append("!!! info \"Rechtebeschränkter Report\"\n")
+        .append(
+            "    Dieser Report ist nur für Personen mit bestimmten Rollen verfügbar. Die Rolle"
+                + " muss in der gewählten Gruppe oder einer übergeordneten Gruppe bestehen.\n\n")
+        .append("<details markdown=\"1\">\n<summary>Berechtigte Rollen (")
+        .append(roles.size())
+        .append(")</summary>\n\n");
+    byGroup.forEach(
+        (group, names) ->
+            md.append("- **")
+                .append(group)
+                .append(":** ")
+                .append(String.join(", ", names))
+                .append("\n"));
+    md.append("\n</details>");
+    return md.toString();
+  }
+
+  static String frontMatter(ReportMetadata report) {
+    List<String> tags = new ArrayList<>();
+    if (report.category != null && !toLabel(report.category).isEmpty()) {
+      tags.add(toLabel(report.category));
+    }
+    tags.addAll(BASE_TAGS);
+    if (report.onlyForType != null) {
+      report.onlyForType.stream()
+          .map(GenerateMarkdownDetailsPublicTask::stripGroupTypePrefix)
+          .map(type -> "report-ebene-" + toLabel(type))
+          .forEach(tags::add);
+    }
+    return "---\ntags: ["
+        + tags.stream().map(t -> "\"" + t + "\"").collect(Collectors.joining(", "))
+        + "]\n---\n";
   }
 
   public void export(ReportMetadata report) {
@@ -53,7 +148,7 @@ public class GenerateMarkdownDetailsPublicTask extends AbstractFollowUpTaskComma
       Table overviewTable =
           new Table.Builder()
               .addRow("", "")
-              .addRow("Beschreibung", report.description)
+              .addRow("Beschreibung", toTableCell(report.description))
               .addRow("Ausgabeformate", String.join(", ", outputFormats))
               .addRow(
                   "Gruppentypen",
@@ -88,12 +183,18 @@ public class GenerateMarkdownDetailsPublicTask extends AbstractFollowUpTaskComma
         // Blank lines between blocks are required: without them Markdown parsers treat the
         // following heading as part of the preceding table.
         writer
+            .append(frontMatter(report))
+            .append("\n")
             .append(new Heading(report.title, 1).toString())
             .append("\n\n")
-            .append(new Heading("Overview", 3).toString())
+            .append(new Heading("Übersicht", 3).toString())
             .append("\n\n")
             .append(overviewTable.toString())
             .append("\n\n")
+            .append(
+                report.onlyWithRole == null || report.onlyWithRole.isEmpty()
+                    ? ""
+                    : roleRestriction(report.onlyWithRole, roleLabels) + "\n\n")
             .append(new Heading("Parameter", 3).toString())
             .append("\n\n")
             .append(parameterTable.build().toString())

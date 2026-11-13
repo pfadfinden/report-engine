@@ -1,8 +1,9 @@
-Reports Overview
-================
+# Verfügbare Berichte
 
-Auto-generated overview of reports:
+Alle verfügbaren Berichte, nach Themen geordnet.
 
-| ID      | Title            |
-| ------- | ---------------- |
-| members | Members (Sample) |
+## Weitere Reports
+
+| Bericht | Beschreibung | Format |
+|---|---|---|
+| [Members (Sample)](./members.md) | Minimal single-table sample report used as a shared test fixture across report-engine's modules. Not a real production report. | PDF, XLSX |
