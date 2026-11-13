@@ -13,7 +13,7 @@ class GenerateMarkdownDetailsPublicTaskTest {
   void labelsAreConfluenceSafe() {
     assertEquals("ein-austritte", GenerateMarkdownDetailsPublicTask.toLabel("Ein-/Austritte"));
     assertEquals(
-        "funktionstraeger-innenlisten",
+        "funktionstraeger-innen",
         GenerateMarkdownDetailsPublicTask.toLabel("Funktionsträger*innen"));
     assertEquals(
         "plausibilitaets-pruefungen",
