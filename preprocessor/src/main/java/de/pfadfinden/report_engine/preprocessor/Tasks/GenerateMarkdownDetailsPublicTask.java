@@ -101,12 +101,33 @@ public class GenerateMarkdownDetailsPublicTask extends AbstractFollowUpTaskComma
         .append(")</summary>\n\n");
     byGroup.forEach((group, names) ->
         md.append("- **")
-            .append(group)
+            .append(escapeMarkdown(group))
             .append(":** ")
-            .append(String.join(", ", names))
+            .append(
+                names.stream()
+                    .map(GenerateMarkdownDetailsPublicTask::escapeMarkdown)
+                    .collect(Collectors.joining(", ")))
             .append("\n"));
     md.append("\n</details>");
     return md.toString();
+  }
+
+  /**
+   * Escapes characters that would be read as emphasis, e.g. the gender star in "Stammesführer*in".
+   */
+  static String escapeMarkdown(String text) {
+    return text.replace("*", "\\*");
+  }
+
+  /** Newest version first; entries without a date and ties keep reverse file order. */
+  static List<VersionMetadata> newestFirst(List<VersionMetadata> versions) {
+    List<VersionMetadata> sorted = new ArrayList<>(versions);
+    java.util.Collections.reverse(sorted);
+    sorted.sort(
+        java.util.Comparator.comparing(
+            (VersionMetadata v) -> v.createdOn,
+            java.util.Comparator.nullsLast(java.util.Comparator.reverseOrder())));
+    return sorted;
   }
 
   static String frontMatter(ReportMetadata report) {
@@ -165,9 +186,10 @@ public class GenerateMarkdownDetailsPublicTask extends AbstractFollowUpTaskComma
               param.label, toTableCell(param.description), toTableCell(param.comment)));
 
       Table.Builder versionTable = new Table.Builder().addRow("Version", "Änderung", "Datum");
-      versionHistory.forEach(version ->
-          versionTable.addRow(
-              version.version(), toTableCell(version.description), version.createdOn));
+      newestFirst(versionHistory)
+          .forEach(version ->
+              versionTable.addRow(
+                  version.version(), toTableCell(version.description), version.createdOn));
 
       // write Markdown file:
       try (Writer writer =

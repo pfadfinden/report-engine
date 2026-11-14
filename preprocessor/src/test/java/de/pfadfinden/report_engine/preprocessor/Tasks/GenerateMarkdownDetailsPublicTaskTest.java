@@ -4,6 +4,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import de.pfadfinden.report_engine.preprocessor.Metadata.ReportMetadata;
+import de.pfadfinden.report_engine.preprocessor.Metadata.VersionMetadata;
 import de.pfadfinden.report_engine.preprocessor.Util.RoleLabels;
 import org.junit.jupiter.api.Test;
 
@@ -45,6 +46,26 @@ class GenerateMarkdownDetailsPublicTaskTest {
   }
 
   @Test
+  void versionHistoryIsSortedNewestFirst() {
+    java.util.function.BiFunction<String, String, VersionMetadata> v =
+        (version, date) -> {
+          VersionMetadata m = new VersionMetadata();
+          m.setVersion(version);
+          m.createdOn = java.time.LocalDate.parse(date);
+          return m;
+        };
+    java.util.List<VersionMetadata> sorted =
+        GenerateMarkdownDetailsPublicTask.newestFirst(
+            java.util.List.of(
+                v.apply("1.0", "2024-01-01"),
+                v.apply("1.2", "2025-03-01"),
+                v.apply("1.1", "2024-06-01")));
+    assertEquals(
+        java.util.List.of("1.2", "1.1", "1.0"),
+        sorted.stream().map(VersionMetadata::version).toList());
+  }
+
+  @Test
   void roleRestrictionIsCollapsedAndGroupedByGroupType() {
     RoleLabels labels =
         new RoleLabels(
@@ -61,7 +82,7 @@ class GenerateMarkdownDetailsPublicTaskTest {
             labels);
     assertTrue(md.startsWith("!!! info \"Rechtebeschränkter Report\""));
     assertTrue(md.contains("<summary>Berechtigte Rollen (3)</summary>"));
-    assertTrue(md.contains("- **Stamm:** Stammesführer*in, Stv. Stammesführer*in"));
+    assertTrue(md.contains("- **Stamm:** Stammesführer\\*in, Stv. Stammesführer\\*in"));
     // never guessed: unknown names are shown as the class name and reported
     assertTrue(md.contains("- **Group::Bund:** Group::Bund::Unbekannt"));
     assertEquals(java.util.Set.of("Group::Bund::Unbekannt", "Group::Bund"), labels.missing());
