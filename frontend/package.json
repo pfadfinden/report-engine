@@ -36,7 +36,7 @@
     "@opentelemetry/sdk-logs": "^3.1.1",
     "@opentelemetry/sdk-metrics": "^3.1.1",
     "@opentelemetry/sdk-node": "^0.301.2",
-    "better-sqlite3": "^13.0.3",
+    "better-sqlite3": "^13.2.0",
     "dotenv": "^18.0.0",
     "express": "^5.3.0",
     "express-rate-limit": "^8.7.4",
