@@ -1,6 +1,7 @@
 import { Group, GroupId } from '../model/group';
 import { Principal, PrincipalId } from '../model/principal';
 import { GroupsService } from '../port/groups.service';
+import { resilientFetch } from '../../resilience/resilient-fetch';
 import * as logger from '../../telemetry/logger';
 
 // Permissions that grant access to a group's entire *layer* and everything
@@ -306,13 +307,17 @@ export class HitobitoGroupsService implements GroupsService {
   }
 
   private async fetchGroupsDocumentUntimed(url: URL): Promise<HitobitoGroupsDocument> {
-    const res = await fetch(url, {
-      headers: {
-        Accept: 'application/vnd.api+json',
-        'X-TOKEN': this.apiToken,
+    const res = await resilientFetch(
+      'hitobito',
+      url,
+      {
+        headers: {
+          Accept: 'application/vnd.api+json',
+          'X-TOKEN': this.apiToken,
+        },
       },
-      signal: AbortSignal.timeout(HITOBITO_REQUEST_TIMEOUT_MS),
-    });
+      { timeoutMs: HITOBITO_REQUEST_TIMEOUT_MS },
+    );
 
     if (!res.ok) {
       throw new Error(`Hitobito API request to ${url} failed: ${res.status} ${res.statusText}`);

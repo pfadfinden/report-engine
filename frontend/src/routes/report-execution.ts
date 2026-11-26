@@ -11,6 +11,7 @@ import { captureCurrentTraceContext, withStoredTraceContext } from '../telemetry
 import * as logger from '../telemetry/logger';
 import { UserExecutionRegistry } from '../executions/user-execution-registry';
 import { buildDownloadFileName, contentDisposition } from '../executions/download-filename';
+import { resilientFetch } from '../resilience/resilient-fetch';
 import { isValidParameterValue } from './parameter-validation';
 
 var express = require('express');
@@ -244,7 +245,8 @@ export function createReportExecutionRouter(services: AppServices, config: AppCo
         }
 
         const fileUrl = await reportExecutionService.downloadUrl(executionId);
-        const fileRes = await fetch(fileUrl, { signal: AbortSignal.timeout(FILE_PROXY_TIMEOUT_MS) });
+        // Retries only cover getting the response headers; once streaming starts there is no going back.
+        const fileRes = await resilientFetch('executor-files', fileUrl, {}, { timeoutMs: FILE_PROXY_TIMEOUT_MS });
         if (!fileRes.ok) {
           throw new Error(`Failed to fetch report file: ${fileRes.status}`);
         }

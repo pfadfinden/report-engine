@@ -45,14 +45,18 @@ public class Main {
     // plain ExecutorService.submit() doesn't carry context across threads on its own.
     ExecutorService backgroundExecutor =
         io.opentelemetry.context.Context.taskWrapping(Executors.newFixedThreadPool(4));
+    ExecutorHealth health = new ExecutorHealth();
+    // Logs loudly at startup if the report engine is already unusable, instead of waiting for
+    // the first healthcheck or user request to find out.
+    health.isHealthy();
     ReportExecutionRunner runner =
-        new ReportExecutionRunner(config, executionStore, backgroundExecutor);
+        new ReportExecutionRunner(config, executionStore, backgroundExecutor, health);
     DownloadUrlSigner signer = new DownloadUrlSigner(config.downloadUrlSigningSecret());
 
     new RetentionCleaner(executionStore, config.outputDir(), config.executionRetention())
         .start(config.cleanupInterval());
 
-    Javalin app = createApp(config, executionStore, runner, signer);
+    Javalin app = createApp(config, executionStore, runner, signer, health);
     app.start(config.port());
   }
 
@@ -62,6 +66,15 @@ public class Main {
       ExecutionStore executionStore,
       ReportExecutionRunner runner,
       DownloadUrlSigner signer) {
+    return createApp(config, executionStore, runner, signer, ExecutorHealth.alwaysHealthy());
+  }
+
+  static Javalin createApp(
+      Config config,
+      ExecutionStore executionStore,
+      ReportExecutionRunner runner,
+      DownloadUrlSigner signer,
+      ExecutorHealth health) {
     Javalin app =
         Javalin.create(javalinConfig -> {
           javalinConfig.startup.showJavalinBanner = false;
@@ -85,7 +98,17 @@ public class Main {
           javalinConfig.routes.before("/reports/*", ctx -> requireApiKey(ctx, config.apiKey()));
           javalinConfig.routes.before("/executions/*", ctx -> requireApiKey(ctx, config.apiKey()));
 
-          javalinConfig.routes.get("/healthz", ctx -> ctx.status(200));
+          // Deep check, not just liveness: see ExecutorHealth. The body is deliberately generic -
+          // this endpoint is unauthenticated; the cause is logged server-side.
+          javalinConfig.routes.get(
+              "/healthz",
+              ctx -> {
+                if (health.isHealthy()) {
+                  ctx.status(200);
+                } else {
+                  ctx.status(503).json(Map.of("status", "unhealthy"));
+                }
+              });
           javalinConfig.routes.post(
               "/reports/{reportId}/executions",
               ctx -> triggerExecution(ctx, executionStore, runner));

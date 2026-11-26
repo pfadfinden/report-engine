@@ -9,9 +9,10 @@ import { createBackchannelLogoutHandler } from './auth/backchannel-logout';
 import { SessionIndex } from './auth/session-index';
 import { requireAuth } from './auth/require-auth';
 import { withBackendHost } from './auth/backend-host';
-import { createExecutionRateLimiter, createGlobalRateLimiter, RetryInfo } from './rate-limit';
+import { createExecutionRateLimiter, createGlobalRateLimiter, RetryInfo } from './resilience/rate-limit';
 import { verifyRequestOrigin } from './auth/csrf';
 import { redactSensitiveQuery } from './auth/url-redaction';
+import { UpstreamError } from './resilience/resilient-fetch';
 import * as logger from './telemetry/logger';
 
 const GENERIC_ERROR_MESSAGE = 'Es ist ein Fehler aufgetreten. Bitte versuche es später erneut.';
@@ -23,6 +24,18 @@ const HEALTHCHECK_TIMEOUT_MS = 3_000;
 // probes for.
 async function checkReachable(url: URL): Promise<void> {
   await fetch(url, { signal: AbortSignal.timeout(HEALTHCHECK_TIMEOUT_MS) });
+}
+
+// Unlike checkReachable this also looks at the answer: local-report-executor's /healthz returns
+// 503 once its report engine is broken (e.g. the AWT font manager is poisoned), which a bare
+// "something answered" check would not notice. A 4xx (e.g. an executor without a /healthz, such as
+// the Azure Functions one) still counts as reachable. Deliberately bypasses the circuit breaker and
+// retries: a healthcheck must reflect the upstream's current state, not a cached verdict.
+async function checkExecutorHealthy(apiUrl: string): Promise<void> {
+  const res = await fetch(new URL('/healthz', apiUrl), { signal: AbortSignal.timeout(HEALTHCHECK_TIMEOUT_MS) });
+  if (res.status >= 500) {
+    throw new Error(`executor reported unhealthy: ${res.status}`);
+  }
 }
 
 var createError = require('http-errors');
@@ -105,7 +118,7 @@ export function createApp(services: AppServices, config: AppConfig, extraMiddlew
   app.get('/healthz', async function (req: Request, res: Response) {
     const checks: ReadonlyArray<[string, Promise<unknown>]> = [
       ['metadata-db', services.metadataService.findFor('__healthz__')],
-      ['executor', checkReachable(new URL(config.execution.apiUrl))],
+      ['executor', checkExecutorHealthy(config.execution.apiUrl)],
       [
         'oidc-discovery',
         checkReachable(
@@ -213,6 +226,10 @@ export function createApp(services: AppServices, config: AppConfig, extraMiddlew
       { 'http.status_code': status, 'http.method': req.method, 'http.path': redactSensitiveQuery(req.originalUrl) },
       err,
     );
+
+    if (err instanceof UpstreamError && err.retryAfterSec !== undefined) {
+      res.setHeader('Retry-After', String(err.retryAfterSec));
+    }
 
     res.locals.message = err.expose ? err.message : GENERIC_ERROR_MESSAGE;
     res.locals.status = status;

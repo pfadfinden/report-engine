@@ -111,4 +111,92 @@ class GithubReleaseDownloaderTest {
             downloader.downloadTo(
                 base + "/o/r/releases/download/v1/missing.zip", new File(tmp, "x.zip")));
   }
+
+  @Test
+  void retriesTransientServerErrorsThenSucceeds() throws Exception {
+    var attempts = new java.util.concurrent.atomic.AtomicInteger();
+    server.createContext(
+        "/o/r/releases/download/v1/flaky.zip",
+        ex -> {
+          if (attempts.incrementAndGet() < 3) {
+            ex.sendResponseHeaders(503, -1);
+            ex.close();
+          } else {
+            respond(ex, 200, asset);
+          }
+        });
+    var downloader = new GithubReleaseDownloader(null, base, base, 3, 1);
+    File out = new File(tmp, "flaky.zip");
+
+    downloader.downloadTo(base + "/o/r/releases/download/v1/flaky.zip", out);
+
+    assertEquals(3, attempts.get());
+    assertArrayEquals(asset, Files.readAllBytes(out.toPath()));
+  }
+
+  @Test
+  void givesUpAfterMaxAttemptsAndReportsLastStatus() {
+    var attempts = new java.util.concurrent.atomic.AtomicInteger();
+    server.createContext(
+        "/o/r/releases/download/v1/down.zip",
+        ex -> {
+          attempts.incrementAndGet();
+          ex.sendResponseHeaders(502, -1);
+          ex.close();
+        });
+    var downloader = new GithubReleaseDownloader(null, base, base, 3, 1);
+
+    IOException e =
+        assertThrows(
+            IOException.class,
+            () ->
+                downloader.downloadTo(
+                    base + "/o/r/releases/download/v1/down.zip", new File(tmp, "d.zip")));
+
+    assertEquals(3, attempts.get());
+    org.junit.jupiter.api.Assertions.assertTrue(e.getMessage().contains("HTTP 502"));
+  }
+
+  @Test
+  void doesNotRetryNotFound() {
+    var attempts = new java.util.concurrent.atomic.AtomicInteger();
+    server.createContext(
+        "/o/r/releases/download/v1/gone.zip",
+        ex -> {
+          attempts.incrementAndGet();
+          ex.sendResponseHeaders(404, -1);
+          ex.close();
+        });
+    var downloader = new GithubReleaseDownloader(null, base, base, 3, 1);
+
+    assertThrows(
+        IOException.class,
+        () ->
+            downloader.downloadTo(
+                base + "/o/r/releases/download/v1/gone.zip", new File(tmp, "g.zip")));
+
+    assertEquals(1, attempts.get());
+  }
+
+  @Test
+  void doesNotWaitOutAnExcessiveRetryAfter() {
+    var attempts = new java.util.concurrent.atomic.AtomicInteger();
+    server.createContext(
+        "/o/r/releases/download/v1/slow.zip",
+        ex -> {
+          attempts.incrementAndGet();
+          ex.getResponseHeaders().add("Retry-After", "3600");
+          ex.sendResponseHeaders(503, -1);
+          ex.close();
+        });
+    var downloader = new GithubReleaseDownloader(null, base, base, 3, 1);
+
+    assertThrows(
+        IOException.class,
+        () ->
+            downloader.downloadTo(
+                base + "/o/r/releases/download/v1/slow.zip", new File(tmp, "s.zip")));
+
+    assertEquals(1, attempts.get());
+  }
 }

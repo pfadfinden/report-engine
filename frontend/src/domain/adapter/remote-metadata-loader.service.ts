@@ -8,8 +8,6 @@ import { SqliteMetadataService } from './sqlite-metadata.service';
 import { GithubReleaseDownloader } from './github-release-downloader';
 import * as logger from '../../telemetry/logger';
 
-const DOWNLOAD_TIMEOUT_MS = 30_000;
-
 export class RemoteMetadataLoaderService implements MetadataLoaderService {
   constructor(
     private cacheDir: string | null = null, // filename for cached DB
@@ -33,7 +31,7 @@ export class RemoteMetadataLoaderService implements MetadataLoaderService {
       logger.debug('metadata.cache.refresh', { 'metadata.source_url': url });
       const startedAt = Date.now();
 
-      const res = await this.downloader.download(url, AbortSignal.timeout(DOWNLOAD_TIMEOUT_MS));
+      const res = await this.downloader.download(url);
       if (!res.ok) {
         logger.warn('metadata.download.failed', {
           'metadata.source_url': url,

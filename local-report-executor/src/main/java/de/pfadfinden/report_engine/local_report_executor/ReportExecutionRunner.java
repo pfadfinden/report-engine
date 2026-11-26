@@ -28,9 +28,19 @@ public class ReportExecutionRunner {
   private final ExecutionStore executionStore;
   private final ExecutorService backgroundExecutor;
   private final ReportExecutionWorker worker;
+  private final ExecutorHealth health;
 
   public ReportExecutionRunner(
       Config config, ExecutionStore executionStore, ExecutorService backgroundExecutor) {
+    this(config, executionStore, backgroundExecutor, new ExecutorHealth());
+  }
+
+  public ReportExecutionRunner(
+      Config config,
+      ExecutionStore executionStore,
+      ExecutorService backgroundExecutor,
+      ExecutorHealth health) {
+    this.health = health;
     this.outputDir = config.outputDir();
     this.executionStore = executionStore;
     this.backgroundExecutor = backgroundExecutor;
@@ -85,6 +95,7 @@ public class ReportExecutionRunner {
       // Redacted before it's kept around: a JDBC connection failure against the source
       // datasource can echo its embedded credentials (see docker-compose.yml) straight into
       // this message, which the status API then hands back verbatim to any caller.
+      health.recordFailure(t);
       state.errorMessage = CredentialRedaction.redactJdbcCredentials(t.getMessage());
       // A failed fill leaves a partial file that nothing would ever serve or clean up.
       if (outputFile != null) {

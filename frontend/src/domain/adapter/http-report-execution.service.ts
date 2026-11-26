@@ -1,7 +1,9 @@
 import { ReportExecutionService } from '../port/report-execution.service';
+import { resilientFetch } from '../../resilience/resilient-fetch';
 import { ReportExecutionStatus, ReportExecutionTask } from '../model/report-execution-task.model';
 
 const EXECUTOR_REQUEST_TIMEOUT_MS = 15_000;
+const UPSTREAM = 'executor';
 const EXECUTION_ID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 function assertValidExecutionId(executionId: string): void {
@@ -23,19 +25,24 @@ export class HttpReportExecutionService implements ReportExecutionService {
   ) {}
 
   public async executeReport(task: ReportExecutionTask): Promise<void> {
-    const res = await fetch(new URL(`/reports/${task.reportId}/executions`, this.baseUrl), {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        ...this.authHeader(),
+    // Triggering is not retried: a replayed POST could start the same report twice.
+    const res = await resilientFetch(
+      UPSTREAM,
+      new URL(`/reports/${task.reportId}/executions`, this.baseUrl),
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...this.authHeader(),
+        },
+        body: JSON.stringify({
+          executionId: task.executionId,
+          parameter: task.parameter,
+          outputFormat: task.outputFormat,
+        }),
       },
-      body: JSON.stringify({
-        executionId: task.executionId,
-        parameter: task.parameter,
-        outputFormat: task.outputFormat,
-      }),
-      signal: AbortSignal.timeout(EXECUTOR_REQUEST_TIMEOUT_MS),
-    });
+      { timeoutMs: EXECUTOR_REQUEST_TIMEOUT_MS, idempotent: false },
+    );
     if (!res.ok) {
       throw new Error(`Failed to trigger report execution: ${res.status}`);
     }
@@ -43,10 +50,12 @@ export class HttpReportExecutionService implements ReportExecutionService {
 
   public async status(executionId: string): Promise<ReportExecutionStatus> {
     assertValidExecutionId(executionId);
-    const res = await fetch(new URL(`/executions/${executionId}/status`, this.baseUrl), {
-      headers: this.authHeader(),
-      signal: AbortSignal.timeout(EXECUTOR_REQUEST_TIMEOUT_MS),
-    });
+    const res = await resilientFetch(
+      UPSTREAM,
+      new URL(`/executions/${executionId}/status`, this.baseUrl),
+      { headers: this.authHeader() },
+      { timeoutMs: EXECUTOR_REQUEST_TIMEOUT_MS },
+    );
     if (!res.ok) {
       throw new Error(`Failed to fetch execution status: ${res.status}`);
     }
@@ -58,10 +67,12 @@ export class HttpReportExecutionService implements ReportExecutionService {
 
   public async downloadUrl(executionId: string): Promise<string> {
     assertValidExecutionId(executionId);
-    const res = await fetch(new URL(`/executions/${executionId}/download`, this.baseUrl), {
-      headers: this.authHeader(),
-      signal: AbortSignal.timeout(EXECUTOR_REQUEST_TIMEOUT_MS),
-    });
+    const res = await resilientFetch(
+      UPSTREAM,
+      new URL(`/executions/${executionId}/download`, this.baseUrl),
+      { headers: this.authHeader() },
+      { timeoutMs: EXECUTOR_REQUEST_TIMEOUT_MS },
+    );
     if (!res.ok) {
       throw new Error(`Failed to fetch download URL: ${res.status}`);
     }

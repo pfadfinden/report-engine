@@ -2,6 +2,7 @@ import { ClientAuth, Configuration, DPoPHandle, fetchProtectedResource } from 'o
 import { PrincipalRole } from '../domain/model/principal';
 import { toPrincipalRoles } from './claims-to-principal';
 import { withBackendHost } from './backend-host';
+import { resilientFetch } from '../resilience/resilient-fetch';
 
 interface BrokerTokenResponse {
   access_token?: string;
@@ -80,12 +81,13 @@ export async function fetchHitobitoUserinfo(
     ? await fetchProtectedResource(dpop.configuration, keycloakAccessToken, brokerTokenUrl, 'POST', body, headers, {
         DPoP: dpop.handle,
       })
-    : await fetch(brokerTokenUrl, {
-        method: 'POST',
-        headers,
-        body,
-        signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
-      });
+    : // Not retried: the body carries a one-time client_assertion (jti), which Keycloak may reject on replay.
+      await resilientFetch(
+        'keycloak',
+        brokerTokenUrl,
+        { method: 'POST', headers, body },
+        { timeoutMs: REQUEST_TIMEOUT_MS, idempotent: false },
+      );
 
   const brokerBody = (await brokerRes.json()) as BrokerTokenResponse;
   if (!brokerRes.ok || brokerBody.error || !brokerBody.access_token) {
@@ -96,10 +98,12 @@ export async function fetchHitobitoUserinfo(
   }
 
   const userinfoUrl = new URL('/oauth/userinfo', hitobitoApiUrl);
-  const userinfoRes = await fetch(userinfoUrl, {
-    headers: { Authorization: `Bearer ${brokerBody.access_token}` },
-    signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
-  });
+  const userinfoRes = await resilientFetch(
+    'hitobito',
+    userinfoUrl,
+    { headers: { Authorization: `Bearer ${brokerBody.access_token}` } },
+    { timeoutMs: REQUEST_TIMEOUT_MS },
+  );
 
   if (!userinfoRes.ok) {
     throw new Error(

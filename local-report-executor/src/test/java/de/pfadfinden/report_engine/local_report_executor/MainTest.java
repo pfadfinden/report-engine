@@ -86,6 +86,20 @@ class MainTest {
   }
 
   @Test
+  void healthzReturns503WhenExecutorIsUnhealthy() {
+    ExecutorHealth unhealthy = new ExecutorHealth(() -> new IllegalStateException("boom"), () -> 0);
+    Javalin app =
+        Main.createApp(
+            config(),
+            new ExecutionStore(),
+            mock(ReportExecutionRunner.class),
+            new DownloadUrlSigner(SIGNING_SECRET),
+            unhealthy);
+
+    JavalinTest.test(app, (server, client) -> assertEquals(503, client.get("/healthz").code()));
+  }
+
+  @Test
   void triggerExecutionRejectsUnsupportedOutputFormatWithoutDelegatingToRunner() {
     ExecutionStore store = new ExecutionStore();
     ReportExecutionRunner runner = mock(ReportExecutionRunner.class);

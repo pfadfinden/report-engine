@@ -1,7 +1,7 @@
 import { NextFunction, Request, RequestHandler, Response } from 'express';
 import { ipKeyGenerator, rateLimit } from 'express-rate-limit';
-import { AppConfig } from './config';
-import * as logger from './telemetry/logger';
+import { AppConfig } from '../config';
+import * as logger from '../telemetry/logger';
 
 var createError = require('http-errors');
 

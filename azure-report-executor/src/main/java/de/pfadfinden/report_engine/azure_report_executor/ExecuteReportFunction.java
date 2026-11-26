@@ -66,7 +66,7 @@ public class ExecuteReportFunction {
         worker.execute(task.reportId(), task.executionId(), task.parameter(), format, output);
       }
       statusStore.markDone(task.executionId());
-    } catch (Exception e) {
+    } catch (Throwable e) {
       // TracingReportFillWorker has already recorded a span error + audit event for this by
       // the time it gets here, so this only needs to update durable execution-tracking state.
       // The message is redacted first - a connection failure against the JDBC datasource can
