@@ -9,8 +9,12 @@ FROM eclipse-temurin:25 AS jre-build
 # JVM metrics collector instead of silently falling back to a JMX-only one that's missing several
 # metrics a generic "JVM Overview" dashboard expects - CPU utilization (jvm.cpu.recent_utilization)
 # in particular, verified empirically absent without these two modules.
+# jdk.httpserver (com.sun.net.httpserver) is what the agent's Prometheus exporter
+# (OTEL_METRICS_EXPORTER=prometheus, a pull endpoint on OTEL_EXPORTER_PROMETHEUS_PORT) serves
+# /metrics with; without it the exporter fails at startup with
+# "ClassNotFoundException: com.sun.net.httpserver.HttpHandler" (the app itself keeps running).
 RUN $JAVA_HOME/bin/jlink \
-         --add-modules java.base,java.desktop,java.sql,java.naming,java.xml,java.logging,java.management,java.instrument,java.net.http,jdk.jfr,jdk.management.jfr \
+         --add-modules java.base,java.desktop,java.sql,java.naming,java.xml,java.logging,java.management,java.instrument,java.net.http,jdk.jfr,jdk.management.jfr,jdk.httpserver \
          --strip-debug \
          --no-man-pages \
          --no-header-files \
